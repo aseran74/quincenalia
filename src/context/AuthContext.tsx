@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../integrations/supabase/client';
@@ -28,7 +27,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         fetchUserProfile(session.user.id);
@@ -37,7 +35,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         fetchUserProfile(session.user.id);
@@ -60,16 +57,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
 
-      // Convert the profile to AppUser type, explicitly adding email
       const userProfile: AppUser = {
         id: data.id,
         name: data.name || '',
-        email: '', // This will be populated from session user
+        email: '',
         role: data.role,
         profileImage: data.profile_image || undefined
       };
 
-      // Use session user's email to complete the user object
       const session = await supabase.auth.getSession();
       userProfile.email = session.data.session?.user.email || '';
 
@@ -90,11 +85,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             name,
           },
-          skipEmailVerification: true // Disable email confirmation
+          emailRedirectTo: window.location.origin,
         }
       });
 
       if (error) throw error;
+      
+      if (!error) {
+        await login(email, password);
+      }
+      
       return true;
     } catch (error) {
       console.error('Error signing up:', error);
@@ -131,7 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         login,
-        signup, // Added signup method to context
+        signup,
         logout,
         isAuthenticated: !!user,
         loading
