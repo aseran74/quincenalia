@@ -9,6 +9,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
+  signup: (email: string, password: string, name: string) => Promise<boolean>;
   logout: () => Promise<void>;
 }
 
@@ -59,11 +60,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
 
-      setUser(data as AppUser);
+      // Convert the profile to AppUser type, explicitly adding email
+      const userProfile: AppUser = {
+        id: data.id,
+        name: data.name || '',
+        email: '', // This will be populated from session user
+        role: data.role,
+        profileImage: data.profile_image || undefined
+      };
+
+      // Use session user's email to complete the user object
+      const session = await supabase.auth.getSession();
+      userProfile.email = session.data.session?.user.email || '';
+
+      setUser(userProfile);
     } catch (error) {
       console.error('Error fetching user profile:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const signup = async (email: string, password: string, name: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+          },
+          skipEmailVerification: true // Disable email confirmation
+        }
+      });
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error signing up:', error);
+      return false;
     }
   };
 
@@ -96,6 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         login,
+        signup, // Added signup method to context
         logout,
         isAuthenticated: !!user,
         loading
