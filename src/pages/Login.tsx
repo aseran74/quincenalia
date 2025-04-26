@@ -1,5 +1,5 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,77 +9,74 @@ import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '../components/layout/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'react-hot-toast';
 
 const Login: React.FC = () => {
-  const { login } = useAuth();
-  const { toast } = useToast();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const navigate = useNavigate();
+  const { login, signup, isAuthenticated, loading } = useAuth();
+  const { toast: useToastToast } = useToast();
+  const [loginData, setLoginData] = useState({
+    email: '',
+    password: '',
+  });
+  const [signupData, setSignupData] = useState({
+    name: '',
+    email: '',
+    password: '',
+  });
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated && !loading) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, loading, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
     try {
-      const success = await login(email, password);
-      
+      const success = await login(loginData.email, loginData.password);
       if (success) {
-        toast({
-          title: "Inicio de sesión exitoso",
-          description: "Bienvenido a Casa Comunitaria Digital",
-        });
+        toast.success('¡Inicio de sesión exitoso!');
       } else {
-        toast({
-          title: "Error de inicio de sesión",
-          description: "Email o contraseña incorrectos",
-          variant: "destructive",
-        });
+        toast.error('Error al iniciar sesión. Por favor, verifica tus credenciales.');
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Ha ocurrido un error. Por favor intenta nuevamente.",
-        variant: "destructive",
-      });
-      console.error(error);
+      toast.error('Error al iniciar sesión');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Registro exitoso",
-        description: "Se ha enviado un correo de confirmación a tu email.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error en el registro",
-        description: error.message || "Ha ocurrido un error. Por favor intenta nuevamente.",
-        variant: "destructive",
-      });
+      const success = await signup(signupData.email, signupData.password, signupData.name);
+      if (success) {
+        toast.success('¡Registro exitoso!');
+      } else {
+        toast.error('Error al registrarse. Por favor, intenta de nuevo.');
+      }
+    } catch (error) {
+      toast.error('Error al registrarse');
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <AppLayout requireAuth={false}>
@@ -99,76 +96,88 @@ const Login: React.FC = () => {
               </TabsList>
               
               <TabsContent value="login">
-                <form onSubmit={handleLogin}>
-                  <div className="grid gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="usuario@ejemplo.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="password">Contraseña</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? "Cargando..." : "Iniciar sesión"}
-                    </Button>
-                  </div>
-                </form>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Iniciar Sesión</CardTitle>
+                    <CardDescription>
+                      Ingresa tus credenciales para acceder a tu cuenta
+                    </CardDescription>
+                  </CardHeader>
+                  <form onSubmit={handleLogin}>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Input
+                          type="email"
+                          placeholder="Email"
+                          value={loginData.email}
+                          onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Input
+                          type="password"
+                          placeholder="Contraseña"
+                          value={loginData.password}
+                          onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+                      </Button>
+                    </CardFooter>
+                  </form>
+                </Card>
               </TabsContent>
 
               <TabsContent value="signup">
-                <form onSubmit={handleSignUp}>
-                  <div className="grid gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="signup-name">Nombre</Label>
-                      <Input
-                        id="signup-name"
-                        type="text"
-                        placeholder="Tu nombre"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="signup-email">Email</Label>
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="usuario@ejemplo.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="signup-password">Contraseña</Label>
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? "Cargando..." : "Registrarse"}
-                    </Button>
-                  </div>
-                </form>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Registrarse</CardTitle>
+                    <CardDescription>
+                      Crea una nueva cuenta para acceder
+                    </CardDescription>
+                  </CardHeader>
+                  <form onSubmit={handleSignup}>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Input
+                          type="text"
+                          placeholder="Nombre"
+                          value={signupData.name}
+                          onChange={(e) => setSignupData({ ...signupData, name: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Input
+                          type="email"
+                          placeholder="Email"
+                          value={signupData.email}
+                          onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Input
+                          type="password"
+                          placeholder="Contraseña"
+                          value={signupData.password}
+                          onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? 'Registrando...' : 'Registrarse'}
+                      </Button>
+                    </CardFooter>
+                  </form>
+                </Card>
               </TabsContent>
             </Tabs>
           </CardContent>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,7 +28,7 @@ const AdminDashboard: React.FC = () => {
               propiedades registradas
             </p>
             <Button asChild className="w-full mt-4" variant="outline">
-              <Link to="/properties">Ver propiedades</Link>
+              <Link to="/dashboard/properties">Ver propiedades</Link>
             </Button>
           </CardContent>
         </Card>
@@ -45,7 +44,7 @@ const AdminDashboard: React.FC = () => {
               agentes activos
             </p>
             <Button asChild className="w-full mt-4" variant="outline">
-              <Link to="/agents">Ver agentes</Link>
+              <Link to="/dashboard/agents">Ver agentes</Link>
             </Button>
           </CardContent>
         </Card>
@@ -61,7 +60,7 @@ const AdminDashboard: React.FC = () => {
               facturas emitidas
             </p>
             <Button asChild className="w-full mt-4" variant="outline">
-              <Link to="/invoices">Ver facturas</Link>
+              <Link to="/dashboard/invoices">Ver facturas</Link>
             </Button>
           </CardContent>
         </Card>
@@ -77,7 +76,7 @@ const AdminDashboard: React.FC = () => {
               incidencias abiertas
             </p>
             <Button asChild className="w-full mt-4" variant="outline">
-              <Link to="/incidents">Ver incidencias</Link>
+              <Link to="/dashboard/incidents">Ver incidencias</Link>
             </Button>
           </CardContent>
         </Card>
@@ -97,7 +96,7 @@ const AdminDashboard: React.FC = () => {
                     <div className="font-medium">{owner.name}</div>
                   </div>
                   <Button asChild size="sm" variant="outline">
-                    <Link to={`/owners/${owner.id}`}>Ver</Link>
+                    <Link to={`/dashboard/owners/${owner.id}`}>Ver</Link>
                   </Button>
                 </div>
               ))}

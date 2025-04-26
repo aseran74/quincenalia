@@ -1,35 +1,50 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from './context/AuthContext';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Properties from './pages/dashboard/properties/Properties';
+import PropertyForm from './pages/dashboard/properties/PropertyForm';
+import PropertyDetail from './pages/dashboard/properties/PropertyDetail';
+import AgenciesList from './pages/dashboard/agencies/AgenciesList';
+import AgencyForm from './pages/dashboard/agencies/AgencyForm';
+import AgentsList from './pages/dashboard/agents/AgentsList';
+import AgentForm from './pages/dashboard/agents/AgentForm';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+function App() {
+  return (
+    <BrowserRouter>
       <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <Toaster position="top-right" />
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
+            <Route index element={<Properties />} />
+            
+            {/* Rutas de Propiedades */}
+            <Route path="properties" element={<Properties />} />
+            <Route path="properties/new" element={<PropertyForm />} />
+            <Route path="properties/:id" element={<PropertyDetail />} />
+            <Route path="properties/:id/edit" element={<PropertyForm isEditing />} />
+            
+            {/* Rutas de Agencias */}
+            <Route path="agencies" element={<AgenciesList />} />
+            <Route path="agencies/new" element={<AgencyForm />} />
+            <Route path="agencies/:id/edit" element={<AgencyForm isEditing />} />
+            
+            {/* Rutas de Agentes */}
+            <Route path="agents" element={<AgentsList />} />
+            <Route path="agents/new" element={<AgentForm />} />
+            <Route path="agents/:id/edit" element={<AgentForm isEditing />} />
+          </Route>
+          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
+            <Route index element={<Properties />} />
+          </Route>
+        </Routes>
       </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    </BrowserRouter>
+  );
+}
 
 export default App;

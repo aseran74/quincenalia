@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -17,19 +16,28 @@ const Index: React.FC = () => {
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
             La plataforma integral para la gestión de propiedades en comunidad
           </p>
-          {isAuthenticated ? (
-            <Link to="/dashboard">
-              <Button size="lg" className="bg-orange-500 hover:bg-orange-600">
-                Ir al Dashboard
-              </Button>
-            </Link>
-          ) : (
-            <Link to="/login">
-              <Button size="lg" className="bg-orange-500 hover:bg-orange-600">
-                Iniciar Sesión
-              </Button>
-            </Link>
-          )}
+          <div className="space-x-4">
+            {isAuthenticated ? (
+              <>
+                <Link to="/dashboard/agencies">
+                  <Button size="lg" className="bg-orange-500 hover:bg-orange-600">
+                    Gestionar Agencias
+                  </Button>
+                </Link>
+                <Link to="/dashboard/agents">
+                  <Button size="lg" className="bg-blue-500 hover:bg-blue-600">
+                    Gestionar Agentes
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <Link to="/login">
+                <Button size="lg" className="bg-orange-500 hover:bg-orange-600">
+                  Iniciar Sesión
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
       </section>
 
@@ -140,21 +148,21 @@ const Index: React.FC = () => {
               </p>
             </div>
             
-            <div className="text-center p-6 border rounded-lg hover:shadow-lg transition-shadow">
+            <Link to={isAuthenticated ? "/dashboard/agencies" : "/login"} className="text-center p-6 border rounded-lg hover:shadow-lg transition-shadow">
               <div className="text-4xl mb-4 text-blue-600">🏢</div>
               <h3 className="text-xl font-semibold mb-2">Agencias Inmobiliarias</h3>
               <p className="text-gray-600">
                 Gestiona tu equipo de agentes y cartera de propiedades.
               </p>
-            </div>
+            </Link>
             
-            <div className="text-center p-6 border rounded-lg hover:shadow-lg transition-shadow">
+            <Link to={isAuthenticated ? "/dashboard/agents" : "/login"} className="text-center p-6 border rounded-lg hover:shadow-lg transition-shadow">
               <div className="text-4xl mb-4 text-blue-600">👨‍💼</div>
               <h3 className="text-xl font-semibold mb-2">Agentes Inmobiliarios</h3>
               <p className="text-gray-600">
                 Coordina visitas y mantén contacto con clientes interesados.
               </p>
-            </div>
+            </Link>
             
             <div className="text-center p-6 border rounded-lg hover:shadow-lg transition-shadow">
               <div className="text-4xl mb-4 text-blue-600">🏠</div>
