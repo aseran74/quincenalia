@@ -27,6 +27,7 @@ interface Property {
   share4_status?: ShareStatus;
   features?: string[];
   agent_id?: string;
+  copropiedad?: string;
 }
 
 const getStatusColor = (status?: string) => {
@@ -160,8 +161,8 @@ const PropertyDetail = () => {
     const fetchAgent = async () => {
       if (property?.agent_id) {
         const { data, error } = await supabase
-          .from('real_estate_agents')
-          .select('first_name, last_name, email, phone')
+          .from('agents')
+          .select('name, email, phone')
           .eq('id', property.agent_id)
           .single();
         if (!error && data) setAgent(data);
@@ -357,6 +358,10 @@ const PropertyDetail = () => {
               </Badge>
             </div>
           </div>
+          <div className="mb-4">
+            <span className="font-semibold">Copropiedad asignada: </span>
+            {property.copropiedad ? property.copropiedad : 'Ninguna'}
+          </div>
           <div className="mb-8">
             <h3 className="text-lg font-semibold mb-2">Copropiedades</h3>
             <div className="grid grid-cols-2 gap-2 mb-4">
@@ -394,17 +399,23 @@ const PropertyDetail = () => {
                 </div>
               </div>
             )}
+            {/* Dirección en texto */}
+            {property.location && (
+              <div className="mb-4">
+                <span className="font-semibold">Dirección: </span>
+                <span className="text-gray-700">{property.location}</span>
+              </div>
+            )}
             {/* Mapa de Google Maps al final de la columna principal */}
             <PropertyMap address={property.location || ''} />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 font-poppins">
-            <div className="md:col-span-2"></div>
-            <div className="md:col-span-1">
+          <div className="grid grid-cols-1 gap-8 font-poppins">
+            <div>
               <div className="mb-8 p-4 bg-gray-50 rounded-lg border">
                 <h3 className="text-lg font-semibold mb-2">Agente asignado</h3>
                 {agent ? (
                   <div>
-                    <p className="font-medium">{agent.first_name} {agent.last_name}</p>
+                    <p className="font-medium">{agent.name}</p>
                     <p className="text-sm text-gray-600">Email: {agent.email}</p>
                     <p className="text-sm text-gray-600">Teléfono: {agent.phone}</p>
                   </div>

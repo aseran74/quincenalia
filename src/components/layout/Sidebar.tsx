@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Home, Building, Users, Mail, FileText, Calendar, AlertTriangle, User } from 'lucide-react';
+import { Home, Building, Users, Mail, FileText, Calendar, AlertTriangle, User, UserPlus } from 'lucide-react';
 
 interface SidebarItem {
   icon: React.ReactNode;
@@ -19,9 +19,15 @@ const Sidebar: React.FC = () => {
   const sidebarItems: SidebarItem[] = [
     { 
       icon: <Home className="h-5 w-5" />, 
-      title: 'Dashboard', 
+      title: 'Propiedades', 
       href: '/dashboard',
       roles: ['admin', 'agency', 'agent', 'owner', 'interested']
+    },
+    {
+      icon: <UserPlus className="h-5 w-5" />,
+      title: 'Propietarios',
+      href: '/admin/owners',
+      roles: ['admin']
     },
     { 
       icon: <Building className="h-5 w-5" />, 

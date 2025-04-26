@@ -13,6 +13,9 @@ import AgentForm from './pages/dashboard/agents/AgentForm';
 import AgencyDetail from './pages/dashboard/agencies/AgencyDetail';
 import AgentDetail from './pages/dashboard/agents/AgentDetail';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import OwnersList from './pages/admin/owners/OwnersList';
+import OwnerForm from './pages/admin/owners/OwnerForm';
+import OwnerDetail from './pages/admin/owners/OwnerDetail';
 
 function App() {
   return (
@@ -41,6 +44,13 @@ function App() {
             <Route path="agents/new" element={<AgentForm />} />
             <Route path="agents/:id/edit" element={<AgentForm isEditing />} />
             <Route path="agents/:id" element={<AgentDetail />} />
+          </Route>
+          {/* RUTAS DE PROPIETARIOS ADMIN CON LAYOUT DASHBOARD */}
+          <Route path="/admin/owners" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
+            <Route index element={<OwnersList />} />
+            <Route path="new" element={<OwnerForm />} />
+            <Route path=":id" element={<OwnerDetail />} />
+            <Route path=":id/edit" element={<OwnerForm />} />
           </Route>
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
             <Route index element={<Properties />} />

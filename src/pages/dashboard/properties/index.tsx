@@ -80,8 +80,8 @@ const PropertiesPage: React.FC = () => {
             ? `${property.description.substring(0, 100)}...`
             : property.description}
         </p>
-        <div className="text-sm text-gray-500">
-          Tipo: {property.copropiedad}
+        <div className="text-sm text-blue-700 font-semibold">
+          {property.copropiedad ? `Asignada: ${property.copropiedad}` : 'Sin copropiedad asignada'}
         </div>
       </div>
     </div>

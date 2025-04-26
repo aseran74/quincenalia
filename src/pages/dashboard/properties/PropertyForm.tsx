@@ -64,7 +64,7 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
   const [uploadingImages, setUploadingImages] = useState(false);
   const [property, setProperty] = useState<Property | null>(null);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
-  const [agents, setAgents] = useState<{ id: string; first_name: string; last_name: string }[]>([]);
+  const [agents, setAgents] = useState<{ id: string; name: string; email: string }[]>([]);
   const [agentQuery, setAgentQuery] = useState('');
 
   useEffect(() => {
@@ -129,9 +129,9 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
 
   const fetchAgents = async () => {
     const { data, error } = await supabase
-      .from('real_estate_agents')
-      .select('id, first_name, last_name')
-      .order('first_name');
+      .from('agents')
+      .select('id, name, email')
+      .order('name');
     if (!error && data) setAgents(data);
   };
 
@@ -233,6 +233,15 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
       toast({
         title: 'Error',
         description: 'No hay datos de la propiedad para guardar',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!property.agent_id) {
+      toast({
+        title: 'Error',
+        description: 'Debes seleccionar un agente inmobiliario',
         variant: 'destructive',
       });
       return;
@@ -370,8 +379,8 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="disponible">Disponible</SelectItem>
-                            <SelectItem value="reservado">Reservado</SelectItem>
-                            <SelectItem value="vendido">Vendido</SelectItem>
+                            <SelectItem value="reservada">Reservada</SelectItem>
+                            <SelectItem value="vendida">Vendida</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -387,8 +396,8 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="disponible">Disponible</SelectItem>
-                            <SelectItem value="reservado">Reservado</SelectItem>
-                            <SelectItem value="vendido">Vendido</SelectItem>
+                            <SelectItem value="reservada">Reservada</SelectItem>
+                            <SelectItem value="vendida">Vendida</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -404,8 +413,8 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="disponible">Disponible</SelectItem>
-                            <SelectItem value="reservado">Reservado</SelectItem>
-                            <SelectItem value="vendido">Vendido</SelectItem>
+                            <SelectItem value="reservada">Reservada</SelectItem>
+                            <SelectItem value="vendida">Vendida</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -421,8 +430,8 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="disponible">Disponible</SelectItem>
-                            <SelectItem value="reservado">Reservado</SelectItem>
-                            <SelectItem value="vendido">Vendido</SelectItem>
+                            <SelectItem value="reservada">Reservada</SelectItem>
+                            <SelectItem value="vendida">Vendida</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -430,7 +439,7 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                   </div>
 
                   <div>
-                    <Label htmlFor="agent_id">Agente asignado</Label>
+                    <Label htmlFor="agent_id">Agente asignado <span className="text-red-600">*</span></Label>
                     <Command>
                       <CommandInput
                         placeholder="Buscar agente por nombre..."
@@ -439,32 +448,34 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                       />
                       <CommandList>
                         {agents.filter(a =>
-                          `${a.first_name} ${a.last_name}`.toLowerCase().includes(agentQuery.toLowerCase())
+                          a.name.toLowerCase().includes(agentQuery.toLowerCase())
                         ).length === 0 && (
                           <CommandEmpty>No hay agentes</CommandEmpty>
                         )}
                         {agents.filter(a =>
-                          `${a.first_name} ${a.last_name}`.toLowerCase().includes(agentQuery.toLowerCase())
+                          a.name.toLowerCase().includes(agentQuery.toLowerCase())
                         ).map(agent => (
                           <CommandItem
                             key={agent.id}
                             onSelect={() => {
                               setProperty(prev => prev ? { ...prev, agent_id: agent.id } : null);
-                              setAgentQuery(`${agent.first_name} ${agent.last_name}`);
+                              setAgentQuery(agent.name);
                             }}
                             value={agent.id}
                           >
-                            {agent.first_name} {agent.last_name}
+                            {agent.name}
                           </CommandItem>
                         ))}
                       </CommandList>
                     </Command>
                     {property.agent_id && (
                       <div className="text-sm text-gray-500 mt-1">
-                        Agente seleccionado: {agents.find(a => a.id === property.agent_id)?.first_name} {agents.find(a => a.id === property.agent_id)?.last_name}
-                        <Button type="button" size="sm" variant="ghost" onClick={() => setProperty(prev => prev ? { ...prev, agent_id: null } : null)}>
-                          Quitar
-                        </Button>
+                        Agente seleccionado: {agents.find(a => a.id === property.agent_id)?.name}
+                        {agents.length > 1 && (
+                          <Button type="button" size="sm" variant="ghost" onClick={() => setProperty(prev => prev ? { ...prev, agent_id: null } : null)}>
+                            Quitar
+                          </Button>
+                        )}
                       </div>
                     )}
                   </div>
