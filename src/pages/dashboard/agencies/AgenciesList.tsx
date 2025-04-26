@@ -53,7 +53,7 @@ const AgenciesList = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 font-poppins">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Agencias Inmobiliarias</h1>
         <div className="flex gap-2">
@@ -78,7 +78,7 @@ const AgenciesList = () => {
       {loading ? (
         <div className="text-center py-12">Cargando agencias...</div>
       ) : agencies.length === 0 ? (
-        <Card>
+        <Card className="font-poppins">
           <CardHeader>
             <h3 className="text-lg font-semibold">No hay agencias registradas</h3>
           </CardHeader>
@@ -89,23 +89,25 @@ const AgenciesList = () => {
           </CardContent>
         </Card>
       ) : view === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-poppins">
           {agencies.map((agency) => (
-            <Card key={agency.id} className="overflow-hidden">
-              <CardHeader>
-                <div className="flex items-center gap-4">
-                  {agency.logo_url && (
-                    <img src={agency.logo_url} alt={agency.name} className="w-16 h-16 object-cover rounded" />
-                  )}
-                  <div>
-                    <h2 className="text-xl font-semibold">{agency.name}</h2>
-                    <p className="text-gray-600 text-sm">{agency.email}</p>
-                    <p className="text-gray-600 text-sm">{agency.phone}</p>
+            <Card key={agency.id} className="relative w-full max-w-[500px] h-[230px] bg-[#333] rounded-xl outline outline-1 outline-white/50 outline-offset-[-12px] shadow-lg overflow-hidden mx-auto group font-poppins">
+              <div className="w-full h-[120px] bg-gray-200 flex items-center justify-center overflow-hidden">
+                {agency.logo_url ? (
+                  <img src={agency.logo_url} alt={agency.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-300">
+                    <span className="text-gray-400 text-4xl">🏢</span>
                   </div>
-                </div>
+                )}
+              </div>
+              <CardHeader className="pt-2 pb-1">
+                <h2 className="text-xl font-semibold text-white drop-shadow-lg">{agency.name}</h2>
+                <p className="text-gray-300 text-sm">{agency.email}</p>
+                <p className="text-gray-300 text-sm">{agency.phone}</p>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 line-clamp-2 mb-2">{agency.description}</p>
+                <p className="text-gray-200 line-clamp-2 mb-2">{agency.description}</p>
                 <div className="flex gap-2 justify-end">
                   <Link to={`/dashboard/agencies/${agency.id}/edit`}>
                     <Button size="icon" variant="ghost"><Pencil /></Button>
@@ -120,7 +122,7 @@ const AgenciesList = () => {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border rounded">
+          <table className="min-w-full bg-white border rounded font-poppins">
             <thead>
               <tr>
                 <th className="px-4 py-2 border">Nombre</th>

@@ -15,7 +15,15 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
-import { HiOutlineArrowLeft, HiOutlinePhoto, HiOutlineTrash } from "react-icons/hi2";
+import { HiOutlineArrowLeft, HiOutlinePhoto, HiOutlineTrash, HiOutlineHome, HiOutlineUser, HiOutlineDocumentText, HiOutlineSparkles, HiOutlineCake, HiOutlineKey } from "react-icons/hi2";
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandItem,
+  CommandEmpty,
+} from '@/components/ui/command';
+import { FaSwimmingPool, FaHotTub, FaChild, FaGamepad, FaUmbrellaBeach, FaParking } from 'react-icons/fa';
 
 type ShareStatus = 'disponible' | 'reservado' | 'vendido';
 
@@ -35,7 +43,18 @@ interface Property {
   share2_status?: ShareStatus;
   share3_status?: ShareStatus;
   share4_status?: ShareStatus;
+  agent_id?: string | null;
+  features?: string[];
 }
+
+const FEATURES = [
+  { key: 'piscina_privada', label: 'Piscina privada', icon: <FaSwimmingPool className="inline mr-2 text-blue-500" /> },
+  { key: 'jacuzzi', label: 'Jacuzzi', icon: <FaHotTub className="inline mr-2 text-pink-500" /> },
+  { key: 'juegos_ninos', label: 'Juegos para niños', icon: <FaChild className="inline mr-2 text-yellow-500" /> },
+  { key: 'videoconsolas', label: 'Videoconsolas', icon: <FaGamepad className="inline mr-2 text-green-500" /> },
+  { key: 'acceso_playa', label: 'Acceso playa', icon: <FaUmbrellaBeach className="inline mr-2 text-cyan-500" /> },
+  { key: 'parking_gratuito', label: 'Parking gratuito', icon: <FaParking className="inline mr-2 text-gray-700" /> },
+];
 
 const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) => {
   const { id } = useParams<{ id: string }>();
@@ -45,9 +64,11 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
   const [uploadingImages, setUploadingImages] = useState(false);
   const [property, setProperty] = useState<Property | null>(null);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [agents, setAgents] = useState<{ id: string; first_name: string; last_name: string }[]>([]);
+  const [agentQuery, setAgentQuery] = useState('');
 
   useEffect(() => {
-    if (!authLoading && user) {
+    if (!authLoading && user && !isEditing) {
       setProperty({
         title: '',
         description: '',
@@ -63,15 +84,20 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
         share2_status: 'disponible',
         share3_status: 'disponible',
         share4_status: 'disponible',
+        features: [],
       });
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, isEditing]);
 
   useEffect(() => {
     if (isEditing && id && !authLoading) {
       fetchProperty();
     }
   }, [id, isEditing, authLoading]);
+
+  useEffect(() => {
+    fetchAgents();
+  }, []);
 
   const fetchProperty = async () => {
     try {
@@ -99,6 +125,14 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
         variant: 'destructive',
       });
     }
+  };
+
+  const fetchAgents = async () => {
+    const { data, error } = await supabase
+      .from('real_estate_agents')
+      .select('id, first_name, last_name')
+      .order('first_name');
+    if (!error && data) setAgents(data);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -208,7 +242,8 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
     try {
       const propertyData = {
         ...property,
-        user_id: user.id
+        user_id: user.id,
+        features: property.features && property.features.length > 0 ? property.features : [],
       };
 
       if (isEditing) {
@@ -277,7 +312,7 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                     <Label htmlFor="title">Título</Label>
                     <Input
                       id="title"
-                      value={property.title}
+                      value={property.title || ''}
                       onChange={(e) => setProperty({ ...property, title: e.target.value })}
                       required
                     />
@@ -287,7 +322,7 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                     <Label htmlFor="description">Descripción</Label>
                     <Textarea
                       id="description"
-                      value={property.description}
+                      value={property.description || ''}
                       onChange={(e) => setProperty({ ...property, description: e.target.value })}
                       className="h-32"
                     />
@@ -298,7 +333,7 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                     <Input
                       id="price"
                       type="number"
-                      value={property.price}
+                      value={property.price || ''}
                       onChange={(e) => setProperty({ ...property, price: Number(e.target.value) })}
                       required
                     />
@@ -307,7 +342,7 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                   <div>
                     <Label htmlFor="status">Estado</Label>
                     <Select
-                      value={property.status}
+                      value={property.status || ''}
                       onValueChange={(value) => setProperty({ ...property, status: value as Property['status'] })}
                     >
                       <SelectTrigger>
@@ -325,9 +360,9 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                     <h3 className="text-lg font-semibold">Estado de Copropiedades</h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="share1">Copropiedad 1</Label>
+                        <Label htmlFor="share1">1º quincena Julio + 10 sem</Label>
                         <Select
-                          value={property.share1_status}
+                          value={property.share1_status || ''}
                           onValueChange={(value) => setProperty({ ...property, share1_status: value as ShareStatus })}
                         >
                           <SelectTrigger>
@@ -342,9 +377,9 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                       </div>
 
                       <div>
-                        <Label htmlFor="share2">Copropiedad 2</Label>
+                        <Label htmlFor="share2">2ª quincena Julio + 10 sem</Label>
                         <Select
-                          value={property.share2_status}
+                          value={property.share2_status || ''}
                           onValueChange={(value) => setProperty({ ...property, share2_status: value as ShareStatus })}
                         >
                           <SelectTrigger>
@@ -359,9 +394,9 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                       </div>
 
                       <div>
-                        <Label htmlFor="share3">Copropiedad 3</Label>
+                        <Label htmlFor="share3">1º quincena Agosto + 10 sem</Label>
                         <Select
-                          value={property.share3_status}
+                          value={property.share3_status || ''}
                           onValueChange={(value) => setProperty({ ...property, share3_status: value as ShareStatus })}
                         >
                           <SelectTrigger>
@@ -376,9 +411,9 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                       </div>
 
                       <div>
-                        <Label htmlFor="share4">Copropiedad 4</Label>
+                        <Label htmlFor="share4">2ª quincena Agosto + 10 sem</Label>
                         <Select
-                          value={property.share4_status}
+                          value={property.share4_status || ''}
                           onValueChange={(value) => setProperty({ ...property, share4_status: value as ShareStatus })}
                         >
                           <SelectTrigger>
@@ -393,6 +428,46 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                       </div>
                     </div>
                   </div>
+
+                  <div>
+                    <Label htmlFor="agent_id">Agente asignado</Label>
+                    <Command>
+                      <CommandInput
+                        placeholder="Buscar agente por nombre..."
+                        value={agentQuery}
+                        onValueChange={setAgentQuery}
+                      />
+                      <CommandList>
+                        {agents.filter(a =>
+                          `${a.first_name} ${a.last_name}`.toLowerCase().includes(agentQuery.toLowerCase())
+                        ).length === 0 && (
+                          <CommandEmpty>No hay agentes</CommandEmpty>
+                        )}
+                        {agents.filter(a =>
+                          `${a.first_name} ${a.last_name}`.toLowerCase().includes(agentQuery.toLowerCase())
+                        ).map(agent => (
+                          <CommandItem
+                            key={agent.id}
+                            onSelect={() => {
+                              setProperty(prev => prev ? { ...prev, agent_id: agent.id } : null);
+                              setAgentQuery(`${agent.first_name} ${agent.last_name}`);
+                            }}
+                            value={agent.id}
+                          >
+                            {agent.first_name} {agent.last_name}
+                          </CommandItem>
+                        ))}
+                      </CommandList>
+                    </Command>
+                    {property.agent_id && (
+                      <div className="text-sm text-gray-500 mt-1">
+                        Agente seleccionado: {agents.find(a => a.id === property.agent_id)?.first_name} {agents.find(a => a.id === property.agent_id)?.last_name}
+                        <Button type="button" size="sm" variant="ghost" onClick={() => setProperty(prev => prev ? { ...prev, agent_id: null } : null)}>
+                          Quitar
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-6">
@@ -400,7 +475,7 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                     <Label htmlFor="location">Ubicación</Label>
                     <Input
                       id="location"
-                      value={property.location}
+                      value={property.location || ''}
                       onChange={(e) => setProperty({ ...property, location: e.target.value })}
                     />
                   </div>
@@ -408,30 +483,67 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <Label htmlFor="bedrooms">Habitaciones</Label>
-                      <Input
-                        id="bedrooms"
-                        type="number"
-                        value={property.bedrooms}
-                        onChange={(e) => setProperty({ ...property, bedrooms: Number(e.target.value) })}
-                      />
+                      <div className="relative">
+                        <Input
+                          id="bedrooms"
+                          type="number"
+                          value={property.bedrooms || ''}
+                          onChange={(e) => setProperty({ ...property, bedrooms: Number(e.target.value) })}
+                          className="pl-10"
+                        />
+                        <HiOutlineHome className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      </div>
                     </div>
                     <div>
                       <Label htmlFor="bathrooms">Baños</Label>
-                      <Input
-                        id="bathrooms"
-                        type="number"
-                        value={property.bathrooms}
-                        onChange={(e) => setProperty({ ...property, bathrooms: Number(e.target.value) })}
-                      />
+                      <div className="relative">
+                        <Input
+                          id="bathrooms"
+                          type="number"
+                          value={property.bathrooms || ''}
+                          onChange={(e) => setProperty({ ...property, bathrooms: Number(e.target.value) })}
+                          className="pl-10"
+                        />
+                        <HiOutlineUser className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      </div>
                     </div>
                     <div>
                       <Label htmlFor="area">Área (m²)</Label>
-                      <Input
-                        id="area"
-                        type="number"
-                        value={property.area}
-                        onChange={(e) => setProperty({ ...property, area: Number(e.target.value) })}
-                      />
+                      <div className="relative">
+                        <Input
+                          id="area"
+                          type="number"
+                          value={property.area || ''}
+                          onChange={(e) => setProperty({ ...property, area: Number(e.target.value) })}
+                          className="pl-10"
+                        />
+                        <HiOutlineDocumentText className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold mb-2">Características</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {FEATURES.map(f => (
+                        <label key={f.key} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={property.features?.includes(f.key) || false}
+                            onChange={e => {
+                              setProperty(prev => prev ? {
+                                ...prev,
+                                features: e.target.checked
+                                  ? [...(prev.features || []), f.key]
+                                  : (prev.features || []).filter(k => k !== f.key)
+                              } : null);
+                            }}
+                            className="accent-blue-600"
+                          />
+                          {f.icon}
+                          <span>{f.label}</span>
+                        </label>
+                      ))}
                     </div>
                   </div>
 

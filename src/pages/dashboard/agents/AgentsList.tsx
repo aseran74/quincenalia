@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { HiOutlineUserCircle } from 'react-icons/hi2';
 
 interface RealEstateAgent {
   id: string;
@@ -14,6 +15,7 @@ interface RealEstateAgent {
   email: string;
   phone: string;
   photo_url?: string;
+  avatar_url?: string;
   agency_id?: string;
 }
 
@@ -109,8 +111,10 @@ const AgentsList = () => {
             <Card key={agent.id} className="overflow-hidden">
               <CardHeader>
                 <div className="flex items-center gap-4">
-                  {agent.photo_url && (
+                  {agent.photo_url ? (
                     <img src={agent.photo_url} alt={agent.first_name} className="w-16 h-16 object-cover rounded-full" />
+                  ) : (
+                    <HiOutlineUserCircle className="w-16 h-16 text-gray-300" />
                   )}
                   <div>
                     <h2 className="text-xl font-semibold">{agent.first_name} {agent.last_name}</h2>
@@ -148,7 +152,14 @@ const AgentsList = () => {
             <tbody>
               {agents.map((agent) => (
                 <tr key={agent.id}>
-                  <td className="px-4 py-2 border">{agent.first_name} {agent.last_name}</td>
+                  <td className="px-4 py-2 border flex items-center gap-2">
+                    {agent.photo_url ? (
+                      <img src={agent.photo_url} alt={agent.first_name} className="w-8 h-8 object-cover rounded-full" />
+                    ) : (
+                      <HiOutlineUserCircle className="w-8 h-8 text-gray-300" />
+                    )}
+                    {agent.first_name} {agent.last_name}
+                  </td>
                   <td className="px-4 py-2 border">{agent.email}</td>
                   <td className="px-4 py-2 border">{agent.phone}</td>
                   <td className="px-4 py-2 border">{getAgencyName(agent.agency_id)}</td>

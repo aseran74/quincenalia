@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -48,6 +48,7 @@ const AgencyForm: React.FC<AgencyFormProps> = ({ isEditing = false }) => {
   });
   const [agents, setAgents] = useState<RealEstateAgent[]>([]);
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isEditing && id) {
@@ -126,6 +127,21 @@ const AgencyForm: React.FC<AgencyFormProps> = ({ isEditing = false }) => {
     }
   };
 
+  const handleRemoveLogo = async () => {
+    if (!agency.logo_url) return;
+    try {
+      const fileName = agency.logo_url.split('/').pop();
+      if (!fileName) throw new Error('No se pudo determinar el archivo');
+      const { error } = await supabase.storage.from('agencies').remove([fileName]);
+      if (error) throw error;
+      setAgency({ ...agency, logo_url: undefined });
+      toast({ title: 'Éxito', description: 'Logo eliminado correctamente' });
+    } catch (error) {
+      console.error('Error al eliminar logo:', error);
+      toast({ title: 'Error', description: 'No se pudo eliminar el logo', variant: 'destructive' });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -175,6 +191,28 @@ const AgencyForm: React.FC<AgencyFormProps> = ({ isEditing = false }) => {
   return (
     <div className="container mx-auto p-6">
       <Card>
+        <div className="w-full h-[140px] bg-gray-200 flex items-center justify-center rounded-t-xl overflow-hidden mb-4 relative">
+          {agency.logo_url ? (
+            <>
+              <img
+                src={agency.logo_url}
+                alt="Logo"
+                className="w-full h-full object-cover"
+              />
+              <Button
+                type="button"
+                size="icon"
+                variant="destructive"
+                className="absolute top-2 right-2 z-10"
+                onClick={handleRemoveLogo}
+              >
+                ×
+              </Button>
+            </>
+          ) : (
+            <HiOutlinePhoto className="h-16 w-16 text-gray-400" />
+          )}
+        </div>
         <CardHeader>
           <h1 className="text-2xl font-bold">
             {isEditing ? 'Editar Agencia' : 'Nueva Agencia'}
@@ -240,31 +278,26 @@ const AgencyForm: React.FC<AgencyFormProps> = ({ isEditing = false }) => {
             <div>
               <Label>Logo</Label>
               <div className="mt-2 space-y-4">
-                {agency.logo_url && (
-                  <img
-                    src={agency.logo_url}
-                    alt="Logo"
-                    className="w-32 h-32 object-cover rounded"
-                  />
-                )}
-                <label className="block">
+                <div>
                   <Button
                     type="button"
                     variant="outline"
                     className="w-full"
                     disabled={uploadingLogo}
+                    onClick={() => fileInputRef.current?.click()}
                   >
                     <HiOutlinePhoto className="h-5 w-5 mr-2" />
                     {uploadingLogo ? 'Subiendo...' : 'Subir Logo'}
                   </Button>
                   <input
+                    ref={fileInputRef}
                     type="file"
                     accept="image/*"
                     className="hidden"
                     onChange={handleLogoUpload}
                     disabled={uploadingLogo}
                   />
-                </label>
+                </div>
               </div>
             </div>
             <div>

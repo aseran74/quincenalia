@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
-import { HiOutlineArrowLeft, HiOutlinePencil } from "react-icons/hi2";
+import { HiOutlineArrowLeft, HiOutlinePencil, HiOutlineHome, HiOutlineUser, HiOutlineDocumentText } from "react-icons/hi2";
+import { FaSwimmingPool, FaHotTub, FaChild, FaGamepad, FaUmbrellaBeach, FaParking } from 'react-icons/fa';
 
 type ShareStatus = 'disponible' | 'reservado' | 'vendido';
 
@@ -24,6 +25,8 @@ interface Property {
   share2_status?: ShareStatus;
   share3_status?: ShareStatus;
   share4_status?: ShareStatus;
+  features?: string[];
+  agent_id?: string;
 }
 
 const getStatusColor = (status?: string) => {
@@ -44,16 +47,139 @@ const formatStatus = (status?: string) => {
   return status.charAt(0).toUpperCase() + status.slice(1);
 };
 
+const FEATURES = [
+  { key: 'piscina_privada', label: 'Piscina privada', icon: <FaSwimmingPool className="text-blue-500" /> },
+  { key: 'jacuzzi', label: 'Jacuzzi', icon: <FaHotTub className="text-pink-500" /> },
+  { key: 'juegos_ninos', label: 'Juegos para niños', icon: <FaChild className="text-yellow-500" /> },
+  { key: 'videoconsolas', label: 'Videoconsolas', icon: <FaGamepad className="text-green-500" /> },
+  { key: 'acceso_playa', label: 'Acceso playa', icon: <FaUmbrellaBeach className="text-cyan-500" /> },
+  { key: 'parking_gratuito', label: 'Parking gratuito', icon: <FaParking className="text-gray-700" /> },
+];
+
+// Definir tipo para los props de la calculadora
+interface MortgageType {
+  value: number;
+  downPayment: number;
+  interest: number;
+  years: number;
+  result: null | {
+    monthly: number;
+    total: number;
+    totalInterest: number;
+  };
+}
+
+function MortgageResult({ mortgage }: { mortgage: MortgageType }) {
+  const l = mortgage.value - mortgage.downPayment;
+  const r = (mortgage.interest / 100) / 12;
+  const n = mortgage.years * 12;
+  const P = l * r / (1 - Math.pow(1 + r, -n));
+  const total = P * n;
+  const totalInterest = total - l;
+  return (
+    <>
+      <p>Cuota mensual: <span className="font-bold">€{isFinite(P) ? P.toLocaleString(undefined, {maximumFractionDigits:2}) : '-'}</span></p>
+      <p>Total a pagar: <span className="font-bold">€{isFinite(total) ? total.toLocaleString(undefined, {maximumFractionDigits:2}) : '-'}</span></p>
+      <p>Total intereses: <span className="font-bold">€{isFinite(totalInterest) ? totalInterest.toLocaleString(undefined, {maximumFractionDigits:2}) : '-'}</span></p>
+    </>
+  );
+}
+
+// Añadir hook para cargar el script de Google Maps
+function useGoogleMaps(apiKey: string) {
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    if (window.google && window.google.maps) {
+      setLoaded(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+    script.async = true;
+    script.onload = () => setLoaded(true);
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, [apiKey]);
+  return loaded;
+}
+
+// Componente para mostrar el mapa
+function PropertyMap({ address }: { address: string }) {
+  const apiKey = "AIzaSyBy4MuV_fOnPJF-WoxQbBlnKj8dMF6KuxM";
+  const loaded = useGoogleMaps(apiKey);
+  const mapRef = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!loaded || !address || !mapRef.current) return;
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode({ address }, (results, status) => {
+      if (status === 'OK' && results && results[0]) {
+        const map = new window.google.maps.Map(mapRef.current!, {
+          zoom: 15,
+          center: results[0].geometry.location,
+        });
+        new window.google.maps.Marker({
+          map,
+          position: results[0].geometry.location,
+        });
+      }
+    });
+  }, [loaded, address]);
+  return (
+    <div className="w-full h-64 rounded-lg overflow-hidden border mt-6">
+      {address ? (
+        <div ref={mapRef} className="w-full h-full" />
+      ) : (
+        <div className="flex items-center justify-center h-full text-gray-500">No hay dirección para mostrar el mapa</div>
+      )}
+    </div>
+  );
+}
+
 const PropertyDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [agent, setAgent] = useState<any>(null);
+  const [mortgage, setMortgage] = useState<MortgageType>({
+    value: 0,
+    downPayment: 0,
+    interest: 2.1,
+    years: 20,
+    result: null
+  });
 
   useEffect(() => {
     fetchProperty();
   }, [id]);
+
+  useEffect(() => {
+    const fetchAgent = async () => {
+      if (property?.agent_id) {
+        const { data, error } = await supabase
+          .from('real_estate_agents')
+          .select('first_name, last_name, email, phone')
+          .eq('id', property.agent_id)
+          .single();
+        if (!error && data) setAgent(data);
+      }
+    };
+    fetchAgent();
+  }, [property]);
+
+  useEffect(() => {
+    if (property) {
+      const sharePrice = property.price / 4;
+      setMortgage(m => ({
+        ...m,
+        value: sharePrice,
+        downPayment: Math.round(sharePrice * 0.2),
+      }));
+    }
+  }, [property]);
 
   const fetchProperty = async () => {
     if (!id) return;
@@ -79,6 +205,21 @@ const PropertyDetail = () => {
     }
   };
 
+  const handleMortgageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setMortgage(m => ({ ...m, [name]: Number(value) }));
+  };
+
+  const calculateMortgage = () => {
+    const l = mortgage.value - mortgage.downPayment;
+    const r = (mortgage.interest / 100) / 12;
+    const n = mortgage.years * 12;
+    const P = l * r / (1 - Math.pow(1 + r, -n));
+    const total = P * n;
+    const totalInterest = total - l;
+    setMortgage(m => ({ ...m, result: { monthly: P, total, totalInterest } }));
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -101,8 +242,25 @@ const PropertyDetail = () => {
     );
   }
 
+  if (property && !Array.isArray(property.features)) {
+    property.features = [];
+  }
+
+  const shareLabels = [
+    '1º quincena Julio + 10 sem',
+    '2ª quincena Julio + 10 sem',
+    '1º quincena Agosto + 10 sem',
+    '2ª quincena Agosto + 10 sem',
+  ];
+  const shareStatus = [
+    property.share1_status,
+    property.share2_status,
+    property.share3_status,
+    property.share4_status,
+  ];
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 font-poppins">
       <div className="flex justify-between items-center mb-6">
         <Button
           variant="outline"
@@ -118,21 +276,10 @@ const PropertyDetail = () => {
           Editar
         </Button>
       </div>
-
-      <Card className="mb-8">
-        <CardContent className="p-6">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">{property.title}</h1>
-              <p className="text-gray-500">{property.location}</p>
-            </div>
-            <Badge className={getStatusColor(property.status)}>
-              {formatStatus(property.status)}
-            </Badge>
-          </div>
-
+      <Card className="mb-8 font-poppins">
+        <CardContent className="p-6 font-poppins">
           <div className="mb-8">
-            <div className="relative h-96 mb-4">
+            <div className="relative w-full h-96 mb-2">
               {property.images && property.images.length > 0 ? (
                 <>
                   <img
@@ -141,18 +288,28 @@ const PropertyDetail = () => {
                     className="w-full h-full object-cover rounded-lg"
                   />
                   {property.images.length > 1 && (
-                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
                       {property.images.map((_, index) => (
                         <button
                           key={index}
-                          className={`w-3 h-3 rounded-full ${
-                            index === currentImageIndex ? 'bg-white' : 'bg-white/50'
-                          }`}
+                          className={`w-3 h-3 rounded-full border-2 border-white ${index === currentImageIndex ? 'bg-blue-600' : 'bg-white/50'}`}
                           onClick={() => setCurrentImageIndex(index)}
                         />
                       ))}
                     </div>
                   )}
+                  <button
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-2 shadow hover:bg-white z-10"
+                    onClick={() => setCurrentImageIndex((currentImageIndex - 1 + property.images.length) % property.images.length)}
+                  >
+                    {'<'}
+                  </button>
+                  <button
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-2 shadow hover:bg-white z-10"
+                    onClick={() => setCurrentImageIndex((currentImageIndex + 1) % property.images.length)}
+                  >
+                    {'>'}
+                  </button>
                 </>
               ) : (
                 <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
@@ -160,64 +317,126 @@ const PropertyDetail = () => {
                 </div>
               )}
             </div>
+            {property.images && property.images.length > 1 && (
+              <div className="flex gap-2 justify-center mt-2">
+                {property.images.map((img, idx) => (
+                  <img
+                    key={idx}
+                    src={img}
+                    alt={`Miniatura ${idx + 1}`}
+                    className={`w-16 h-16 object-cover rounded-lg border-2 cursor-pointer transition-all duration-200 ${idx === currentImageIndex ? 'border-blue-600 scale-105' : 'border-gray-300 opacity-70 hover:opacity-100'}`}
+                    onClick={() => setCurrentImageIndex(idx)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">Detalles</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-gray-500">Precio</p>
-                  <p className="text-xl font-semibold">€{property.price?.toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Área</p>
-                  <p className="text-xl font-semibold">{property.area} m²</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Habitaciones</p>
-                  <p className="text-xl font-semibold">{property.bedrooms}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Baños</p>
-                  <p className="text-xl font-semibold">{property.bathrooms}</p>
-                </div>
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold mb-2">{property.title}</h1>
+            <div className="flex flex-wrap gap-6 items-center mb-2">
+              <div className="flex items-center gap-2">
+                <HiOutlineHome className="text-blue-500 w-5 h-5" />
+                <span className="font-semibold">{property.bedrooms}</span>
+                <span>Habitaciones</span>
               </div>
-
-              <div className="mt-8">
-                <h2 className="text-2xl font-semibold mb-4">Estado de Copropiedades</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-gray-500 mb-2">Share 1</p>
-                    <Badge className={getStatusColor(property.share1_status)}>
-                      {formatStatus(property.share1_status)}
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 mb-2">Share 2</p>
-                    <Badge className={getStatusColor(property.share2_status)}>
-                      {formatStatus(property.share2_status)}
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 mb-2">Share 3</p>
-                    <Badge className={getStatusColor(property.share3_status)}>
-                      {formatStatus(property.share3_status)}
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 mb-2">Share 4</p>
-                    <Badge className={getStatusColor(property.share4_status)}>
-                      {formatStatus(property.share4_status)}
-                    </Badge>
-                  </div>
-                </div>
+              <div className="flex items-center gap-2">
+                <HiOutlineUser className="text-blue-500 w-5 h-5" />
+                <span className="font-semibold">{property.bathrooms}</span>
+                <span>Baños</span>
               </div>
+              <div className="flex items-center gap-2">
+                <HiOutlineDocumentText className="text-blue-500 w-5 h-5" />
+                <span className="font-semibold">{property.area}</span>
+                <span>m²</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-gray-500">{property.location}</span>
+              </div>
+              <Badge className={getStatusColor(property.status)}>
+                {formatStatus(property.status)}
+              </Badge>
             </div>
-
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">Descripción</h2>
-              <p className="text-gray-600 whitespace-pre-wrap">{property.description}</p>
+          </div>
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-2">Copropiedades</h3>
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              {[0,1,2,3].map(idx => {
+                const status = shareStatus[idx];
+                let bg = 'bg-gray-100 border-gray-300 text-gray-700';
+                if (status === 'disponible') bg = 'bg-green-100 border-green-400 text-green-900';
+                if (status === 'reservado') bg = 'bg-yellow-100 border-yellow-400 text-yellow-900';
+                if (status === 'vendido') bg = 'bg-purple-200 border-purple-500 text-purple-900';
+                return (
+                  <div key={idx} className={`border rounded-lg p-3 flex flex-col items-center text-xs font-medium ${bg}`}>
+                    <span className="text-[11px] font-normal text-center mb-1">{shareLabels[idx]}</span>
+                    <span className="px-2 py-1 rounded text-xs font-semibold mb-1 capitalize">
+                      {status ? status : 'Sin estado'}
+                    </span>
+                    <span className="text-blue-700 font-bold">€{(property.price/4).toLocaleString()}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">Descripción</h2>
+            <p className="text-gray-600 whitespace-pre-wrap mb-6">{property.description}</p>
+            {property.features && property.features.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">Características</h3>
+                <div className="flex flex-wrap gap-3">
+                  {FEATURES.filter(f => property.features.includes(f.key)).map(f => (
+                    <span key={f.key} className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-sm font-medium">
+                      {f.icon}
+                      {f.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Mapa de Google Maps al final de la columna principal */}
+            <PropertyMap address={property.location || ''} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 font-poppins">
+            <div className="md:col-span-2"></div>
+            <div className="md:col-span-1">
+              <div className="mb-8 p-4 bg-gray-50 rounded-lg border">
+                <h3 className="text-lg font-semibold mb-2">Agente asignado</h3>
+                {agent ? (
+                  <div>
+                    <p className="font-medium">{agent.first_name} {agent.last_name}</p>
+                    <p className="text-sm text-gray-600">Email: {agent.email}</p>
+                    <p className="text-sm text-gray-600">Teléfono: {agent.phone}</p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">No hay agente asignado</p>
+                )}
+              </div>
+              <div className="p-4 bg-blue-50 rounded-lg border font-poppins">
+                <h3 className="text-lg font-semibold mb-4">Calculadora de Hipoteca</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Valor de la copropiedad</label>
+                    <input type="number" name="value" value={mortgage.value} onChange={handleMortgageChange} className="w-full border rounded px-2 py-1" min={0} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Entrada inicial (20%)</label>
+                    <input type="number" name="downPayment" value={mortgage.downPayment} onChange={handleMortgageChange} className="w-full border rounded px-2 py-1" min={0} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Interés (%)</label>
+                    <input type="number" name="interest" value={mortgage.interest} onChange={handleMortgageChange} className="w-full border rounded px-2 py-1" min={0} step={0.01} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Plazo (años)</label>
+                    <input type="number" name="years" value={mortgage.years} onChange={handleMortgageChange} className="w-full border rounded px-2 py-1" min={1} />
+                  </div>
+                </div>
+                <div className="mt-4 bg-white rounded p-3 border">
+                  <h4 className="font-semibold mb-2">Resultado</h4>
+                  <MortgageResult mortgage={mortgage} />
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>

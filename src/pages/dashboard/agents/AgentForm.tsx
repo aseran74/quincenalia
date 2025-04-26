@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/components/ui/use-toast';
+import { HiOutlineUserCircle, HiOutlinePhoto } from 'react-icons/hi2';
 
 interface RealEstateAgency {
   id: string;
@@ -27,6 +28,9 @@ const AgentForm: React.FC<AgentFormProps> = ({ isEditing = false }) => {
     phone: '',
   });
   const [loading, setLoading] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchAgencies();
@@ -46,7 +50,7 @@ const AgentForm: React.FC<AgentFormProps> = ({ isEditing = false }) => {
   const fetchAgent = async () => {
     const { data, error } = await supabase
       .from('real_estate_agents')
-      .select('first_name, last_name, email, phone, agency_id')
+      .select('first_name, last_name, email, phone, agency_id, photo_url')
       .eq('id', id)
       .single();
     if (!error && data) {
@@ -56,6 +60,42 @@ const AgentForm: React.FC<AgentFormProps> = ({ isEditing = false }) => {
         phone: data.phone,
       });
       setSelectedAgency(data.agency_id || '');
+      setPhotoUrl(data.photo_url);
+    }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage.from('agents').upload(fileName, file);
+      if (uploadError) throw uploadError;
+      const { data: { publicUrl } } = supabase.storage.from('agents').getPublicUrl(fileName);
+      setPhotoUrl(publicUrl);
+      toast({ title: 'Éxito', description: 'Foto subida correctamente' });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({ title: 'Error', description: 'Error al subir la foto', variant: 'destructive' });
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    if (!photoUrl) return;
+    try {
+      const fileName = photoUrl.split('/').pop();
+      if (!fileName) throw new Error('No se pudo determinar el archivo');
+      const { error } = await supabase.storage.from('agents').remove([fileName]);
+      if (error) throw error;
+      setPhotoUrl(undefined);
+      toast({ title: 'Éxito', description: 'Foto eliminada correctamente' });
+    } catch (error) {
+      console.error('Error al eliminar foto:', error);
+      toast({ title: 'Error', description: 'No se pudo eliminar la foto', variant: 'destructive' });
     }
   };
 
@@ -71,6 +111,7 @@ const AgentForm: React.FC<AgentFormProps> = ({ isEditing = false }) => {
         email: agent.email,
         phone: agent.phone,
         agency_id: selectedAgency || null,
+        photo_url: photoUrl || null,
       };
       if (isEditing && id) {
         const { error } = await supabase
@@ -104,6 +145,48 @@ const AgentForm: React.FC<AgentFormProps> = ({ isEditing = false }) => {
           </h1>
         </CardHeader>
         <CardContent>
+          <div className="flex flex-col items-center mb-4">
+            <div className="relative">
+              {photoUrl ? (
+                <>
+                  <img
+                    src={photoUrl}
+                    alt="Avatar"
+                    className="w-24 h-24 rounded-full object-cover border-2 border-gray-300"
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="destructive"
+                    className="absolute top-0 right-0 z-10"
+                    onClick={handleRemovePhoto}
+                  >
+                    ×
+                  </Button>
+                </>
+              ) : (
+                <HiOutlineUserCircle className="w-24 h-24 text-gray-300" />
+              )}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-2"
+              disabled={uploadingPhoto}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <HiOutlinePhoto className="h-5 w-5 mr-2" />
+              {uploadingPhoto ? 'Subiendo...' : 'Subir Foto'}
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoUpload}
+              disabled={uploadingPhoto}
+            />
+          </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="name">Nombre</Label>
