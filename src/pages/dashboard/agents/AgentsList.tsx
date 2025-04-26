@@ -117,7 +117,9 @@ const AgentsList = () => {
                     <HiOutlineUserCircle className="w-16 h-16 text-gray-300" />
                   )}
                   <div>
-                    <h2 className="text-xl font-semibold">{agent.first_name} {agent.last_name}</h2>
+                    <Link to={`/dashboard/agents/${agent.id}`} className="hover:underline">
+                      <h2 className="text-xl font-semibold">{agent.first_name} {agent.last_name}</h2>
+                    </Link>
                     <p className="text-gray-600 text-sm">{agent.email}</p>
                     <p className="text-gray-600 text-sm">{agent.phone}</p>
                     <p className="text-gray-600 text-sm">{getAgencyName(agent.agency_id)}</p>
@@ -158,7 +160,9 @@ const AgentsList = () => {
                     ) : (
                       <HiOutlineUserCircle className="w-8 h-8 text-gray-300" />
                     )}
-                    {agent.first_name} {agent.last_name}
+                    <Link to={`/dashboard/agents/${agent.id}`} className="hover:underline">
+                      {agent.first_name} {agent.last_name}
+                    </Link>
                   </td>
                   <td className="px-4 py-2 border">{agent.email}</td>
                   <td className="px-4 py-2 border">{agent.phone}</td>

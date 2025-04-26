@@ -91,31 +91,33 @@ const AgenciesList = () => {
       ) : view === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-poppins">
           {agencies.map((agency) => (
-            <Card key={agency.id} className="relative w-full max-w-[500px] h-[230px] bg-[#333] rounded-xl outline outline-1 outline-white/50 outline-offset-[-12px] shadow-lg overflow-hidden mx-auto group font-poppins">
-              <div className="w-full h-[120px] bg-gray-200 flex items-center justify-center overflow-hidden">
+            <Card key={agency.id} className="relative w-full max-w-[500px] h-[300px] bg-white rounded-xl outline outline-1 outline-gray-200 outline-offset-[-12px] shadow-lg overflow-hidden mx-auto group font-poppins flex flex-col items-center justify-start pt-6">
+              <div className="flex flex-col items-center">
                 {agency.logo_url ? (
-                  <img src={agency.logo_url} alt={agency.name} className="w-full h-full object-cover" />
+                  <img src={agency.logo_url} alt={agency.name} className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow-lg" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-300">
+                  <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-200 shadow-lg">
                     <span className="text-gray-400 text-4xl">🏢</span>
                   </div>
                 )}
-              </div>
-              <CardHeader className="pt-2 pb-1">
-                <h2 className="text-xl font-semibold text-white drop-shadow-lg">{agency.name}</h2>
-                <p className="text-gray-300 text-sm">{agency.email}</p>
-                <p className="text-gray-300 text-sm">{agency.phone}</p>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-200 line-clamp-2 mb-2">{agency.description}</p>
-                <div className="flex gap-2 justify-end">
+                <div className="flex gap-2 justify-center mt-2">
                   <Link to={`/dashboard/agencies/${agency.id}/edit`}>
-                    <Button size="icon" variant="ghost"><Pencil /></Button>
+                    <Button size="icon" variant="ghost" className="text-gray-500"><Pencil size={18} /></Button>
                   </Link>
                   {user?.role === 'admin' && (
-                    <Button size="icon" variant="ghost" onClick={() => handleDelete(agency.id)}><Trash2 color="#e11d48" /></Button>
+                    <Button size="icon" variant="ghost" className="text-gray-500" onClick={() => handleDelete(agency.id)}><Trash2 size={18} color="#e11d48" /></Button>
                   )}
                 </div>
+              </div>
+              <CardHeader className="pt-2 pb-1 text-center bg-white">
+                <Link to={`/dashboard/agencies/${agency.id}`} className="hover:underline">
+                  <h2 className="text-xl font-semibold text-gray-900 drop-shadow-none">{agency.name}</h2>
+                </Link>
+                <p className="text-gray-600 text-sm">{agency.email}</p>
+                <p className="text-gray-600 text-sm">{agency.phone}</p>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700 text-sm line-clamp-2 mb-2 max-h-[2.5em] overflow-hidden pt-4">{agency.description}</p>
               </CardContent>
             </Card>
           ))}
@@ -134,7 +136,11 @@ const AgenciesList = () => {
             <tbody>
               {agencies.map((agency) => (
                 <tr key={agency.id}>
-                  <td className="px-4 py-2 border">{agency.name}</td>
+                  <td className="px-4 py-2 border">
+                    <Link to={`/dashboard/agencies/${agency.id}`} className="hover:underline">
+                      {agency.name}
+                    </Link>
+                  </td>
                   <td className="px-4 py-2 border">{agency.email}</td>
                   <td className="px-4 py-2 border">{agency.phone}</td>
                   <td className="px-4 py-2 border flex gap-2">

@@ -10,6 +10,8 @@ import AgenciesList from './pages/dashboard/agencies/AgenciesList';
 import AgencyForm from './pages/dashboard/agencies/AgencyForm';
 import AgentsList from './pages/dashboard/agents/AgentsList';
 import AgentForm from './pages/dashboard/agents/AgentForm';
+import AgencyDetail from './pages/dashboard/agencies/AgencyDetail';
+import AgentDetail from './pages/dashboard/agents/AgentDetail';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
@@ -32,11 +34,13 @@ function App() {
             <Route path="agencies" element={<AgenciesList />} />
             <Route path="agencies/new" element={<AgencyForm />} />
             <Route path="agencies/:id/edit" element={<AgencyForm isEditing />} />
+            <Route path="agencies/:id" element={<AgencyDetail />} />
             
             {/* Rutas de Agentes */}
             <Route path="agents" element={<AgentsList />} />
             <Route path="agents/new" element={<AgentForm />} />
             <Route path="agents/:id/edit" element={<AgentForm isEditing />} />
+            <Route path="agents/:id" element={<AgentDetail />} />
           </Route>
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
             <Route index element={<Properties />} />
