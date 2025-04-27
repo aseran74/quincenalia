@@ -30,6 +30,15 @@ interface Property {
   copropiedad?: string;
 }
 
+interface Agent {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  photo_url?: string;
+}
+
 const getStatusColor = (status?: string) => {
   switch (status) {
     case 'disponible':
@@ -144,7 +153,7 @@ const PropertyDetail = () => {
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [agent, setAgent] = useState<any>(null);
+  const [agent, setAgent] = useState<Agent | null>(null);
   const [mortgage, setMortgage] = useState<MortgageType>({
     value: 0,
     downPayment: 0,
@@ -157,19 +166,38 @@ const PropertyDetail = () => {
     fetchProperty();
   }, [id]);
 
-  useEffect(() => {
-    const fetchAgent = async () => {
-      if (property?.agent_id) {
-        const { data, error } = await supabase
-          .from('agents')
-          .select('name, email, phone')
-          .eq('id', property.agent_id)
-          .single();
-        if (!error && data) setAgent(data);
+  const fetchProperty = async () => {
+    try {
+      const { data: propertyData, error: propertyError } = await supabase
+        .from('properties')
+        .select(`
+          *,
+          agent:real_estate_agents(*)
+        `)
+        .eq('id', id)
+        .single();
+
+      if (propertyError) throw propertyError;
+
+      if (propertyData) {
+        setProperty(propertyData);
+        if (propertyData.agent) {
+          setAgent({
+            ...propertyData.agent,
+          });
+        }
       }
-    };
-    fetchAgent();
-  }, [property]);
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: 'Error',
+        description: 'Error al cargar la propiedad',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (property) {
@@ -181,30 +209,6 @@ const PropertyDetail = () => {
       }));
     }
   }, [property]);
-
-  const fetchProperty = async () => {
-    if (!id) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-      setProperty(data);
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: 'Error',
-        description: 'Error al cargar los detalles de la propiedad',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleMortgageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -415,7 +419,7 @@ const PropertyDetail = () => {
                 <h3 className="text-lg font-semibold mb-2">Agente asignado</h3>
                 {agent ? (
                   <div>
-                    <p className="font-medium">{agent.name}</p>
+                    <p className="font-medium">{agent.first_name} {agent.last_name}</p>
                     <p className="text-sm text-gray-600">Email: {agent.email}</p>
                     <p className="text-sm text-gray-600">Teléfono: {agent.phone}</p>
                   </div>

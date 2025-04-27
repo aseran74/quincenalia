@@ -14,6 +14,11 @@ interface Owner {
   email: string;
   phone: string;
   photo_url?: string;
+  properties?: Array<{
+    id: string;
+    title: string;
+    shares: Array<{ num: number; status: string }>;
+  }>;
 }
 
 const OwnersList = () => {
@@ -27,11 +32,25 @@ const OwnersList = () => {
 
   const fetchOwners = async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data: ownersData } = await supabase
       .from('property_owners')
       .select('*')
       .order('first_name');
-    setOwners(data || []);
+    const { data: propertiesData } = await supabase
+      .from('properties')
+      .select('id, title, share1_owner_id, share1_status, share2_owner_id, share2_status, share3_owner_id, share3_status, share4_owner_id, share4_status');
+    const ownersWithProps = (ownersData || []).map(owner => {
+      const props = (propertiesData || []).map(p => {
+        const shares = [];
+        if (p.share1_owner_id === owner.id) shares.push({ num: 1, status: p.share1_status });
+        if (p.share2_owner_id === owner.id) shares.push({ num: 2, status: p.share2_status });
+        if (p.share3_owner_id === owner.id) shares.push({ num: 3, status: p.share3_status });
+        if (p.share4_owner_id === owner.id) shares.push({ num: 4, status: p.share4_status });
+        return shares.length > 0 ? { id: p.id, title: p.title, shares } : null;
+      }).filter(Boolean);
+      return { ...owner, properties: props };
+    });
+    setOwners(ownersWithProps);
     setLoading(false);
   };
 
@@ -101,6 +120,18 @@ const OwnersList = () => {
                     </Link>
                     <p className="text-gray-600 text-sm">{owner.email}</p>
                     <p className="text-gray-600 text-sm">{owner.phone}</p>
+                    {owner.properties && owner.properties.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {owner.properties.map(prop => (
+                          <div key={prop.id} className="flex items-center gap-2 text-xs">
+                            <span className="font-semibold">{prop.title}</span>
+                            {prop.shares.map(share => (
+                              <span key={share.num} className={`px-2 py-0.5 rounded text-white ${share.status === 'reservada' ? 'bg-blue-500' : 'bg-green-600'}`}>#{share.num} {share.status}</span>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -129,15 +160,29 @@ const OwnersList = () => {
             <tbody>
               {owners.map((owner) => (
                 <tr key={owner.id}>
-                  <td className="px-4 py-2 border flex items-center gap-2">
-                    {owner.photo_url ? (
-                      <img src={owner.photo_url} alt={owner.first_name} className="w-8 h-8 object-cover rounded-full" />
-                    ) : (
-                      <HiOutlineUserCircle className="w-8 h-8 text-gray-300" />
+                  <td className="px-4 py-2 border flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      {owner.photo_url ? (
+                        <img src={owner.photo_url} alt={owner.first_name} className="w-8 h-8 object-cover rounded-full" />
+                      ) : (
+                        <HiOutlineUserCircle className="w-8 h-8 text-gray-300" />
+                      )}
+                      <Link to={`/admin/owners/${owner.id}`} className="hover:underline">
+                        {owner.first_name} {owner.last_name}
+                      </Link>
+                    </div>
+                    {owner.properties && owner.properties.length > 0 && (
+                      <div className="mt-1 space-y-0.5">
+                        {owner.properties.map(prop => (
+                          <div key={prop.id} className="flex items-center gap-2 text-xs">
+                            <span className="font-semibold">{prop.title}</span>
+                            {prop.shares.map(share => (
+                              <span key={share.num} className={`px-2 py-0.5 rounded text-white ${share.status === 'reservada' ? 'bg-blue-500' : 'bg-green-600'}`}>#{share.num} {share.status}</span>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
                     )}
-                    <Link to={`/admin/owners/${owner.id}`} className="hover:underline">
-                      {owner.first_name} {owner.last_name}
-                    </Link>
                   </td>
                   <td className="px-4 py-2 border">{owner.email}</td>
                   <td className="px-4 py-2 border">{owner.phone}</td>

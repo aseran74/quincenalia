@@ -10,10 +10,12 @@ export type FeatureCategory = 'exterior' | 'interior' | 'servicios'
 
 export type Agent = {
   id: string
-  name: string
+  first_name: string
+  last_name: string
   email: string
   phone: string
-  created_at: string
+  photo_url?: string
+  agency_id?: string
 }
 
 export type Feature = {

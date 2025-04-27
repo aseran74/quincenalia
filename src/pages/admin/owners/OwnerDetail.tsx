@@ -18,11 +18,11 @@ interface Owner {
 const OwnerDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [owner, setOwner] = useState<Owner | null>(null);
-  const [shares, setShares] = useState<any[]>([]);
+  const [properties, setProperties] = useState<any[]>([]);
 
   useEffect(() => {
     fetchOwner();
-    fetchShares();
+    fetchProperties();
   }, [id]);
 
   const fetchOwner = async () => {
@@ -34,16 +34,20 @@ const OwnerDetail: React.FC = () => {
     if (data) setOwner(data);
   };
 
-  const fetchShares = async () => {
-    const { data, error } = await supabase
-      .from('shares')
-      .select(`id, status, price, percentage, 
-        properties (id, title),
-        copropiedades (id, nombre)
-      `)
-      .eq('owner_id', id)
-      .in('status', ['reservada', 'vendida']);
-    if (data) setShares(data);
+  const fetchProperties = async () => {
+    const { data: propertiesData } = await supabase
+      .from('properties')
+      .select('id, title, share1_owner_id, share1_status, share2_owner_id, share2_status, share3_owner_id, share3_status, share4_owner_id, share4_status');
+    if (!id) return;
+    const props = (propertiesData || []).map(p => {
+      const shares = [];
+      if (p.share1_owner_id === id) shares.push({ num: 1, status: p.share1_status });
+      if (p.share2_owner_id === id) shares.push({ num: 2, status: p.share2_status });
+      if (p.share3_owner_id === id) shares.push({ num: 3, status: p.share3_status });
+      if (p.share4_owner_id === id) shares.push({ num: 4, status: p.share4_status });
+      return shares.length > 0 ? { id: p.id, title: p.title, shares } : null;
+    }).filter(Boolean);
+    setProperties(props);
   };
 
   if (!owner) return <div className="p-8">Cargando propietario...</div>;
@@ -65,35 +69,22 @@ const OwnerDetail: React.FC = () => {
           {owner.created_at && (
             <div className="text-gray-500 text-sm">Creado: {new Date(owner.created_at).toLocaleString()}</div>
           )}
-          <div className="mt-8">
-            <h2 className="text-xl font-bold mb-4">Copropiedades asignadas</h2>
-            {shares.length === 0 ? (
-              <p className="text-gray-500">Este propietario no tiene copropiedades reservadas ni compradas.</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Propiedad</TableHead>
-                    <TableHead>Fracción</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Precio</TableHead>
-                    <TableHead>Porcentaje</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {shares.map((share) => (
-                    <TableRow key={share.id}>
-                      <TableCell>{share.properties?.title || '-'}</TableCell>
-                      <TableCell>{share.copropiedades?.nombre || '-'}</TableCell>
-                      <TableCell className="capitalize">{share.status}</TableCell>
-                      <TableCell>€{share.price?.toLocaleString()}</TableCell>
-                      <TableCell>{share.percentage}%</TableCell>
-                    </TableRow>
+
+          <h2 className="text-xl font-bold mb-4">Copropiedades asignadas</h2>
+          {properties.length === 0 ? (
+            <p className="text-gray-500">Este propietario no tiene copropiedades reservadas ni compradas.</p>
+          ) : (
+            <div className="space-y-2 mb-4">
+              {properties.map(prop => (
+                <div key={prop.id} className="flex items-center gap-2 text-sm">
+                  <span className="font-semibold">{prop.title}</span>
+                  {prop.shares.map(share => (
+                    <span key={share.num} className={`px-2 py-0.5 rounded text-white ${share.status === 'reservada' ? 'bg-blue-500' : 'bg-green-600'}`}>#{share.num} {share.status}</span>
                   ))}
-                </TableBody>
-              </Table>
-            )}
-          </div>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="mt-4">
             <Link to={`/admin/owners/${owner.id}/edit`} className="text-blue-600 hover:underline">Editar propietario</Link>
           </div>

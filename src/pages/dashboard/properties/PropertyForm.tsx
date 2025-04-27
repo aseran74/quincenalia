@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FC } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/command';
 import { FaSwimmingPool, FaHotTub, FaChild, FaGamepad, FaUmbrellaBeach, FaParking } from 'react-icons/fa';
 
-type ShareStatus = 'disponible' | 'reservado' | 'vendido';
+type ShareStatus = 'disponible' | 'reservada' | 'vendida';
 
 interface Property {
   id?: string;
@@ -39,12 +39,24 @@ interface Property {
   area?: number;
   location?: string;
   user_id: string | null;
-  share1_status?: ShareStatus;
-  share2_status?: ShareStatus;
-  share3_status?: ShareStatus;
-  share4_status?: ShareStatus;
   agent_id?: string | null;
   features?: string[];
+  // Share 1: 1ª quincena Julio + 10 sem
+  share1_status: ShareStatus;
+  share1_owner_id: string | null;
+  share1_price: number;
+  // Share 2: 2ª quincena Julio + 10 sem
+  share2_status: ShareStatus;
+  share2_owner_id: string | null;
+  share2_price: number;
+  // Share 3: 1ª quincena Agosto + 10 sem
+  share3_status: ShareStatus;
+  share3_owner_id: string | null;
+  share3_price: number;
+  // Share 4: 2ª quincena Agosto + 10 sem
+  share4_status: ShareStatus;
+  share4_owner_id: string | null;
+  share4_price: number;
 }
 
 const FEATURES = [
@@ -56,7 +68,7 @@ const FEATURES = [
   { key: 'parking_gratuito', label: 'Parking gratuito', icon: <FaParking className="inline mr-2 text-gray-700" /> },
 ];
 
-const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) => {
+const PropertyForm: FC<{ isEditing?: boolean }> = ({ isEditing = false }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -64,8 +76,13 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
   const [uploadingImages, setUploadingImages] = useState(false);
   const [property, setProperty] = useState<Property | null>(null);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
-  const [agents, setAgents] = useState<{ id: string; name: string; email: string }[]>([]);
+  const [agents, setAgents] = useState<{ id: string; name: string; email: string; phone: string }[]>([]);
   const [agentQuery, setAgentQuery] = useState('');
+  const [owners, setOwners] = useState<{ id: string; name: string; email: string; phone: string }[]>([]);
+  const [ownerQuery1, setOwnerQuery1] = useState('');
+  const [ownerQuery2, setOwnerQuery2] = useState('');
+  const [ownerQuery3, setOwnerQuery3] = useState('');
+  const [ownerQuery4, setOwnerQuery4] = useState('');
 
   useEffect(() => {
     if (!authLoading && user && !isEditing) {
@@ -80,11 +97,21 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
         area: 0,
         location: '',
         user_id: user.id,
-        share1_status: 'disponible',
-        share2_status: 'disponible',
-        share3_status: 'disponible',
-        share4_status: 'disponible',
+        agent_id: null,
         features: [],
+        // Inicializar los shares
+        share1_status: 'disponible',
+        share1_owner_id: null,
+        share1_price: 0,
+        share2_status: 'disponible',
+        share2_owner_id: null,
+        share2_price: 0,
+        share3_status: 'disponible',
+        share3_owner_id: null,
+        share3_price: 0,
+        share4_status: 'disponible',
+        share4_owner_id: null,
+        share4_price: 0
       });
     }
   }, [user, authLoading, isEditing]);
@@ -99,22 +126,44 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
     fetchAgents();
   }, []);
 
+  useEffect(() => {
+    fetchOwners();
+  }, []);
+
   const fetchProperty = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: propertyData, error: propertyError } = await supabase
         .from('properties')
         .select('*')
         .eq('id', id)
         .single();
 
-      if (error) throw error;
-      if (data) {
+      if (propertyError) throw propertyError;
+      if (propertyData) {
         setProperty({
-          ...data,
+          ...propertyData,
           user_id: user?.id || null
         });
-        if (data.images) {
-          setPreviewImages(data.images);
+        if (propertyData.images) {
+          setPreviewImages(propertyData.images);
+        }
+        
+        // Inicializar los campos de búsqueda con los nombres de los propietarios
+        if (propertyData.share1_owner_id) {
+          const owner = owners.find(o => o.id === propertyData.share1_owner_id);
+          if (owner) setOwnerQuery1(owner.name);
+        }
+        if (propertyData.share2_owner_id) {
+          const owner = owners.find(o => o.id === propertyData.share2_owner_id);
+          if (owner) setOwnerQuery2(owner.name);
+        }
+        if (propertyData.share3_owner_id) {
+          const owner = owners.find(o => o.id === propertyData.share3_owner_id);
+          if (owner) setOwnerQuery3(owner.name);
+        }
+        if (propertyData.share4_owner_id) {
+          const owner = owners.find(o => o.id === propertyData.share4_owner_id);
+          if (owner) setOwnerQuery4(owner.name);
         }
       }
     } catch (error) {
@@ -129,10 +178,32 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
 
   const fetchAgents = async () => {
     const { data, error } = await supabase
-      .from('agents')
-      .select('id, name, email')
-      .order('name');
-    if (!error && data) setAgents(data);
+      .from('real_estate_agents')
+      .select('id, first_name, last_name, email, phone')
+      .order('first_name');
+    if (!error && data) {
+      setAgents(data.map(agent => ({
+        id: agent.id,
+        name: `${agent.first_name} ${agent.last_name}`,
+        email: agent.email,
+        phone: agent.phone
+      })));
+    }
+  };
+
+  const fetchOwners = async () => {
+    const { data, error } = await supabase
+      .from('property_owners')
+      .select('id, first_name, last_name, email, phone')
+      .order('first_name');
+    if (!error && data) {
+      setOwners(data.map(owner => ({
+        id: owner.id,
+        name: `${owner.first_name} ${owner.last_name}`,
+        email: owner.email,
+        phone: owner.phone || ''
+      })));
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,25 +320,27 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
 
     setLoading(true);
     try {
-      const propertyData = {
+      // Calculamos los precios de los shares basados en el precio total
+      const propertyToSave = {
         ...property,
-        user_id: user.id,
-        features: property.features && property.features.length > 0 ? property.features : [],
+        share1_price: property.price * 0.25,
+        share2_price: property.price * 0.25,
+        share3_price: property.price * 0.25,
+        share4_price: property.price * 0.25,
+        features: property.features && property.features.length > 0 ? property.features : []
       };
 
-      if (isEditing) {
+      if (isEditing && id) {
         const { error } = await supabase
           .from('properties')
-          .update(propertyData)
+          .update(propertyToSave)
           .eq('id', id);
 
         if (error) throw error;
       } else {
-        // Cuando creamos una nueva propiedad, omitimos el id
-        const { id, ...newPropertyData } = propertyData;
         const { error } = await supabase
           .from('properties')
-          .insert([newPropertyData]);
+          .insert([propertyToSave]);
 
         if (error) throw error;
       }
@@ -359,8 +432,8 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="disponible">Disponible</SelectItem>
-                        <SelectItem value="reservado">Reservado</SelectItem>
-                        <SelectItem value="vendido">Vendido</SelectItem>
+                        <SelectItem value="reservada">Reservada</SelectItem>
+                        <SelectItem value="vendida">Vendida</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -371,8 +444,12 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                       <div>
                         <Label htmlFor="share1">1º quincena Julio + 10 sem</Label>
                         <Select
-                          value={property.share1_status || ''}
-                          onValueChange={(value) => setProperty({ ...property, share1_status: value as ShareStatus })}
+                          value={property.share1_status}
+                          onValueChange={(value) => setProperty({ 
+                            ...property, 
+                            share1_status: value as ShareStatus,
+                            share1_price: property.price * 0.25 
+                          })}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Selecciona estado" />
@@ -383,13 +460,61 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                             <SelectItem value="vendida">Vendida</SelectItem>
                           </SelectContent>
                         </Select>
+                        {(property.share1_status === 'reservada' || property.share1_status === 'vendida') && (
+                          <div className="mt-2">
+                            <Label>Propietario</Label>
+                            <Command>
+                              <CommandInput
+                                placeholder="Buscar propietario..."
+                                value={ownerQuery1}
+                                onValueChange={setOwnerQuery1}
+                              />
+                              <CommandList>
+                                {owners.filter(o =>
+                                  o.name.toLowerCase().includes(ownerQuery1.toLowerCase())
+                                ).length === 0 && (
+                                  <CommandEmpty>No hay propietarios</CommandEmpty>
+                                )}
+                                {owners.filter(o =>
+                                  o.name.toLowerCase().includes(ownerQuery1.toLowerCase())
+                                ).map(owner => (
+                                  <CommandItem
+                                    key={owner.id}
+                                    onSelect={() => {
+                                      setProperty({ ...property, share1_owner_id: owner.id });
+                                      setOwnerQuery1(owner.name);
+                                    }}
+                                    value={owner.id}
+                                  >
+                                    {owner.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandList>
+                            </Command>
+                            {property.share1_owner_id && (
+                              <div className="text-sm text-gray-500 mt-1">
+                                Propietario seleccionado: {owners.find(o => o.id === property.share1_owner_id)?.name}
+                                <Button type="button" size="sm" variant="ghost" onClick={() => {
+                                  setProperty({ ...property, share1_owner_id: null });
+                                  setOwnerQuery1('');
+                                }}>
+                                  Quitar
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <div>
                         <Label htmlFor="share2">2ª quincena Julio + 10 sem</Label>
                         <Select
-                          value={property.share2_status || ''}
-                          onValueChange={(value) => setProperty({ ...property, share2_status: value as ShareStatus })}
+                          value={property.share2_status}
+                          onValueChange={(value) => setProperty({ 
+                            ...property, 
+                            share2_status: value as ShareStatus,
+                            share2_price: property.price * 0.25 
+                          })}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Selecciona estado" />
@@ -400,13 +525,61 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                             <SelectItem value="vendida">Vendida</SelectItem>
                           </SelectContent>
                         </Select>
+                        {(property.share2_status === 'reservada' || property.share2_status === 'vendida') && (
+                          <div className="mt-2">
+                            <Label>Propietario</Label>
+                            <Command>
+                              <CommandInput
+                                placeholder="Buscar propietario..."
+                                value={ownerQuery2}
+                                onValueChange={setOwnerQuery2}
+                              />
+                              <CommandList>
+                                {owners.filter(o =>
+                                  o.name.toLowerCase().includes(ownerQuery2.toLowerCase())
+                                ).length === 0 && (
+                                  <CommandEmpty>No hay propietarios</CommandEmpty>
+                                )}
+                                {owners.filter(o =>
+                                  o.name.toLowerCase().includes(ownerQuery2.toLowerCase())
+                                ).map(owner => (
+                                  <CommandItem
+                                    key={owner.id}
+                                    onSelect={() => {
+                                      setProperty({ ...property, share2_owner_id: owner.id });
+                                      setOwnerQuery2(owner.name);
+                                    }}
+                                    value={owner.id}
+                                  >
+                                    {owner.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandList>
+                            </Command>
+                            {property.share2_owner_id && (
+                              <div className="text-sm text-gray-500 mt-1">
+                                Propietario seleccionado: {owners.find(o => o.id === property.share2_owner_id)?.name}
+                                <Button type="button" size="sm" variant="ghost" onClick={() => {
+                                  setProperty({ ...property, share2_owner_id: null });
+                                  setOwnerQuery2('');
+                                }}>
+                                  Quitar
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <div>
                         <Label htmlFor="share3">1º quincena Agosto + 10 sem</Label>
                         <Select
-                          value={property.share3_status || ''}
-                          onValueChange={(value) => setProperty({ ...property, share3_status: value as ShareStatus })}
+                          value={property.share3_status}
+                          onValueChange={(value) => setProperty({ 
+                            ...property, 
+                            share3_status: value as ShareStatus,
+                            share3_price: property.price * 0.25 
+                          })}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Selecciona estado" />
@@ -417,13 +590,61 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                             <SelectItem value="vendida">Vendida</SelectItem>
                           </SelectContent>
                         </Select>
+                        {(property.share3_status === 'reservada' || property.share3_status === 'vendida') && (
+                          <div className="mt-2">
+                            <Label>Propietario</Label>
+                            <Command>
+                              <CommandInput
+                                placeholder="Buscar propietario..."
+                                value={ownerQuery3}
+                                onValueChange={setOwnerQuery3}
+                              />
+                              <CommandList>
+                                {owners.filter(o =>
+                                  o.name.toLowerCase().includes(ownerQuery3.toLowerCase())
+                                ).length === 0 && (
+                                  <CommandEmpty>No hay propietarios</CommandEmpty>
+                                )}
+                                {owners.filter(o =>
+                                  o.name.toLowerCase().includes(ownerQuery3.toLowerCase())
+                                ).map(owner => (
+                                  <CommandItem
+                                    key={owner.id}
+                                    onSelect={() => {
+                                      setProperty({ ...property, share3_owner_id: owner.id });
+                                      setOwnerQuery3(owner.name);
+                                    }}
+                                    value={owner.id}
+                                  >
+                                    {owner.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandList>
+                            </Command>
+                            {property.share3_owner_id && (
+                              <div className="text-sm text-gray-500 mt-1">
+                                Propietario seleccionado: {owners.find(o => o.id === property.share3_owner_id)?.name}
+                                <Button type="button" size="sm" variant="ghost" onClick={() => {
+                                  setProperty({ ...property, share3_owner_id: null });
+                                  setOwnerQuery3('');
+                                }}>
+                                  Quitar
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <div>
                         <Label htmlFor="share4">2ª quincena Agosto + 10 sem</Label>
                         <Select
-                          value={property.share4_status || ''}
-                          onValueChange={(value) => setProperty({ ...property, share4_status: value as ShareStatus })}
+                          value={property.share4_status}
+                          onValueChange={(value) => setProperty({ 
+                            ...property, 
+                            share4_status: value as ShareStatus,
+                            share4_price: property.price * 0.25 
+                          })}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Selecciona estado" />
@@ -434,6 +655,50 @@ const PropertyForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) 
                             <SelectItem value="vendida">Vendida</SelectItem>
                           </SelectContent>
                         </Select>
+                        {(property.share4_status === 'reservada' || property.share4_status === 'vendida') && (
+                          <div className="mt-2">
+                            <Label>Propietario</Label>
+                            <Command>
+                              <CommandInput
+                                placeholder="Buscar propietario..."
+                                value={ownerQuery4}
+                                onValueChange={setOwnerQuery4}
+                              />
+                              <CommandList>
+                                {owners.filter(o =>
+                                  o.name.toLowerCase().includes(ownerQuery4.toLowerCase())
+                                ).length === 0 && (
+                                  <CommandEmpty>No hay propietarios</CommandEmpty>
+                                )}
+                                {owners.filter(o =>
+                                  o.name.toLowerCase().includes(ownerQuery4.toLowerCase())
+                                ).map(owner => (
+                                  <CommandItem
+                                    key={owner.id}
+                                    onSelect={() => {
+                                      setProperty({ ...property, share4_owner_id: owner.id });
+                                      setOwnerQuery4(owner.name);
+                                    }}
+                                    value={owner.id}
+                                  >
+                                    {owner.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandList>
+                            </Command>
+                            {property.share4_owner_id && (
+                              <div className="text-sm text-gray-500 mt-1">
+                                Propietario seleccionado: {owners.find(o => o.id === property.share4_owner_id)?.name}
+                                <Button type="button" size="sm" variant="ghost" onClick={() => {
+                                  setProperty({ ...property, share4_owner_id: null });
+                                  setOwnerQuery4('');
+                                }}>
+                                  Quitar
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

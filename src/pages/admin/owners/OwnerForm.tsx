@@ -3,8 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import { HiOutlineUserCircle, HiOutlinePhoto } from 'react-icons/hi2';
 
 const OwnerForm = () => {
@@ -21,15 +19,9 @@ const OwnerForm = () => {
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [properties, setProperties] = useState<any[]>([]);
-  const [selectedProperty, setSelectedProperty] = useState<any | null>(null);
-  const [selectedShare, setSelectedShare] = useState<string>('');
-  const [action, setAction] = useState<'reservar' | 'comprar' | ''>('');
-  const [sharePrice, setSharePrice] = useState<number>(0);
 
   useEffect(() => {
     if (id) fetchOwner();
-    fetchProperties();
   }, [id]);
 
   const fetchOwner = async () => {
@@ -42,35 +34,6 @@ const OwnerForm = () => {
     if (data) setOwner(data);
     setLoading(false);
   };
-
-  const fetchProperties = async () => {
-    const { data } = await supabase
-      .from('properties')
-      .select('*');
-    // Filtrar propiedades con al menos una copropiedad disponible
-    const filtered = (data || []).filter((p: any) =>
-      ['share1_status','share2_status','share3_status','share4_status'].some(s => p[s] === 'disponible')
-    );
-    setProperties(filtered);
-  };
-
-  // Cuando se selecciona una propiedad, limpiar selección de copropiedad y acción
-  useEffect(() => {
-    setSelectedShare('');
-    setAction('');
-    setSharePrice(0);
-    if (selectedProperty && selectedProperty.id) {
-      // Opcional: podrías cargar detalles si necesitas
-    }
-  }, [selectedProperty]);
-
-  // Cuando se selecciona una copropiedad, calcular el precio
-  useEffect(() => {
-    if (!selectedProperty || !selectedShare) return;
-    const idx = ['share1','share2','share3','share4'].findIndex(s => s === selectedShare);
-    const price = selectedProperty[`${selectedShare}_price`] ?? (selectedProperty.price/4);
-    setSharePrice(price);
-  }, [selectedShare, selectedProperty]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setOwner({ ...owner, [e.target.name]: e.target.value });
@@ -116,46 +79,16 @@ const OwnerForm = () => {
     setLoading(true);
     try {
       const ownerData = { ...owner, photo_url: photoUrl || null };
-      let result, ownerId;
+      let result;
       if (id) {
         result = await supabase
           .from('property_owners')
           .update(ownerData)
           .eq('id', id);
-        ownerId = id;
       } else {
         result = await supabase
           .from('property_owners')
-          .insert([ownerData])
-          .select('id')
-          .single();
-        ownerId = result.data?.id;
-      }
-      if (!result.error && ownerId && selectedProperty && selectedShare && action) {
-        // Insertar en shares
-        const { error: shareError } = await supabase
-          .from('shares')
-          .insert([
-            {
-              owner_id: ownerId,
-              property_id: selectedProperty.id,
-              copropiedad_id: selectedShare, // Ajusta si el campo es diferente
-              status: action === 'reservar' ? 'reservada' : 'vendida',
-              price: sharePrice,
-              percentage: 25 // O el valor correspondiente
-            }
-          ]);
-        // Actualizar el estado de la copropiedad en properties
-        const statusField = `${selectedShare}_status`;
-        const { error: propertyError } = await supabase
-          .from('properties')
-          .update({ [statusField]: action === 'reservar' ? 'reservada' : 'vendida' })
-          .eq('id', selectedProperty.id);
-        if (shareError || propertyError) {
-          toast({ title: 'Error', description: 'No se pudo asignar la copropiedad', variant: 'destructive' });
-          setLoading(false);
-          return;
-        }
+          .insert([ownerData]);
       }
       if (!result.error) {
         toast({ title: 'Éxito', description: 'Propietario guardado correctamente' });
@@ -175,66 +108,6 @@ const OwnerForm = () => {
       <h1 className="text-2xl font-bold mb-4">{id ? 'Editar Propietario' : 'Nuevo Propietario'}</h1>
       <form className="space-y-4" onSubmit={handleSubmit}>
         <div>
-          <Label className="block mb-1 font-medium">Propiedad</Label>
-          <Select value={selectedProperty?.id || ''} onValueChange={val => {
-            const prop = properties.find(p => p.id === val);
-            setSelectedProperty(prop || null);
-          }}>
-            <SelectTrigger className="w-full border rounded px-3 py-2">
-              <SelectValue placeholder="Selecciona una propiedad" />
-            </SelectTrigger>
-            <SelectContent>
-              {properties.map(p => (
-                <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {selectedProperty && (
-          <div>
-            <Label className="block mb-1 font-medium">Copropiedad</Label>
-            <Select value={selectedShare} onValueChange={setSelectedShare}>
-              <SelectTrigger className="w-full border rounded px-3 py-2">
-                <SelectValue placeholder="Selecciona una copropiedad" />
-              </SelectTrigger>
-              <SelectContent>
-                {['share1','share2','share3','share4'].map((share, idx) => (
-                  selectedProperty[`${share}_status`] === 'disponible' && (
-                    <SelectItem key={share} value={share}>
-                      {['1º quincena Julio + 10 sem','2ª quincena Julio + 10 sem','1º quincena Agosto + 10 sem','2ª quincena Agosto + 10 sem'][idx]}
-                    </SelectItem>
-                  )
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        {selectedShare && (
-          <div>
-            <Label className="block mb-1 font-medium">Acción</Label>
-            <Select value={action} onValueChange={val => setAction(val as 'reservar' | 'comprar')}>
-              <SelectTrigger className="w-full border rounded px-3 py-2">
-                <SelectValue placeholder="Reservar o Comprar" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="reservar">Reservar (10%)</SelectItem>
-                <SelectItem value="comprar">Comprar (100%)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        {action && (
-          <div>
-            <Label className="block mb-1 font-medium">Importe</Label>
-            <input
-              type="text"
-              className="w-full border rounded px-3 py-2 bg-gray-100"
-              value={action === 'reservar' ? Math.round(sharePrice * 0.1) : sharePrice}
-              readOnly
-            />
-          </div>
-        )}
-        <div>
           <label className="block mb-1 font-medium">Nombre</label>
           <input type="text" name="first_name" value={owner.first_name} onChange={handleChange} className="w-full border rounded px-3 py-2" required />
         </div>
@@ -250,48 +123,46 @@ const OwnerForm = () => {
           <label className="block mb-1 font-medium">Teléfono</label>
           <input type="tel" name="phone" value={owner.phone} onChange={handleChange} className="w-full border rounded px-3 py-2" required />
         </div>
-        <div className="flex flex-col items-center mb-4">
-          <div className="relative">
-            {photoUrl ? (
-              <>
-                <img
-                  src={photoUrl}
-                  alt="Avatar"
-                  className="w-24 h-24 rounded-full object-cover border-2 border-gray-300"
-                />
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="destructive"
-                  className="absolute top-0 right-0 z-10"
-                  onClick={handleRemovePhoto}
-                >
-                  ×
-                </Button>
-              </>
-            ) : (
-              <HiOutlineUserCircle className="w-24 h-24 text-gray-300" />
-            )}
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            className="mt-2"
-            disabled={uploadingPhoto}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <HiOutlinePhoto className="h-5 w-5 mr-2" />
-            {uploadingPhoto ? 'Subiendo...' : 'Subir Foto'}
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handlePhotoUpload}
-            disabled={uploadingPhoto}
-          />
+        <div className="relative">
+          {photoUrl ? (
+            <>
+              <img
+                src={photoUrl}
+                alt="Avatar"
+                className="w-24 h-24 rounded-full object-cover border-2 border-gray-300"
+              />
+              <Button
+                type="button"
+                size="icon"
+                variant="destructive"
+                className="absolute top-0 right-0 z-10"
+                onClick={handleRemovePhoto}
+              >
+                ×
+              </Button>
+            </>
+          ) : (
+            <HiOutlineUserCircle className="w-24 h-24 text-gray-300" />
+          )}
         </div>
+        <Button
+          type="button"
+          variant="outline"
+          className="mt-2"
+          disabled={uploadingPhoto}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <HiOutlinePhoto className="h-5 w-5 mr-2" />
+          {uploadingPhoto ? 'Subiendo...' : 'Subir Foto'}
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handlePhotoUpload}
+          disabled={uploadingPhoto}
+        />
         <Button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded" disabled={loading}>
           {loading ? 'Guardando...' : 'Guardar'}
         </Button>
