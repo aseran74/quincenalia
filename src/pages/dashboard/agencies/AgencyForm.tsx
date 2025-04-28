@@ -154,13 +154,27 @@ const AgencyForm: React.FC<AgencyFormProps> = ({ isEditing = false }) => {
           .eq('id', id);
         if (error) throw error;
       } else {
+        // 1. Crea usuario en Auth
+        const password = Math.random().toString(36).slice(-8) + 'Aa1!';
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: agency.email,
+          password,
+        });
+        if (signUpError || !signUpData.user) {
+          toast({ title: 'Error', description: 'No se pudo crear el usuario Auth: ' + (signUpError?.message || 'Error desconocido'), variant: 'destructive' });
+          setLoading(false);
+          return;
+        }
+        const user_id = signUpData.user.id;
+        // 2. Crea la agencia con el user_id
         const { data, error } = await supabase
           .from('real_estate_agencies')
-          .insert([agency])
+          .insert([{ ...agency, user_id }])
           .select('id')
           .single();
         if (error) throw error;
         agencyId = data.id;
+        toast({ title: 'Usuario creado', description: `Contraseña temporal: ${password}` });
       }
       await supabase
         .from('real_estate_agents')

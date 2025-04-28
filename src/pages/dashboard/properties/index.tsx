@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Routes, Route } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import ReservationCalendar from './ReservationCalendar';
+import PropertyDetail from './PropertyDetail';
 
 interface Property {
   id: string;
@@ -92,46 +94,52 @@ const PropertiesPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Propiedades</h1>
-        <div className="flex space-x-4">
-          <Button onClick={() => navigate('/dashboard/properties/copropiedades')}>
-            Gestionar Copropiedades
-          </Button>
-          <Button onClick={() => navigate('/dashboard/properties/bulk-upload')}>
-            Carga Masiva
-          </Button>
-          <Button onClick={() => navigate('/dashboard/properties/new')}>
-            <Plus className="h-5 w-5 mr-2" />
-            Nueva Propiedad
-          </Button>
-        </div>
-      </div>
-
-      {properties.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">No hay propiedades registradas</p>
-          <div className="flex justify-center space-x-4">
-            <Button onClick={() => navigate('/dashboard/properties/new')}>
-              Agregar Primera Propiedad
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/dashboard/properties/bulk-upload')}
-            >
-              Importar Propiedades
-            </Button>
+    <Routes>
+      <Route path="reservas" element={<ReservationCalendar />} />
+      <Route index element={
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">Propiedades</h1>
+            <div className="flex space-x-4">
+              <Button onClick={() => navigate('/dashboard/properties/copropiedades')}>
+                Gestionar Copropiedades
+              </Button>
+              <Button onClick={() => navigate('/dashboard/properties/bulk-upload')}>
+                Carga Masiva
+              </Button>
+              <Button onClick={() => navigate('/dashboard/properties/new')}>
+                <Plus className="h-5 w-5 mr-2" />
+                Nueva Propiedad
+              </Button>
+            </div>
           </div>
+
+          {properties.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 mb-4">No hay propiedades registradas</p>
+              <div className="flex justify-center space-x-4">
+                <Button onClick={() => navigate('/dashboard/properties/new')}>
+                  Agregar Primera Propiedad
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/dashboard/properties/bulk-upload')}
+                >
+                  Importar Propiedades
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {properties.map((property) => (
+                <PropertyCard key={property.id} property={property} />
+              ))}
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {properties.map((property) => (
-            <PropertyCard key={property.id} property={property} />
-          ))}
-        </div>
-      )}
-    </div>
+      } />
+      <Route path=":id" element={<PropertyDetail />} />
+    </Routes>
   );
 };
 

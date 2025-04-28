@@ -147,6 +147,10 @@ function PropertyMap({ address }: { address: string }) {
   );
 }
 
+function isUUID(str: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+}
+
 const PropertyDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -163,8 +167,13 @@ const PropertyDetail = () => {
   });
 
   useEffect(() => {
+    if (!id || !isUUID(id)) return;
     fetchProperty();
   }, [id]);
+
+  if (!id || !isUUID(id)) {
+    return <div className="p-8 text-center text-red-500">ID de propiedad no válido</div>;
+  }
 
   const fetchProperty = async () => {
     try {

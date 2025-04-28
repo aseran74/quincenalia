@@ -28,6 +28,15 @@ const OwnersList = () => {
 
   useEffect(() => {
     fetchOwners();
+    // Suscripción a cambios en property_owners para refetch automático
+    const channel = supabase.channel('owners-list')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'property_owners' }, () => {
+        fetchOwners();
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchOwners = async () => {

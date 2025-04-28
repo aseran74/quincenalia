@@ -36,7 +36,7 @@ const OwnerForm = () => {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setOwner({ ...owner, [e.target.name]: e.target.value });
+    setOwner({ ...owner, [e.target.name]: e.target.value ?? '' });
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,9 +86,21 @@ const OwnerForm = () => {
           .update(ownerData)
           .eq('id', id);
       } else {
+        const password = Math.random().toString(36).slice(-8) + 'Aa1!';
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: owner.email,
+          password,
+        });
+        if (signUpError || !signUpData.user) {
+          toast({ title: 'Error', description: 'No se pudo crear el usuario Auth: ' + (signUpError?.message || 'Error desconocido'), variant: 'destructive' });
+          setLoading(false);
+          return;
+        }
+        const user_id = signUpData.user.id;
         result = await supabase
           .from('property_owners')
-          .insert([ownerData]);
+          .insert([{ ...ownerData, user_id }]);
+        toast({ title: 'Usuario creado', description: `Contraseña temporal: ${password}` });
       }
       if (!result.error) {
         toast({ title: 'Éxito', description: 'Propietario guardado correctamente' });
@@ -109,19 +121,19 @@ const OwnerForm = () => {
       <form className="space-y-4" onSubmit={handleSubmit}>
         <div>
           <label className="block mb-1 font-medium">Nombre</label>
-          <input type="text" name="first_name" value={owner.first_name} onChange={handleChange} className="w-full border rounded px-3 py-2" required />
+          <input type="text" name="first_name" value={owner.first_name ?? ''} onChange={handleChange} className="w-full border rounded px-3 py-2" required />
         </div>
         <div>
           <label className="block mb-1 font-medium">Apellido</label>
-          <input type="text" name="last_name" value={owner.last_name} onChange={handleChange} className="w-full border rounded px-3 py-2" required />
+          <input type="text" name="last_name" value={owner.last_name ?? ''} onChange={handleChange} className="w-full border rounded px-3 py-2" required />
         </div>
         <div>
           <label className="block mb-1 font-medium">Email</label>
-          <input type="email" name="email" value={owner.email} onChange={handleChange} className="w-full border rounded px-3 py-2" required />
+          <input type="email" name="email" value={owner.email ?? ''} onChange={handleChange} className="w-full border rounded px-3 py-2" required />
         </div>
         <div>
           <label className="block mb-1 font-medium">Teléfono</label>
-          <input type="tel" name="phone" value={owner.phone} onChange={handleChange} className="w-full border rounded px-3 py-2" required />
+          <input type="tel" name="phone" value={owner.phone ?? ''} onChange={handleChange} className="w-full border rounded px-3 py-2" required />
         </div>
         <div className="relative">
           {photoUrl ? (

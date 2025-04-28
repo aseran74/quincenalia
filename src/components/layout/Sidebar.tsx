@@ -29,6 +29,12 @@ const Sidebar: React.FC = () => {
       href: '/admin/owners',
       roles: ['admin']
     },
+    {
+      icon: <Calendar className="h-5 w-5" />,
+      title: 'Reservas Semanales',
+      href: '/dashboard/properties/reservas',
+      roles: ['admin', 'agency']
+    },
     { 
       icon: <Building className="h-5 w-5" />, 
       title: 'Agencias', 
@@ -65,9 +71,16 @@ const Sidebar: React.FC = () => {
       href: '/dashboard/incidents',
       roles: ['admin', 'owner']
     },
-    { 
-      icon: <User className="h-5 w-5" />, 
-      title: 'Perfil', 
+  
+    {
+      icon: <FileText className="h-5 w-5" />,
+      title: 'Comisiones',
+      href: '/dashboard/commissions',
+      roles: ['admin', 'agency']
+    },
+    {
+      icon: <User className="h-5 w-5" />,
+      title: 'Perfil',
       href: '/dashboard/profile',
       roles: ['admin', 'agency', 'agent', 'owner', 'interested']
     },
