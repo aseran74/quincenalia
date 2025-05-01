@@ -11,9 +11,26 @@ import AppLayout from '../components/layout/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'react-hot-toast';
 
+const getDashboardPath = (role: string) => {
+  switch (role) {
+    case 'admin':
+      return '/dashboard/admin';
+    case 'owner':
+      return '/dashboard/owner';
+    case 'agency':
+      return '/dashboard/agencies';
+    case 'agent':
+      return '/dashboard/agents';
+    case 'interested':
+      return '/dashboard';
+    default:
+      return '/dashboard';
+  }
+};
+
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, signup, isAuthenticated, loading } = useAuth();
+  const { login, signup, isAuthenticated, loading, user } = useAuth();
   const { toast: useToastToast } = useToast();
   const [loginData, setLoginData] = useState({
     email: '',
@@ -27,10 +44,10 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && !loading) {
-      navigate('/dashboard');
+    if (isAuthenticated && !loading && user) {
+      navigate(getDashboardPath(user.role));
     }
-  }, [isAuthenticated, loading, navigate]);
+  }, [isAuthenticated, loading, navigate, user]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

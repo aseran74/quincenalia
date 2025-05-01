@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Agent } from '@/pages/dashboard/mensajes/MessagesBoard';
-import { Owner } from './ChatSidebarOwners';
+import { Agent, Owner } from '@/pages/dashboard/mensajes/MessagesBoard';
 import { useAuth } from '@/context/AuthContext';
+import { User } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Message {
   id: string;
@@ -22,12 +23,10 @@ const MessageList: React.FC<MessageListProps> = ({ selectedAgent }) => {
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // --- Función para hacer scroll ---
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // --- Carga inicial de mensajes ---
   useEffect(() => {
     const fetchMessages = async () => {
       if (!selectedAgent?.user_id || !user?.id) return;
@@ -39,6 +38,7 @@ const MessageList: React.FC<MessageListProps> = ({ selectedAgent }) => {
           `and(sender_id.eq.${user.id},receiver_id.eq.${selectedAgent.user_id}),and(sender_id.eq.${selectedAgent.user_id},receiver_id.eq.${user.id})`
         )
         .order('created_at', { ascending: true });
+
       if (error) {
         setMessages([]);
       } else {
@@ -49,9 +49,9 @@ const MessageList: React.FC<MessageListProps> = ({ selectedAgent }) => {
     fetchMessages();
   }, [selectedAgent, user]);
 
-  // --- Suscripción a nuevos mensajes (Realtime) ---
   useEffect(() => {
     if (!user?.id || !selectedAgent?.user_id) return;
+    
     const channel = supabase.channel('private-messages')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, (payload) => {
         const msg = payload.new as Message;
@@ -66,57 +66,101 @@ const MessageList: React.FC<MessageListProps> = ({ selectedAgent }) => {
         }
       })
       .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
     };
   }, [selectedAgent, user]);
 
-  // --- useEffect para hacer scroll cuando cambian los mensajes ---
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // --- useEffect para hacer scroll cuando cambia el chat ---
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      scrollToBottom();
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [selectedAgent]);
-
   if (loading) {
-    return <div className="p-4 text-center text-gray-500">Cargando mensajes...</div>;
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (messages.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-gray-400">
+        <p className="text-center">No hay mensajes todavía.</p>
+        <p className="text-sm mt-2">¡Sé el primero en enviar un mensaje!</p>
+      </div>
+    );
   }
 
   return (
-    <div>
-      {messages.length === 0 ? (
-        <p className="text-center text-gray-400 py-4">No hay mensajes todavía.</p>
-      ) : (
-        messages.map((msg) => {
-          const isMe = msg.sender_id === user?.id;
-          return (
-            <div
-              key={msg.id}
-              className={`flex items-end gap-2 ${isMe ? 'justify-end' : ''}`}
-            >
-              {!isMe && (
-                <img src={
-                  (selectedAgent as Agent).photo_url || (selectedAgent as Owner).photo_url || 'https://randomuser.me/api/portraits/men/32.jpg'
-                } alt="Avatar" className="w-8 h-8 rounded-full" />
-              )}
-              <div>
-                <div className={`rounded px-3 py-2 shadow text-sm ${isMe ? 'bg-blue-500 text-white' : 'bg-white'}`}>{msg.content}</div>
-                <div className={`text-xs text-gray-400 mt-1 ${isMe ? 'text-right' : ''}`}>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+    <div className="space-y-4">
+      {messages.map((msg) => {
+        const isMe = msg.sender_id === user?.id;
+        return (
+          <div
+            key={msg.id}
+            className={cn(
+              "flex items-end gap-2",
+              isMe ? "justify-end" : "justify-start"
+            )}
+          >
+            {!isMe && (
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
+                {selectedAgent.photo_url ? (
+                  <img
+                    src={selectedAgent.photo_url}
+                    alt={`${selectedAgent.first_name} ${selectedAgent.last_name}`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-gray-400" />
+                  </div>
+                )}
               </div>
-              {isMe && (
-                <img src={user?.profileImage || 'https://randomuser.me/api/portraits/men/31.jpg'} alt="Avatar" className="w-8 h-8 rounded-full" />
-              )}
+            )}
+
+            <div className={cn(
+              "max-w-[75%] break-words",
+              isMe ? "items-end" : "items-start"
+            )}>
+              <div className={cn(
+                "px-4 py-2 rounded-2xl shadow-sm",
+                isMe ? "bg-blue-500 text-white rounded-br-none" : "bg-white border rounded-bl-none"
+              )}>
+                <p className="whitespace-pre-wrap">{msg.content}</p>
+              </div>
+              <p className={cn(
+                "text-xs mt-1",
+                isMe ? "text-right text-gray-400" : "text-gray-400"
+              )}>
+                {new Date(msg.created_at).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
             </div>
-          );
-        })
-      )}
-      <div ref={messagesEndRef} style={{ height: '1px' }} />
+
+            {isMe && (
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
+                {user?.profileImage ? (
+                  <img
+                    src={user.profileImage}
+                    alt="Mi avatar"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-gray-400" />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      <div ref={messagesEndRef} />
     </div>
   );
 };

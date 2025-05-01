@@ -1,12 +1,22 @@
 import { createClient } from '@supabase/supabase-js'
+import { API_CONFIG } from './config'
 
-const supabaseUrl = 'https://vpneiupvzsqzyrurcgmo.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwbmVpdXB2enNxenlydXJjZ21vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU1Nzk3MjUsImV4cCI6MjA2MTE1NTcyNX0.MwM55HG_n-j6YpDBoe-NqFsHhqp6o5IgeYniM6fn4nM'
+const supabaseUrl = API_CONFIG.SUPABASE_URL
+const supabaseAnonKey = API_CONFIG.SUPABASE_ANON_KEY
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export type ShareStatus = 'disponible' | 'reservada' | 'vendida'
 export type FeatureCategory = 'exterior' | 'interior' | 'servicios'
+
+export type NearbyService = 
+  | 'playa_cercana'
+  | 'supermercados'
+  | 'vida_nocturna'
+  | 'parques_naturales'
+  | 'deportes_nauticos'
+  | 'puerto_deportivo'
+  | 'farmacias'
 
 export type Agent = {
   id: string
@@ -39,6 +49,7 @@ export type Property = {
   agent_id: string
   agent?: Agent
   features?: Feature[]
+  nearby_services: NearbyService[]
   share1_price: number | null
   share1_status: ShareStatus
   share2_price: number | null
@@ -49,20 +60,83 @@ export type Property = {
   share4_status: ShareStatus
   created_at: string
   updated_at: string
+  latitude: number
+  longitude: number
 }
 
-export async function getProperties(): Promise<Property[]> {
-  const { data, error } = await supabase
+export interface PropertyFilters {
+  bedrooms?: number;
+  bathrooms?: number;
+  minArea?: number;
+  maxArea?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  location?: string;
+  features?: string[];
+  nearby_services?: NearbyService[];
+  isSharedProperty?: boolean;
+}
+
+export async function getProperties(filters?: PropertyFilters): Promise<Property[]> {
+  try {
+    // Primero intentamos obtener los datos de la API externa
+    const response = await fetch(API_CONFIG.PROPERTIES_API_URL);
+    if (response.ok) {
+      const externalData = await response.json();
+      // Aquí podrías transformar los datos si el formato es diferente
+      return externalData;
+    }
+  } catch (error) {
+    console.error('Error fetching from external API:', error);
+    // Si falla la API externa, usamos Supabase como respaldo
+  }
+
+  // Supabase como respaldo
+  let query = supabase
     .from('properties')
     .select(`
       *,
       agent:agents(*),
       features:property_features(features(*))
     `)
-    .order('created_at', { ascending: false })
+
+  // Aplicar filtros si existen
+  if (filters) {
+    if (filters.bedrooms) {
+      query = query.eq('bedrooms', filters.bedrooms)
+    }
+    if (filters.bathrooms) {
+      query = query.eq('bathrooms', filters.bathrooms)
+    }
+    if (filters.minArea) {
+      query = query.gte('area', filters.minArea)
+    }
+    if (filters.maxArea) {
+      query = query.lte('area', filters.maxArea)
+    }
+    if (filters.minPrice) {
+      query = query.gte('price', filters.minPrice)
+    }
+    if (filters.maxPrice) {
+      query = query.lte('price', filters.maxPrice)
+    }
+    if (filters.location) {
+      query = query.ilike('location', `%${filters.location}%`)
+    }
+    if (filters.isSharedProperty) {
+      query = query.not('share1_price', 'is', null)
+    }
+    if (filters.nearby_services && filters.nearby_services.length > 0) {
+      query = query.contains('nearby_services', filters.nearby_services)
+    }
+  }
+
+  query = query.order('created_at', { ascending: false })
+
+  const { data, error } = await query
 
   if (error) {
-    console.error('Error fetching properties:', error)
+    console.error('Error fetching properties from Supabase:', error)
     return []
   }
 

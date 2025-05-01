@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Routes, Route } from 'react-router-dom';
+import { useNavigate, Routes, Route, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,9 @@ import { Plus } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import ReservationCalendar from './ReservationCalendar';
 import PropertyDetail from './PropertyDetail';
+import { Card } from '@/components/ui/card';
+import { GeocodeProperties } from '@/components/GeocodeProperties';
+import type { Property } from '@/types/property';
 
 interface Property {
   id: string;

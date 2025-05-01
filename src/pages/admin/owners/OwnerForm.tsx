@@ -5,7 +5,11 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { HiOutlineUserCircle, HiOutlinePhoto } from 'react-icons/hi2';
 
-const OwnerForm = () => {
+interface OwnerFormProps {
+  isEditing?: boolean;
+}
+
+const OwnerForm: React.FC<OwnerFormProps> = ({ isEditing = false }) => {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -21,8 +25,8 @@ const OwnerForm = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (id) fetchOwner();
-  }, [id]);
+    if (isEditing && id) fetchOwner();
+  }, [id, isEditing]);
 
   const fetchOwner = async () => {
     setLoading(true);

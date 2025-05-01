@@ -8,6 +8,10 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { supabase } from '@/lib/supabase';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useAuth } from '@/context/AuthContext';
+import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from '@/components/ui/use-toast';
+import { cn } from '@/lib/utils';
 
 // --- Interfaces ---
 interface Property {
@@ -54,6 +58,9 @@ const localizer = dateFnsLocalizer({
 const Colores = ['#4f8cff', '#ffb84f', '#4fff8c', '#ff4f8c', '#8c4fff', '#ff7b4f', '#4fffc3'];
 
 const ReservationCalendar: React.FC = () => {
+  const { user } = useAuth();
+  const { id: propertyId } = useParams();
+  const navigate = useNavigate();
   const [propiedades, setPropiedades] = useState<Property[]>([]);
   const [propiedadSeleccionada, setPropiedadSeleccionada] = useState<Property | null>(null);
   const [propietarios, setPropietarios] = useState<Owner[]>([]);
@@ -64,117 +71,207 @@ const ReservationCalendar: React.FC = () => {
   const [loadingReservations, setLoadingReservations] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // --- Cargar Propiedades ---
+  // Cargar Propiedades
   useEffect(() => {
-    setLoadingProps(true);
-    setError(null);
-    supabase
-      .from('properties')
-      .select('id, title, share1_owner_id, share2_owner_id, share3_owner_id, share4_owner_id')
-      .then(({ data, error: dbError }) => {
-        if (dbError) {
-          setError('No se pudieron cargar las propiedades.');
-          setPropiedades([]);
-        } else {
-          setPropiedades(data || []);
+    const fetchProperties = async () => {
+      setLoadingProps(true);
+      setError(null);
+      try {
+        let query = supabase
+          .from('properties')
+          .select('id, title, share1_owner_id, share2_owner_id, share3_owner_id, share4_owner_id');
+
+        // Si es propietario, solo mostrar sus propiedades
+        if (user?.role === 'owner') {
+          query = query.or(`share1_owner_id.eq.${user.id},share2_owner_id.eq.${user.id},share3_owner_id.eq.${user.id},share4_owner_id.eq.${user.id}`);
         }
+
+        const { data, error: dbError } = await query;
+
+        if (dbError) throw dbError;
+
+        setPropiedades(data || []);
+
+        // Si hay un propertyId en la URL o el usuario es propietario con una sola propiedad
+        if (propertyId) {
+          const selectedProperty = data?.find(p => p.id === propertyId);
+          if (selectedProperty) {
+            setPropiedadSeleccionada(selectedProperty);
+          } else {
+            setError('Propiedad no encontrada');
+          }
+        } else if (user?.role === 'owner' && data && data.length === 1) {
+          // Si el usuario es propietario y solo tiene una propiedad, seleccionarla automáticamente
+          setPropiedadSeleccionada(data[0]);
+        }
+      } catch (error) {
+        console.error('Error al cargar propiedades:', error);
+        setError('No se pudieron cargar las propiedades.');
+        setPropiedades([]);
+      } finally {
         setLoadingProps(false);
-      });
-  }, []);
+      }
+    };
 
-  // --- Cargar Propietarios y Reservas cuando cambia la propiedad seleccionada ---
+    fetchProperties();
+  }, [propertyId, user]);
+
+  // Cargar Propietarios y Reservas cuando cambia la propiedad seleccionada
   useEffect(() => {
-    setPropietarios([]);
-    setReservas([]);
-    setOwnerSeleccionado(null);
-    setError(null);
-
     if (!propiedadSeleccionada) return;
 
-    setLoadingOwners(true);
-    setLoadingReservations(true);
+    const loadData = async () => {
+      setLoadingOwners(true);
+      setLoadingReservations(true);
+      setError(null);
 
-    const shares = [
-      { label: 'Share 1', owner_id: propiedadSeleccionada.share1_owner_id },
-      { label: 'Share 2', owner_id: propiedadSeleccionada.share2_owner_id },
-      { label: 'Share 3', owner_id: propiedadSeleccionada.share3_owner_id },
-      { label: 'Share 4', owner_id: propiedadSeleccionada.share4_owner_id },
-    ].filter(s => s.owner_id);
+      try {
+        // Cargar propietarios
+        const shares = [
+          { label: 'Share 1', owner_id: propiedadSeleccionada.share1_owner_id },
+          { label: 'Share 2', owner_id: propiedadSeleccionada.share2_owner_id },
+          { label: 'Share 3', owner_id: propiedadSeleccionada.share3_owner_id },
+          { label: 'Share 4', owner_id: propiedadSeleccionada.share4_owner_id },
+        ].filter(s => s.owner_id);
 
-    const ownerIds = shares.map(s => s.owner_id as string);
+        const ownerIds = shares.map(s => s.owner_id as string);
 
-    if (ownerIds.length === 0) {
-      setLoadingOwners(false);
-    } else {
-      supabase
-        .from('property_owners')
-        .select('id, first_name, last_name')
-        .in('id', ownerIds)
-        .then(({ data: ownersData, error: ownersError }) => {
-          if (ownersError) {
-            setError('No se pudieron cargar los propietarios.');
-            setPropietarios([]);
-          } else {
-            const propietariosConShare = shares
-              .map(share => {
-                const owner = (ownersData || []).find(o => o.id === share.owner_id);
-                return owner ? { ...owner, shareLabel: share.label } : undefined;
-              })
-              .filter((o): o is Owner => Boolean(o));
-            setPropietarios(propietariosConShare);
+        if (ownerIds.length > 0) {
+          const { data: ownersData, error: ownersError } = await supabase
+            .from('property_owners')
+            .select('id, first_name, last_name')
+            .in('id', ownerIds);
+
+          if (ownersError) throw ownersError;
+
+          const propietariosConShare = shares
+            .map(share => {
+              const owner = (ownersData || []).find(o => o.id === share.owner_id);
+              return owner ? { ...owner, shareLabel: share.label } : undefined;
+            })
+            .filter((o): o is Owner => Boolean(o));
+
+          setPropietarios(propietariosConShare);
+
+          // Si el usuario es propietario, seleccionar automáticamente su share
+          if (user?.role === 'owner') {
+            const userOwner = propietariosConShare.find(o => o.id === user.id);
+            if (userOwner) {
+              setOwnerSeleccionado(userOwner);
+            }
           }
-          setLoadingOwners(false);
-        });
-    }
-
-    supabase
-      .from('property_reservations')
-      .select('*')
-      .eq('property_id', propiedadSeleccionada.id)
-      .then(({ data: reservationsData, error: reservationsError }) => {
-        if (reservationsError) {
-          setError('No se pudieron cargar las reservas.');
-          setReservas([]);
-        } else {
-          setReservas(reservationsData || []);
         }
-        setLoadingReservations(false);
-      });
-  }, [propiedadSeleccionada]);
 
-  // --- Función para Reservar ---
+        // Cargar reservas
+        const { data: reservationsData, error: reservationsError } = await supabase
+          .from('property_reservations')
+          .select('*')
+          .eq('property_id', propiedadSeleccionada.id);
+
+        if (reservationsError) throw reservationsError;
+        setReservas(reservationsData || []);
+
+      } catch (error) {
+        console.error('Error al cargar datos:', error);
+        setError('Error al cargar los datos de la propiedad');
+      } finally {
+        setLoadingOwners(false);
+        setLoadingReservations(false);
+      }
+    };
+
+    loadData();
+  }, [propiedadSeleccionada, user]);
+
+  // Verificar permisos para la propiedad seleccionada
+  const canManageReservations = (property: Property | null) => {
+    if (!user || !property) return false;
+    if (user.role === 'admin') return true;
+    if (user.role === 'owner') {
+      return [
+        property.share1_owner_id,
+        property.share2_owner_id,
+        property.share3_owner_id,
+        property.share4_owner_id
+      ].includes(user.id);
+    }
+    return false;
+  };
+
+  // Función para Reservar
   const reservarSemana = async ({ start, end }: { start: Date, end: Date }) => {
     if (!ownerSeleccionado || !propiedadSeleccionada) {
-      alert('Selecciona una propiedad y un propietario para reservar.');
+      toast({
+        title: 'Error',
+        description: 'Selecciona una propiedad y un propietario para reservar.',
+        variant: 'destructive'
+      });
       return;
     }
+
+    if (!canManageReservations(propiedadSeleccionada)) {
+      toast({
+        title: 'Error',
+        description: 'No tienes permisos para gestionar las reservas de esta propiedad',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setError(null);
     try {
-      const { error: upsertError } = await supabase.from('property_reservations').upsert([
-        {
+      // Verificar conflictos
+      const conflictingReservations = reservas.filter(res => {
+        const resStart = new Date(res.start_date);
+        const resEnd = new Date(res.end_date);
+        return (
+          (start >= resStart && start <= resEnd) ||
+          (end >= resStart && end <= resEnd) ||
+          (start <= resStart && end >= resEnd)
+        );
+      });
+
+      if (conflictingReservations.length > 0) {
+        toast({
+          title: 'Error',
+          description: 'Ya existe una reserva en ese rango de fechas',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      const { error: upsertError } = await supabase
+        .from('property_reservations')
+        .upsert([{
           property_id: propiedadSeleccionada.id,
           owner_id: ownerSeleccionado.id,
           start_date: format(start, 'yyyy-MM-dd'),
           end_date: format(end, 'yyyy-MM-dd'),
-        },
-      ], { onConflict: 'property_id, start_date' });
+        }]);
 
       if (upsertError) throw upsertError;
 
-      setLoadingReservations(true);
+      // Recargar reservas
       const { data: updatedReservations, error: fetchError } = await supabase
         .from('property_reservations')
         .select('*')
         .eq('property_id', propiedadSeleccionada.id);
 
       if (fetchError) throw fetchError;
-
       setReservas(updatedReservations || []);
 
+      toast({
+        title: 'Éxito',
+        description: 'Reserva creada correctamente'
+      });
+
     } catch (err: any) {
-      setError(`Error al guardar la reserva: ${err.message}`);
-    } finally {
-      setLoadingReservations(false);
+      console.error('Error al crear reserva:', err);
+      toast({
+        title: 'Error',
+        description: 'No se pudo crear la reserva',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -234,34 +331,54 @@ const ReservationCalendar: React.FC = () => {
 
   // --- Renderizado ---
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>Reservar semanas por Propietario</h2>
-
-      {/* Selector de Propiedad */}
-      <div style={{ marginBottom: '20px' }}>
-        <label htmlFor="property-select" style={{ marginRight: '10px' }}>Propiedad:</label>
-        <select
-          id="property-select"
-          value={propiedadSeleccionada?.id || ''}
-          onChange={e => {
-            const propId = e.target.value;
-            const prop = propiedades.find(p => p.id === propId) || null;
-            setPropiedadSeleccionada(prop);
-          }}
-          disabled={loadingProps}
-          style={{ padding: '8px', minWidth: '200px' }}
-        >
-          <option value="">{loadingProps ? 'Cargando...' : '-- Selecciona una propiedad --'}</option>
-          {propiedades.map(p => (
-            <option key={p.id} value={p.id}>{p.title}</option>
-          ))}
-        </select>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">
+          {user?.role === 'owner' ? 'Mis Reservas' : 'Calendario de Reservas'}
+        </h1>
+        {user?.role === 'admin' && (
+          <button
+            onClick={() => navigate('/dashboard/admin/properties')}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Volver a Propiedades
+          </button>
+        )}
       </div>
 
-      {error && <div style={{ color: 'red', marginBottom: '15px' }}>Error: {error}</div>}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
 
-      {/* Selector de Propietarios */}
-      {propiedadSeleccionada && (loadingOwners || propietarios.length > 0) && (
+      {/* Selector de Propiedad (solo si no hay propertyId en la URL y el usuario no es propietario o tiene múltiples propiedades) */}
+      {!propertyId && !(user?.role === 'owner' && propiedades.length === 1) && (
+        <div className="mb-6">
+          <label className="block mb-2 font-medium">Seleccionar Propiedad:</label>
+          <select
+            className="w-full md:w-1/2 p-2 border rounded"
+            value={propiedadSeleccionada?.id || ''}
+            onChange={e => {
+              const prop = propiedades.find(p => p.id === e.target.value);
+              setPropiedadSeleccionada(prop || null);
+              if (prop) {
+                navigate(`/dashboard/admin/properties/${prop.id}/reservations`);
+              }
+            }}
+            disabled={loadingProps}
+          >
+            <option value="">
+              {loadingProps ? 'Cargando...' : '-- Selecciona una propiedad --'}
+            </option>
+            {propiedades.map(p => (
+              <option key={p.id} value={p.id}>{p.title}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {propiedadSeleccionada && (loadingOwners || propietarios.length > 0) && user?.role === 'admin' && (
         <div style={{ marginBottom: '20px' }}>
           <h3>Selecciona Propietario para Reservar:</h3>
            {loadingOwners ? <p>Cargando propietarios...</p> :
@@ -294,38 +411,38 @@ const ReservationCalendar: React.FC = () => {
       )}
 
       {propiedadSeleccionada && (
-        <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start' }}>
+        <div className="flex flex-col lg:flex-row gap-8">
           {/* Columna 1: Histórico y resumen */}
-          <div style={{ flex: 1, background: '#fff', borderRadius: 8, boxShadow: '0 1px 4px #0001', padding: 16, border: '1px solid #eee' }}>
-            <h3 style={{ fontWeight: 600, marginBottom: 12 }}>Histórico de reservas</h3>
+          <div className="w-full lg:w-1/3 bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+            <h3 className="font-semibold mb-3">Histórico de reservas</h3>
             {/* Resumen */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 16 }}>
-              <div style={{ background: '#e0e7ff', borderRadius: 6, padding: 8, textAlign: 'center' }}>
-                <div style={{ fontSize: 12, color: '#555' }}>Total reservas</div>
-                <div style={{ fontWeight: 700, fontSize: 18 }}>{totalReservas}</div>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="bg-indigo-50 rounded-lg p-2 text-center">
+                <div className="text-xs text-gray-600">Total reservas</div>
+                <div className="font-bold text-lg">{totalReservas}</div>
               </div>
-              <div style={{ background: '#fef9c3', borderRadius: 6, padding: 8, textAlign: 'center' }}>
-                <div style={{ fontSize: 12, color: '#555' }}>Semanas reservadas</div>
-                <div style={{ fontWeight: 700, fontSize: 18 }}>{totalSemanasReservadas}</div>
+              <div className="bg-yellow-50 rounded-lg p-2 text-center">
+                <div className="text-xs text-gray-600">Semanas reservadas</div>
+                <div className="font-bold text-lg">{totalSemanasReservadas}</div>
               </div>
-              <div style={{ background: '#bbf7d0', borderRadius: 6, padding: 8, textAlign: 'center' }}>
-                <div style={{ fontSize: 12, color: '#555' }}>Días reservados</div>
-                <div style={{ fontWeight: 700, fontSize: 18 }}>{totalDiasReservados}</div>
+              <div className="bg-green-50 rounded-lg p-2 text-center">
+                <div className="text-xs text-gray-600">Días reservados</div>
+                <div className="font-bold text-lg">{totalDiasReservados}</div>
               </div>
-              <div style={{ background: '#fee2e2', borderRadius: 6, padding: 8, textAlign: 'center' }}>
-                <div style={{ fontSize: 12, color: '#555' }}>Semanas libres</div>
-                <div style={{ fontWeight: 700, fontSize: 18 }}>{semanasLibres}</div>
+              <div className="bg-red-50 rounded-lg p-2 text-center">
+                <div className="text-xs text-gray-600">Semanas libres</div>
+                <div className="font-bold text-lg">{semanasLibres}</div>
               </div>
             </div>
             {/* Histórico */}
             {reservas.length > 0 ? (
-              <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-                {reservas.map((r, idx) => {
+              <ul className="space-y-2">
+                {reservas.map((r) => {
                   const owner = propietarios.find((p) => p.id === r.owner_id);
                   return (
-                    <li key={r.id} style={{ marginBottom: 8, borderBottom: '1px solid #eee', paddingBottom: 6 }}>
-                      <span style={{ fontWeight: 500 }}>{owner ? `${owner.first_name} ${owner.last_name}` : 'Propietario desconocido'}</span>
-                      <span style={{ color: '#666', marginLeft: 8 }}>
+                    <li key={r.id} className="pb-2 border-b border-gray-100">
+                      <span className="font-medium">{owner ? `${owner.first_name} ${owner.last_name}` : 'Propietario desconocido'}</span>
+                      <span className="text-gray-600 ml-2">
                         {` del ${r.start_date} al ${r.end_date}`}
                       </span>
                     </li>
@@ -333,14 +450,19 @@ const ReservationCalendar: React.FC = () => {
                 })}
               </ul>
             ) : (
-              <div style={{ color: '#888', fontSize: 14 }}>No hay reservas para esta propiedad.</div>
+              <div className="text-gray-500 text-sm">No hay reservas para esta propiedad.</div>
             )}
           </div>
+
           {/* Columna 2: Calendario y formulario */}
-          <div style={{ flex: 2 }}>
+          <div className="w-full lg:w-2/3">
             {/* Calendario */}
-            <div style={{ marginTop: '24px', height: '600px', position: 'relative' }}>
-               {loadingReservations && <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(255,255,255,0.8)', padding: '10px', borderRadius: '5px', zIndex: 10 }}>Cargando reservas...</div>}
+            <div className="relative h-[600px] mt-6 lg:mt-0">
+              {loadingReservations && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+                  <div className="bg-white p-3 rounded-lg shadow-sm">Cargando reservas...</div>
+                </div>
+              )}
               <Calendar
                 localizer={localizer}
                 events={events}
@@ -350,7 +472,10 @@ const ReservationCalendar: React.FC = () => {
                 onSelectSlot={handleSelectSlot}
                 eventPropGetter={eventPropGetter}
                 views={['month', 'week']}
-                style={{ height: '550px', opacity: loadingReservations ? 0.5 : 1 }}
+                className={cn(
+                  "h-[550px] transition-opacity duration-200",
+                  loadingReservations && "opacity-50"
+                )}
                 messages={{
                   month: 'Mes',
                   week: 'Semana',
@@ -371,27 +496,19 @@ const ReservationCalendar: React.FC = () => {
 
             {/* Lista de reservas adjudicadas */}
             {propiedadSeleccionada && reservas.length > 0 && (
-              <div style={{ marginTop: 24 }}>
-                <h4>Semanas adjudicadas:</h4>
-                <ul>
+              <div className="mt-6">
+                <h4 className="font-semibold mb-3">Semanas adjudicadas:</h4>
+                <ul className="space-y-2">
                   {reservas.map((r) => {
                     const owner = propietarios.find((p) => p.id === r.owner_id);
                     return (
-                      <li key={r.id} style={{ marginBottom: 8 }}>
+                      <li key={r.id} className="flex items-center justify-between">
                         <span>
                           {owner ? `${owner.first_name} ${owner.last_name}` : 'Propietario desconocido'}: 
                           {` del ${r.start_date} al ${r.end_date}`}
                         </span>
                         <button
-                          style={{
-                            marginLeft: 12,
-                            color: 'white',
-                            background: '#e53e3e',
-                            border: 'none',
-                            borderRadius: 4,
-                            padding: '2px 8px',
-                            cursor: 'pointer'
-                          }}
+                          className="ml-3 px-3 py-1 text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
                           onClick={async () => {
                             if (window.confirm('¿Seguro que quieres eliminar esta reserva?')) {
                               const { error } = await supabase

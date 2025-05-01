@@ -1,6 +1,6 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Properties from './pages/dashboard/properties/Properties';
@@ -20,9 +20,21 @@ import MessagesBoard from './pages/dashboard/mensajes/MessagesBoard';
 import ReservationCalendar from './pages/dashboard/properties/ReservationCalendar';
 import FacturasPropietario from './pages/dashboard/facturas/FacturasPropietario';
 import IncidenciasPanel from './pages/dashboard/incidencias/IncidenciasPanel';
+import IncidenciaForm from './pages/dashboard/incidencias/IncidenciaForm';
 import ComisionesPanel from './pages/dashboard/commissions/ComisionesPanel';
 import ProfilePanel from './pages/dashboard/profile/ProfilePanel';
 import React from 'react';
+import HomePage from './pages/home/HomePage';
+import DashboardHome from './pages/dashboard/DashboardHome';
+import { PropertiesPage } from './pages/properties';
+import { PropertyDetail as PublicPropertyDetail } from './pages/properties/PropertyDetail';
+import OwnerDashboard from './pages/dashboard/owner/OwnerDashboard';
+import OwnerIncidents from './pages/dashboard/owner/OwnerIncidents';
+import OwnerReservations from './pages/dashboard/owner/OwnerReservations';
+import { OwnerInvoices, OwnerMessages } from './pages/dashboard/owner/OwnerDashboard';
+import OwnerHome from './pages/dashboard/owner/OwnerHome';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminHome from './pages/admin/AdminHome';
 
 const Profile = () => (
   <div style={{ padding: 32 }}>
@@ -33,54 +45,110 @@ const Profile = () => (
 
 function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <AuthProvider>
         <Toaster position="top-right" />
         <Routes>
+          {/* Rutas públicas */}
+          <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/propiedades" element={<PropertiesPage />} />
+          <Route path="/properties/:id" element={<PublicPropertyDetail />} />
+          
+          {/* Ruta por defecto del dashboard que redirige según el rol */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <DashboardRedirect />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Dashboard de Propietarios */}
+          <Route path="/dashboard/owner" element={<ProtectedRoute><OwnerDashboard /></ProtectedRoute>}>
+            <Route index element={<OwnerHome />} />
+            <Route path="incidents" element={<OwnerIncidents />} />
+            <Route path="reservations" element={<OwnerReservations />} />
+            <Route path="invoices" element={<OwnerInvoices />} />
+            <Route path="messages" element={<OwnerMessages />} />
+            <Route path="profile" element={<ProfilePanel />} />
+          </Route>
+
+          {/* Dashboard General */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
-            <Route index element={<Properties />} />
-            
-            {/* Rutas de Propiedades */}
+            <Route path="invoices" element={<FacturasPropietario />} />
+            <Route path="reservations" element={<ReservationCalendar />} />
+            <Route path="properties/:id/reservations" element={<ReservationCalendar />} />
+            <Route path="properties/reservas" element={<ReservationCalendar />} />
+          </Route>
+
+          {/* Dashboard de Administración */}
+          <Route path="/dashboard/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>}>
+            <Route index element={<AdminHome />} />
+            <Route path="owners" element={<OwnersList />} />
+            <Route path="owners/new" element={<OwnerForm />} />
+            <Route path="owners/:id" element={<OwnerDetail />} />
+            <Route path="owners/:id/edit" element={<OwnerForm isEditing />} />
             <Route path="properties" element={<Properties />} />
             <Route path="properties/new" element={<PropertyForm />} />
-            <Route path="properties/reservas" element={<ReservationCalendar />} />
             <Route path="properties/:id" element={<PropertyDetail />} />
             <Route path="properties/:id/edit" element={<PropertyForm isEditing />} />
-            
-            {/* Rutas de Agencias */}
-            <Route path="agencies" element={<AgenciesList />} />
-            <Route path="agencies/new" element={<AgencyForm />} />
-            <Route path="agencies/:id/edit" element={<AgencyForm isEditing />} />
-            <Route path="agencies/:id" element={<AgencyDetail />} />
-            
-            {/* Rutas de Agentes */}
-            <Route path="agents" element={<AgentsList />} />
-            <Route path="agents/new" element={<AgentForm />} />
-            <Route path="agents/:id/edit" element={<AgentForm isEditing />} />
-            <Route path="agents/:id" element={<AgentDetail />} />
-            {/* Ruta de Mensajería */}
-            <Route path="mensajes" element={<MessagesBoard />} />
-            <Route path="messages" element={<MessagesBoard />} />
-            <Route path="profile" element={<ProtectedRoute><ProfilePanel /></ProtectedRoute>} />
+            <Route path="properties/:id/reservations" element={<ReservationCalendar />} />
+            <Route path="reservations" element={<ReservationCalendar />} />
             <Route path="invoices" element={<FacturasPropietario />} />
             <Route path="incidents" element={<IncidenciasPanel />} />
+            <Route path="incidents/new" element={<IncidenciaForm />} />
+            <Route path="messages" element={<MessagesBoard />} />
             <Route path="commissions" element={<ComisionesPanel />} />
+            <Route path="profile" element={<ProfilePanel />} />
+            <Route path="agencies" element={<AgenciesList />} />
+            <Route path="agencies/new" element={<AgencyForm />} />
+            <Route path="agencies/:id" element={<AgencyDetail />} />
+            <Route path="agencies/:id/edit" element={<AgencyForm isEditing />} />
+            <Route path="agents" element={<AgentsList />} />
+            <Route path="agents/new" element={<AgentForm />} />
+            <Route path="agents/:id" element={<AgentDetail />} />
+            <Route path="agents/:id/edit" element={<AgentForm isEditing />} />
           </Route>
-          {/* RUTAS DE PROPIETARIOS ADMIN CON LAYOUT DASHBOARD */}
-          <Route path="/admin/owners" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
-            <Route index element={<OwnersList />} />
-            <Route path="new" element={<OwnerForm />} />
-            <Route path=":id" element={<OwnerDetail />} />
-            <Route path=":id/edit" element={<OwnerForm />} />
+
+          {/* Dashboard de Agencias */}
+          <Route path="/dashboard/agencies" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
+            <Route index element={<AgenciesList />} />
+            <Route path="new" element={<AgencyForm />} />
+            <Route path=":id/edit" element={<AgencyForm isEditing />} />
+            <Route path=":id" element={<AgencyDetail />} />
           </Route>
-          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
-            <Route index element={<Properties />} />
+
+          {/* Dashboard de Agentes */}
+          <Route path="/dashboard/agents" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}>
+            <Route index element={<AgentsList />} />
+            <Route path="new" element={<AgentForm />} />
+            <Route path=":id/edit" element={<AgentForm isEditing />} />
+            <Route path=":id" element={<AgentDetail />} />
           </Route>
         </Routes>
       </AuthProvider>
-    </BrowserRouter>
+    </Router>
   );
 }
+
+// Componente para redirigir según el rol
+const DashboardRedirect = () => {
+  const { user } = useAuth();
+  
+  switch (user?.role) {
+    case 'admin':
+      return <Navigate to="/dashboard/admin" replace />;
+    case 'owner':
+      return <Navigate to="/dashboard/owner" replace />;
+    case 'agency':
+      return <Navigate to="/dashboard/agencies" replace />;
+    case 'agent':
+      return <Navigate to="/dashboard/agents" replace />;
+    default:
+      return <DashboardHome />;
+  }
+};
 
 export default App;

@@ -1,53 +1,73 @@
 import React, { useEffect, useRef } from 'react';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
-import { Agent } from '@/pages/dashboard/mensajes/MessagesBoard';
-import { Owner } from './ChatSidebarOwners';
+import { Agent, Owner } from '@/pages/dashboard/mensajes/MessagesBoard';
+import { User } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ChatWindowProps {
-  selectedAgent: Agent | Owner | null;
+  selectedAgent: Agent | Owner;
+  canSendMessage: boolean;
 }
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ selectedAgent }) => {
-  // 1. Crea una referencia para el contenedor scrollable
+const ChatWindow: React.FC<ChatWindowProps> = ({ selectedAgent, canSendMessage }) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // 2. Usa useEffect para hacer scroll cuando cambie el agente seleccionado
   useEffect(() => {
     if (messagesContainerRef.current) {
-      // Hacemos scroll hasta abajo del contenedor
-      // Esto se ejecutará cada vez que 'selectedAgent' cambie.
-      // Puede necesitar un pequeño retraso si MessageList tarda en renderizar mensajes iniciales.
       const timer = setTimeout(() => {
-         if (messagesContainerRef.current) { // Verificar de nuevo por si acaso
-           messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-         }
-      }, 50); // Prueba con 0 o 50ms
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
+      }, 50);
 
-      return () => clearTimeout(timer); // Limpia el temporizador si el componente se desmonta rápido
+      return () => clearTimeout(timer);
     }
-
-    // IMPORTANTE: Esto NO hará scroll automáticamente cuando lleguen NUEVOS mensajes
-    // dentro de la MISMA conversación. Para eso, NECESITAS la lógica dentro de MessageList.
-  }, [selectedAgent]); // La dependencia es el agente seleccionado
+  }, [selectedAgent]);
 
   return (
-    <div className="flex flex-col h-full w-full">
-      {/* 3. Asigna la referencia al div que tiene overflow-y-auto */}
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 bg-white">
-        {selectedAgent ? (
-          <MessageList selectedAgent={selectedAgent} />
+    <div className="flex flex-col h-full">
+      {/* Header del chat */}
+      <header className="flex items-center p-4 border-b bg-white">
+        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden mr-3">
+          {selectedAgent.photo_url ? (
+            <img 
+              src={selectedAgent.photo_url} 
+              alt={`${selectedAgent.first_name} ${selectedAgent.last_name}`}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <User className="h-6 w-6 text-gray-400" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-lg font-semibold truncate">
+            {selectedAgent.first_name} {selectedAgent.last_name}
+          </h2>
+          {selectedAgent.email && (
+            <p className="text-sm text-gray-500 truncate">{selectedAgent.email}</p>
+          )}
+        </div>
+      </header>
+
+      {/* Contenedor de mensajes */}
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"
+      >
+        <MessageList selectedAgent={selectedAgent} />
+      </div>
+
+      {/* Input de mensajes */}
+      <footer className="p-4 border-t bg-white">
+        {canSendMessage ? (
+          <MessageInput selectedAgent={selectedAgent} />
         ) : (
-          <div className="h-full flex items-center justify-center text-gray-400">
-            Selecciona un usuario para comenzar a chatear.
+          <div className="text-center text-gray-500 py-2">
+            No tienes permisos para enviar mensajes a este usuario
           </div>
         )}
-        {/* El div dummy para scrollIntoView iría DENTRO de MessageList en la solución ideal */}
-      </div>
-      {/* El input se queda abajo correctamente con sticky */}
-      <div className="sticky bottom-0 bg-white p-2 border-t z-10">
-        {selectedAgent && <MessageInput selectedAgent={selectedAgent} />}
-      </div>
+      </footer>
     </div>
   );
 };

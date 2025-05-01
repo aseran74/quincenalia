@@ -12,8 +12,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from '@/components/ui/use-toast';
-import { LayoutGrid, List, Plus } from 'lucide-react';
+import { LayoutGrid, List, Plus, Pencil, Trash2 } from 'lucide-react';
 import { PropertiesList } from './PropertiesList';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 interface Property {
   id: string;
@@ -95,11 +96,121 @@ const TableView = ({ properties, onDelete }: { properties: Property[], onDelete:
   );
 };
 
+// Hook para detectar si la pantalla es móvil (breakpoint sm: 640px)
+const useIsMobile = (breakpoint = 640) => {
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < breakpoint);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [breakpoint]);
+  return isMobile;
+};
+
+function PropertyMobileCard({ property, onDelete, onEdit }) {
+  const navigate = useNavigate();
+  const [imgIdx, setImgIdx] = React.useState(0);
+  const totalImgs = property.images && property.images.length > 0 ? property.images.length : 0;
+  const currentImg = totalImgs > 0 ? property.images[imgIdx] : null;
+  const autoSlideRef = React.useRef(null);
+
+  // Slide automático
+  React.useEffect(() => {
+    if (totalImgs <= 1) return;
+    if (autoSlideRef.current) clearInterval(autoSlideRef.current);
+    autoSlideRef.current = setInterval(() => {
+      setImgIdx(idx => (idx + 1) % totalImgs);
+    }, 2500);
+    return () => {
+      if (autoSlideRef.current) clearInterval(autoSlideRef.current);
+    };
+  }, [totalImgs]);
+
+  // Reinicia el temporizador si se navega manualmente
+  const handlePrev = (e) => {
+    e.stopPropagation();
+    setImgIdx(idx => (idx - 1 + totalImgs) % totalImgs);
+    if (autoSlideRef.current) clearInterval(autoSlideRef.current);
+    autoSlideRef.current = setInterval(() => {
+      setImgIdx(idx => (idx + 1) % totalImgs);
+    }, 2500);
+  };
+  const handleNext = (e) => {
+    e.stopPropagation();
+    setImgIdx(idx => (idx + 1) % totalImgs);
+    if (autoSlideRef.current) clearInterval(autoSlideRef.current);
+    autoSlideRef.current = setInterval(() => {
+      setImgIdx(idx => (idx + 1) % totalImgs);
+    }, 2500);
+  };
+
+  return (
+    <Card className="mb-4 overflow-hidden relative">
+      <div
+        className="relative w-full h-40 group cursor-pointer"
+        onClick={() => navigate(`/dashboard/properties/${property.id}`)}
+      >
+        {currentImg ? (
+          <img src={currentImg} alt={property.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 group-hover:opacity-80" />
+        ) : (
+          <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">Sin imagen</div>
+        )}
+        <div className="absolute inset-0 flex flex-col justify-end p-4 transition-colors pointer-events-none">
+          <CardTitle className="text-white text-lg mb-1 line-clamp-2 drop-shadow font-semibold bg-black/60 px-2 py-1 rounded w-fit">{property.title}</CardTitle>
+          <p className="text-white text-xs mb-1 bg-black/60 px-2 py-0.5 rounded w-fit"><strong>Ubicación:</strong> {property.location}</p>
+          <p className="text-white text-xs bg-black/60 px-2 py-0.5 rounded w-fit"><strong>Precio:</strong> €{property.price.toLocaleString()}</p>
+        </div>
+        {totalImgs > 1 && (
+          <>
+            <button
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center z-10"
+              onClick={handlePrev}
+              aria-label="Anterior"
+            >
+              &#8592;
+            </button>
+            <button
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center z-10"
+              onClick={handleNext}
+              aria-label="Siguiente"
+            >
+              &#8594;
+            </button>
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+              {property.images.map((_, i) => (
+                <span key={i} className={`w-2 h-2 rounded-full ${i === imgIdx ? 'bg-white' : 'bg-white/40'}`}></span>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+      <CardContent className="pt-3 pb-4 px-4 bg-[#222]">
+        <div className="flex flex-wrap gap-3 text-white text-sm">
+          <span><strong>Habitaciones:</strong> {property.bedrooms}</span>
+          <span><strong>Baños:</strong> {property.bathrooms}</span>
+          <span><strong>Área:</strong> {property.area} m²</span>
+        </div>
+        <div className="flex space-x-2 mt-4">
+          <Button size="sm" variant="outline" onClick={() => onEdit(property.id)} className="flex-1">
+            <Pencil className="mr-1 h-4 w-4" /> Editar
+          </Button>
+          <Button size="sm" variant="destructive" onClick={() => onDelete(property.id)} className="flex-1">
+            <Trash2 className="mr-1 h-4 w-4" /> Eliminar
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 const Properties = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [filter, setFilter] = useState('');
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchProperties();
@@ -154,6 +265,15 @@ const Properties = () => {
     }
   };
 
+  const handleEdit = (id: string) => {
+    navigate(`/dashboard/properties/${id}/edit`);
+  };
+
+  // Filtrado por nombre
+  const filteredProperties = properties.filter((property) =>
+    property.title.toLowerCase().includes(filter.toLowerCase())
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -163,46 +283,59 @@ const Properties = () => {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex flex-col space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Propiedades</h1>
-          <div className="flex items-center space-x-4">
-            <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'grid' | 'table')}>
+    <div className="container mx-auto py-8">
+      <Card>
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
+            <CardTitle className="mb-2 sm:mb-0">Propiedades</CardTitle>
+            <input
+              type="text"
+              placeholder="Filtrar por nombre..."
+              value={filter}
+              onChange={e => setFilter(e.target.value)}
+              className="border rounded px-3 py-1 text-sm w-full sm:w-64"
+            />
+            <Tabs value={viewMode} onValueChange={v => setViewMode(v as 'grid' | 'table')}>
               <TabsList>
                 <TabsTrigger value="grid">
-                  <LayoutGrid className="h-5 w-5 mr-2" />
-                  Grid
+                  <LayoutGrid className="h-5 w-5 mr-2" /> Grid
                 </TabsTrigger>
                 <TabsTrigger value="table">
-                  <List className="h-5 w-5 mr-2" />
-                  Lista
+                  <List className="h-5 w-5 mr-2" /> Tabla
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            <Button onClick={() => navigate('/dashboard/properties/new')}>
-              <Plus className="h-5 w-5 mr-2" />
-              Nueva Propiedad
-            </Button>
           </div>
-        </div>
-
-        {properties.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 mb-4">No hay propiedades registradas</p>
-            <Button onClick={() => navigate('/dashboard/properties/new')}>
-              <Plus className="h-5 w-5 mr-2" />
-              Crear primera propiedad
-            </Button>
-          </div>
-        ) : (
-          viewMode === 'grid' ? (
-            <PropertiesList properties={properties} onDelete={handleDelete} />
+          <Button onClick={() => navigate('/dashboard/properties/add')}>
+            <Plus className="mr-2 h-4 w-4" />
+            Agregar Propiedad
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {filteredProperties.length === 0 ? (
+            <div className="text-center py-8">No hay propiedades registradas</div>
           ) : (
-            <TableView properties={properties} onDelete={handleDelete} />
-          )
-        )}
-      </div>
+            isMobile ? (
+              <div className="space-y-4">
+                {filteredProperties.map((property) => (
+                  <PropertyMobileCard
+                    key={property.id}
+                    property={property}
+                    onDelete={handleDelete}
+                    onEdit={handleEdit}
+                  />
+                ))}
+              </div>
+            ) : (
+              viewMode === 'grid' ? (
+                <PropertiesList properties={filteredProperties} onDelete={handleDelete} />
+              ) : (
+                <TableView properties={filteredProperties} onDelete={handleDelete} />
+              )
+            )
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

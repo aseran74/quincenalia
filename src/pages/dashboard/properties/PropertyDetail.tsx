@@ -6,7 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import { HiOutlineArrowLeft, HiOutlinePencil, HiOutlineHome, HiOutlineUser, HiOutlineDocumentText } from "react-icons/hi2";
-import { FaSwimmingPool, FaHotTub, FaChild, FaGamepad, FaUmbrellaBeach, FaParking } from 'react-icons/fa';
+import { FaSwimmingPool, FaHotTub, FaChild, FaGamepad, FaUmbrellaBeach, FaParking, FaShoppingCart, FaGlassCheers, FaTree, FaWater, FaShip, FaPrescriptionBottleAlt } from 'react-icons/fa';
+import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api';
 
 type ShareStatus = 'disponible' | 'reservado' | 'vendido';
 
@@ -28,6 +29,7 @@ interface Property {
   features?: string[];
   agent_id?: string;
   copropiedad?: string;
+  nearby_services?: string[];
 }
 
 interface Agent {
@@ -58,12 +60,22 @@ const formatStatus = (status?: string) => {
 };
 
 const FEATURES = [
-  { key: 'piscina_privada', label: 'Piscina privada', icon: <FaSwimmingPool className="text-blue-500" /> },
-  { key: 'jacuzzi', label: 'Jacuzzi', icon: <FaHotTub className="text-pink-500" /> },
-  { key: 'juegos_ninos', label: 'Juegos para niños', icon: <FaChild className="text-yellow-500" /> },
-  { key: 'videoconsolas', label: 'Videoconsolas', icon: <FaGamepad className="text-green-500" /> },
-  { key: 'acceso_playa', label: 'Acceso playa', icon: <FaUmbrellaBeach className="text-cyan-500" /> },
-  { key: 'parking_gratuito', label: 'Parking gratuito', icon: <FaParking className="text-gray-700" /> },
+  { key: 'piscina_privada', label: 'Piscina privada', icon: <FaSwimmingPool className="w-6 h-6 text-blue-500" /> },
+  { key: 'jacuzzi', label: 'Jacuzzi', icon: <FaHotTub className="w-6 h-6 text-pink-500" /> },
+  { key: 'juegos_ninos', label: 'Juegos para niños', icon: <FaChild className="w-6 h-6 text-yellow-500" /> },
+  { key: 'videoconsolas', label: 'Videoconsolas', icon: <FaGamepad className="w-6 h-6 text-green-500" /> },
+  { key: 'acceso_playa', label: 'Acceso playa', icon: <FaUmbrellaBeach className="w-6 h-6 text-cyan-500" /> },
+  { key: 'parking_gratuito', label: 'Parking gratuito', icon: <FaParking className="w-6 h-6 text-gray-700" /> },
+];
+
+const NEARBY_SERVICES = [
+  { key: 'playa_cercana', label: 'Playa cercana', icon: <FaUmbrellaBeach className="w-6 h-6 text-cyan-500" /> },
+  { key: 'supermercados', label: 'Supermercados', icon: <FaShoppingCart className="w-6 h-6 text-green-500" /> },
+  { key: 'vida_nocturna', label: 'Vida nocturna', icon: <FaGlassCheers className="w-6 h-6 text-purple-500" /> },
+  { key: 'parques_naturales', label: 'Parques naturales', icon: <FaTree className="w-6 h-6 text-green-600" /> },
+  { key: 'deportes_nauticos', label: 'Deportes náuticos', icon: <FaWater className="w-6 h-6 text-blue-500" /> },
+  { key: 'puerto_deportivo', label: 'Puerto deportivo', icon: <FaShip className="w-6 h-6 text-blue-600" /> },
+  { key: 'farmacias', label: 'Farmacias', icon: <FaPrescriptionBottleAlt className="w-6 h-6 text-red-500" /> },
 ];
 
 // Definir tipo para los props de la calculadora
@@ -151,6 +163,8 @@ function isUUID(str: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
 }
 
+const GOOGLE_MAPS_API_KEY = "AIzaSyBy4MuV_fOnPJF-WoxQbBlnKj8dMF6KuxM";
+
 const PropertyDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -165,6 +179,8 @@ const PropertyDetail = () => {
     years: 20,
     result: null
   });
+  const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY });
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     if (!id || !isUUID(id)) return;
@@ -233,6 +249,20 @@ const PropertyDetail = () => {
     const totalInterest = total - l;
     setMortgage(m => ({ ...m, result: { monthly: P, total, totalInterest } }));
   };
+
+  useEffect(() => {
+    if (isLoaded && property?.location && !coordinates) {
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode({ address: property.location }, (results, status) => {
+        if (status === 'OK' && results && results[0]) {
+          setCoordinates({
+            lat: results[0].geometry.location.lat(),
+            lng: results[0].geometry.location.lng(),
+          });
+        }
+      });
+    }
+  }, [isLoaded, property?.location]);
 
   if (loading) {
     return (
@@ -371,10 +401,6 @@ const PropertyDetail = () => {
               </Badge>
             </div>
           </div>
-          <div className="mb-4">
-            <span className="font-semibold">Copropiedad asignada: </span>
-            {property.copropiedad ? property.copropiedad : 'Ninguna'}
-          </div>
           <div className="mb-8">
             <h3 className="text-lg font-semibold mb-2">Copropiedades</h3>
             <div className="grid grid-cols-2 gap-2 mb-4">
@@ -401,14 +427,30 @@ const PropertyDetail = () => {
             <p className="text-gray-600 whitespace-pre-wrap mb-6">{property.description}</p>
             {property.features && property.features.length > 0 && (
               <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-2">Características</h3>
-                <div className="flex flex-wrap gap-3">
-                  {FEATURES.filter(f => property.features.includes(f.key)).map(f => (
-                    <span key={f.key} className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-sm font-medium">
-                      {f.icon}
-                      {f.label}
-                    </span>
+                <h3 className="text-xl font-semibold mb-4">Características Destacadas</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {FEATURES.filter(f => property.features?.includes(f.key)).map(feature => (
+                    <div key={feature.key} className="flex items-center gap-3 p-4 bg-white rounded-lg">
+                      <div className="text-2xl">{feature.icon}</div>
+                      <span className="font-medium">{feature.label}</span>
+                    </div>
                   ))}
+                </div>
+              </div>
+            )}
+            {property?.nearby_services && property.nearby_services.length > 0 && (
+              <div id="servicios" className="bg-gray-50 rounded-lg p-6 scroll-mt-24">
+                <h2 className="text-xl font-semibold mb-4">Servicios Cercanos</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  {property.nearby_services.map((service) => {
+                    const serviceInfo = NEARBY_SERVICES.find(s => s.key === service);
+                    return (
+                      <div key={service} className="flex items-center gap-3 p-4 bg-white rounded-lg">
+                        {serviceInfo?.icon}
+                        <span className="font-medium">{serviceInfo?.label || service}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -420,7 +462,17 @@ const PropertyDetail = () => {
               </div>
             )}
             {/* Mapa de Google Maps al final de la columna principal */}
-            <PropertyMap address={property.location || ''} />
+            {isLoaded && coordinates && (
+              <div className="w-full h-64 rounded-lg overflow-hidden border mt-6">
+                <GoogleMap
+                  mapContainerStyle={{ width: '100%', height: '100%' }}
+                  center={coordinates}
+                  zoom={16}
+                >
+                  <Marker position={coordinates} />
+                </GoogleMap>
+              </div>
+            )}
           </div>
           <div className="grid grid-cols-1 gap-8 font-poppins">
             <div>

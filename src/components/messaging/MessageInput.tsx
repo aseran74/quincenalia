@@ -1,52 +1,91 @@
 import React, { useState } from 'react';
-import { Agent } from '@/pages/dashboard/mensajes/MessagesBoard';
-import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
+import { Agent, Owner } from '@/pages/dashboard/mensajes/MessagesBoard';
+import { toast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import { Send } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface MessageInputProps {
-  selectedAgent: Agent;
+  selectedAgent: Agent | Owner;
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({ selectedAgent }) => {
+  const [message, setMessage] = useState('');
+  const [sending, setSending] = useState(false);
   const { user } = useAuth();
-  const [value, setValue] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const handleSend = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!value.trim() || !user) return;
-    setLoading(true);
-    const payload = {
-      sender_id: user.id,
-      receiver_id: selectedAgent.user_id,
-      content: value.trim(),
-    };
-    console.log('Enviando mensaje:', payload);
-    const { error, data } = await supabase.from('messages').insert(payload);
-    if (error) {
-      console.error('Error al enviar mensaje:', error);
-    } else {
-      console.log('Mensaje enviado:', data);
+    if (!message.trim() || !user) return;
+
+    setSending(true);
+    try {
+      const { error } = await supabase.from('messages').insert({
+        sender_id: user.id,
+        sender_role: user.role,
+        receiver_id: selectedAgent.user_id,
+        receiver_role: 'agent' in selectedAgent ? 'agent' : 'owner',
+        content: message.trim(),
+        read_at: null
+      });
+
+      if (error) throw error;
+
+      setMessage('');
+      toast({
+        title: "Mensaje enviado",
+        description: "Tu mensaje ha sido enviado correctamente.",
+      });
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Error al enviar mensaje",
+        description: "No se pudo enviar el mensaje. Por favor, intenta de nuevo.",
+        variant: "destructive"
+      });
+    } finally {
+      setSending(false);
     }
-    setValue('');
-    setLoading(false);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
   };
 
   return (
-    <form className="flex gap-2" onSubmit={handleSend}>
+    <form onSubmit={handleSubmit} className="flex items-center gap-2">
       <input
         type="text"
-        className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring"
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        onKeyPress={handleKeyPress}
         placeholder="Escribe un mensaje..."
-        value={value}
-        onChange={e => setValue(e.target.value)}
-        disabled={loading}
+        className={cn(
+          "flex-1 px-4 py-2 rounded-full",
+          "border border-gray-200",
+          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+          "bg-gray-50",
+          sending && "opacity-50 cursor-not-allowed"
+        )}
+        disabled={sending}
       />
-      <button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center" disabled={loading || !value.trim()}>
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-7.5-15-7.5v6l10 1.5-10 1.5v6z" />
-        </svg>
-      </button>
+      <Button
+        type="submit"
+        size="icon"
+        disabled={!message.trim() || sending}
+        className={cn(
+          "rounded-full w-10 h-10",
+          "bg-blue-500 hover:bg-blue-600",
+          "disabled:opacity-50 disabled:cursor-not-allowed"
+        )}
+      >
+        <Send className="h-5 w-5" />
+      </Button>
     </form>
   );
 };

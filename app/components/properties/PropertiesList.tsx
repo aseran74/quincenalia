@@ -1,25 +1,12 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { PropertyCard } from './PropertyCard'
-import { Property, getProperties } from '../../../lib/supabase'
+import { Property } from '../../../lib/supabase'
 
-export const PropertiesList = () => {
-  const [properties, setProperties] = useState<Property[]>([])
-  const [loading, setLoading] = useState(true)
+interface PropertiesListProps {
+  properties: Property[]
+}
 
-  useEffect(() => {
-    async function loadProperties() {
-      const data = await getProperties()
-      setProperties(data)
-      setLoading(false)
-    }
-
-    loadProperties()
-  }, [])
-
-  if (loading) {
-    return <div className="text-center">Cargando propiedades...</div>
-  }
-
+export const PropertiesList: React.FC<PropertiesListProps> = ({ properties }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
       {properties.map((property) => (

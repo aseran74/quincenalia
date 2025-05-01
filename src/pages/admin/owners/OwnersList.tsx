@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Link } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
-import { Pencil, Trash2 } from 'lucide-react';
-import { HiOutlineUserCircle } from 'react-icons/hi2';
+import { Pencil, Trash2, Plus, Home, Mail, Phone } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface Owner {
   id: string;
@@ -24,189 +24,134 @@ interface Owner {
 const OwnersList = () => {
   const [owners, setOwners] = useState<Owner[]>([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'grid' | 'table'>('grid');
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchOwners();
-    // Suscripción a cambios en property_owners para refetch automático
-    const channel = supabase.channel('owners-list')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'property_owners' }, () => {
-        fetchOwners();
-      })
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   const fetchOwners = async () => {
-    setLoading(true);
-    const { data: ownersData } = await supabase
-      .from('property_owners')
-      .select('*')
-      .order('first_name');
-    const { data: propertiesData } = await supabase
-      .from('properties')
-      .select('id, title, share1_owner_id, share1_status, share2_owner_id, share2_status, share3_owner_id, share3_status, share4_owner_id, share4_status');
-    const ownersWithProps = (ownersData || []).map(owner => {
-      const props = (propertiesData || []).map(p => {
-        const shares = [];
-        if (p.share1_owner_id === owner.id) shares.push({ num: 1, status: p.share1_status });
-        if (p.share2_owner_id === owner.id) shares.push({ num: 2, status: p.share2_status });
-        if (p.share3_owner_id === owner.id) shares.push({ num: 3, status: p.share3_status });
-        if (p.share4_owner_id === owner.id) shares.push({ num: 4, status: p.share4_status });
-        return shares.length > 0 ? { id: p.id, title: p.title, shares } : null;
-      }).filter(Boolean);
-      return { ...owner, properties: props };
-    });
-    setOwners(ownersWithProps);
-    setLoading(false);
-  };
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('property_owners')
+        .select('*');
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('¿Seguro que quieres eliminar este propietario?')) return;
-    const { error } = await supabase
-      .from('property_owners')
-      .delete()
-      .eq('id', id);
-    if (!error) {
-      setOwners(owners.filter(o => o.id !== id));
-      toast({ title: 'Éxito', description: 'Propietario eliminado correctamente' });
-    } else {
-      toast({ title: 'Error', description: 'Error al eliminar', variant: 'destructive' });
+      if (error) throw error;
+      setOwners(data || []);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los propietarios",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="container mx-auto p-6 font-poppins">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Propietarios</h1>
-        <div className="flex gap-2">
-          <Button
-            variant={view === 'grid' ? 'default' : 'outline'}
-            onClick={() => setView('grid')}
-          >
-            Grid
-          </Button>
-          <Button
-            variant={view === 'table' ? 'default' : 'outline'}
-            onClick={() => setView('table')}
-          >
-            Tabla
-          </Button>
-          <Link to="/admin/owners/new">
-            <Button>Nuevo Propietario</Button>
-          </Link>
-        </div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
-      {loading ? (
-        <div className="text-center py-12">Cargando propietarios...</div>
-      ) : owners.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <h3 className="text-lg font-semibold">No hay propietarios registrados</h3>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600">
-              Comienza agregando un nuevo propietario.
-            </p>
-          </CardContent>
-        </Card>
-      ) : view === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {owners.map((owner) => (
-            <Card key={owner.id} className="overflow-hidden">
-              <CardHeader>
-                <div className="flex items-center gap-4">
-                  {owner.photo_url ? (
-                    <img src={owner.photo_url} alt={owner.first_name} className="w-16 h-16 object-cover rounded-full" />
-                  ) : (
-                    <HiOutlineUserCircle className="w-16 h-16 text-gray-300" />
-                  )}
-                  <div>
-                    <Link to={`/admin/owners/${owner.id}`} className="hover:underline">
-                      <h2 className="text-xl font-semibold">{owner.first_name} {owner.last_name}</h2>
-                    </Link>
-                    <p className="text-gray-600 text-sm">{owner.email}</p>
-                    <p className="text-gray-600 text-sm">{owner.phone}</p>
-                    {owner.properties && owner.properties.length > 0 && (
-                      <div className="mt-2 space-y-1">
-                        {owner.properties.map(prop => (
-                          <div key={prop.id} className="flex items-center gap-2 text-xs">
-                            <span className="font-semibold">{prop.title}</span>
-                            {prop.shares.map(share => (
-                              <span key={share.num} className={`px-2 py-0.5 rounded text-white ${share.status === 'reservada' ? 'bg-blue-500' : 'bg-green-600'}`}>#{share.num} {share.status}</span>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+    );
+  }
+
+  return (
+    <div className="p-4 md:p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold">Propietarios</h1>
+        <Button onClick={() => navigate('/dashboard/admin/owners/new')}>
+          <Plus className="h-5 w-5 mr-2" />
+          Nuevo Propietario
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {owners.map((owner) => (
+          <Card 
+            key={owner.id}
+            className="group cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+            onClick={() => navigate(`/dashboard/admin/owners/${owner.id}`)}
+          >
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center text-center space-y-4">
+                <Avatar className="h-20 w-20">
+                  <AvatarImage src={owner.photo_url} alt={`${owner.first_name} ${owner.last_name}`} />
+                  <AvatarFallback className="bg-blue-500 text-white text-xl">
+                    {owner.first_name[0]}{owner.last_name[0]}
+                  </AvatarFallback>
+                </Avatar>
+
+                <div>
+                  <CardTitle className="text-xl font-bold mb-2">
+                    {owner.first_name} {owner.last_name}
+                  </CardTitle>
+                  
+                  <div className="space-y-2 text-gray-600">
+                    <div className="flex items-center justify-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      <p className="text-sm truncate">{owner.email}</p>
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                      <Phone className="h-4 w-4" />
+                      <p className="text-sm">{owner.phone}</p>
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                      <Home className="h-4 w-4" />
+                      <p className="text-sm">{owner.properties?.length || 0} propiedades</p>
+                    </div>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-2 justify-end">
-                  <Link to={`/admin/owners/${owner.id}/edit`}>
-                    <Button size="icon" variant="ghost"><Pencil /></Button>
-                  </Link>
-                  <Button size="icon" variant="ghost" onClick={() => handleDelete(owner.id)}><Trash2 color="#e11d48" /></Button>
+
+                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/dashboard/admin/owners/${owner.id}/edit`);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-red-600 hover:text-red-700"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (confirm('¿Estás seguro de que quieres eliminar este propietario?')) {
+                        const { error } = await supabase
+                          .from('property_owners')
+                          .delete()
+                          .eq('id', owner.id);
+                        
+                        if (error) {
+                          toast({
+                            title: "Error",
+                            description: "No se pudo eliminar el propietario",
+                            variant: "destructive",
+                          });
+                        } else {
+                          fetchOwners();
+                          toast({
+                            title: "Éxito",
+                            description: "Propietario eliminado correctamente",
+                          });
+                        }
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border rounded">
-            <thead>
-              <tr>
-                <th className="px-4 py-2 border">Nombre</th>
-                <th className="px-4 py-2 border">Email</th>
-                <th className="px-4 py-2 border">Teléfono</th>
-                <th className="px-4 py-2 border">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {owners.map((owner) => (
-                <tr key={owner.id}>
-                  <td className="px-4 py-2 border flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      {owner.photo_url ? (
-                        <img src={owner.photo_url} alt={owner.first_name} className="w-8 h-8 object-cover rounded-full" />
-                      ) : (
-                        <HiOutlineUserCircle className="w-8 h-8 text-gray-300" />
-                      )}
-                      <Link to={`/admin/owners/${owner.id}`} className="hover:underline">
-                        {owner.first_name} {owner.last_name}
-                      </Link>
-                    </div>
-                    {owner.properties && owner.properties.length > 0 && (
-                      <div className="mt-1 space-y-0.5">
-                        {owner.properties.map(prop => (
-                          <div key={prop.id} className="flex items-center gap-2 text-xs">
-                            <span className="font-semibold">{prop.title}</span>
-                            {prop.shares.map(share => (
-                              <span key={share.num} className={`px-2 py-0.5 rounded text-white ${share.status === 'reservada' ? 'bg-blue-500' : 'bg-green-600'}`}>#{share.num} {share.status}</span>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-2 border">{owner.email}</td>
-                  <td className="px-4 py-2 border">{owner.phone}</td>
-                  <td className="px-4 py-2 border flex gap-2">
-                    <Link to={`/admin/owners/${owner.id}/edit`}>
-                      <Button size="icon" variant="ghost"><Pencil /></Button>
-                    </Link>
-                    <Button size="icon" variant="ghost" onClick={() => handleDelete(owner.id)}><Trash2 color="#e11d48" /></Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };

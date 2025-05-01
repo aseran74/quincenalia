@@ -23,9 +23,21 @@ import {
   CommandItem,
   CommandEmpty,
 } from '@/components/ui/command';
-import { FaSwimmingPool, FaHotTub, FaChild, FaGamepad, FaUmbrellaBeach, FaParking } from 'react-icons/fa';
+import { FaSwimmingPool, FaHotTub, FaChild, FaGamepad, FaUmbrellaBeach, FaParking, FaShoppingCart, FaGlassCheers, FaTree, FaWater, FaShip, FaPrescriptionBottleAlt } from 'react-icons/fa';
+import { GoogleMap, Marker, useLoadScript, Autocomplete } from '@react-google-maps/api';
+import { geocodeAddress } from '@/utils/geocoding';
 
 type ShareStatus = 'disponible' | 'reservada' | 'vendida';
+
+const NEARBY_SERVICES = [
+  { key: 'playa_cercana', label: 'Playa cercana', icon: <FaUmbrellaBeach className="w-6 h-6 text-cyan-500" /> },
+  { key: 'supermercados', label: 'Supermercados', icon: <FaShoppingCart className="w-6 h-6 text-green-500" /> },
+  { key: 'vida_nocturna', label: 'Vida nocturna', icon: <FaGlassCheers className="w-6 h-6 text-purple-500" /> },
+  { key: 'parques_naturales', label: 'Parques naturales', icon: <FaTree className="w-6 h-6 text-green-600" /> },
+  { key: 'deportes_nauticos', label: 'Deportes náuticos', icon: <FaWater className="w-6 h-6 text-blue-500" /> },
+  { key: 'puerto_deportivo', label: 'Puerto deportivo', icon: <FaShip className="w-6 h-6 text-blue-600" /> },
+  { key: 'farmacias', label: 'Farmacias', icon: <FaPrescriptionBottleAlt className="w-6 h-6 text-red-500" /> },
+];
 
 interface Property {
   id?: string;
@@ -38,6 +50,8 @@ interface Property {
   bathrooms?: number;
   area?: number;
   location?: string;
+  latitude?: number;
+  longitude?: number;
   user_id: string | null;
   agent_id?: string | null;
   features?: string[];
@@ -57,18 +71,25 @@ interface Property {
   share4_status: ShareStatus;
   share4_owner_id: string | null;
   share4_price: number;
+  nearby_services?: string[];
 }
 
 const FEATURES = [
-  { key: 'piscina_privada', label: 'Piscina privada', icon: <FaSwimmingPool className="inline mr-2 text-blue-500" /> },
-  { key: 'jacuzzi', label: 'Jacuzzi', icon: <FaHotTub className="inline mr-2 text-pink-500" /> },
-  { key: 'juegos_ninos', label: 'Juegos para niños', icon: <FaChild className="inline mr-2 text-yellow-500" /> },
-  { key: 'videoconsolas', label: 'Videoconsolas', icon: <FaGamepad className="inline mr-2 text-green-500" /> },
-  { key: 'acceso_playa', label: 'Acceso playa', icon: <FaUmbrellaBeach className="inline mr-2 text-cyan-500" /> },
-  { key: 'parking_gratuito', label: 'Parking gratuito', icon: <FaParking className="inline mr-2 text-gray-700" /> },
+  { key: 'piscina_privada', label: 'Piscina privada', icon: <FaSwimmingPool className="w-6 h-6 text-blue-500" /> },
+  { key: 'jacuzzi', label: 'Jacuzzi', icon: <FaHotTub className="w-6 h-6 text-pink-500" /> },
+  { key: 'juegos_ninos', label: 'Juegos para niños', icon: <FaChild className="w-6 h-6 text-yellow-500" /> },
+  { key: 'videoconsolas', label: 'Videoconsolas', icon: <FaGamepad className="w-6 h-6 text-green-500" /> },
+  { key: 'acceso_playa', label: 'Acceso playa', icon: <FaUmbrellaBeach className="w-6 h-6 text-cyan-500" /> },
+  { key: 'parking_gratuito', label: 'Parking gratuito', icon: <FaParking className="w-6 h-6 text-gray-700" /> },
 ];
 
-const PropertyForm: FC<{ isEditing?: boolean }> = ({ isEditing = false }) => {
+const GOOGLE_MAPS_API_KEY = "AIzaSyBy4MuV_fOnPJF-WoxQbBlnKj8dMF6KuxM";
+
+interface PropertyFormProps {
+  isEditing?: boolean;
+}
+
+const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -83,6 +104,9 @@ const PropertyForm: FC<{ isEditing?: boolean }> = ({ isEditing = false }) => {
   const [ownerQuery2, setOwnerQuery2] = useState('');
   const [ownerQuery3, setOwnerQuery3] = useState('');
   const [ownerQuery4, setOwnerQuery4] = useState('');
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY, libraries: ['places'] });
+  const autocompleteRef = React.useRef<any>(null);
 
   useEffect(() => {
     if (!authLoading && user && !isEditing) {
@@ -99,6 +123,7 @@ const PropertyForm: FC<{ isEditing?: boolean }> = ({ isEditing = false }) => {
         user_id: user.id,
         agent_id: null,
         features: [],
+        nearby_services: [],
         // Inicializar los shares
         share1_status: 'disponible',
         share1_owner_id: null,
@@ -130,6 +155,20 @@ const PropertyForm: FC<{ isEditing?: boolean }> = ({ isEditing = false }) => {
     fetchOwners();
   }, []);
 
+  useEffect(() => {
+    if (property?.location && !coordinates && isLoaded) {
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode({ address: property.location }, (results, status) => {
+        if (status === 'OK' && results && results[0]) {
+          setCoordinates({
+            lat: results[0].geometry.location.lat(),
+            lng: results[0].geometry.location.lng(),
+          });
+        }
+      });
+    }
+  }, [property?.location, isLoaded]);
+
   const fetchProperty = async () => {
     try {
       const { data: propertyData, error: propertyError } = await supabase
@@ -146,6 +185,14 @@ const PropertyForm: FC<{ isEditing?: boolean }> = ({ isEditing = false }) => {
         });
         if (propertyData.images) {
           setPreviewImages(propertyData.images);
+        }
+        
+        // Inicializar coordenadas si existen
+        if (propertyData.latitude && propertyData.longitude) {
+          setCoordinates({
+            lat: propertyData.latitude,
+            lng: propertyData.longitude
+          });
         }
         
         // Inicializar los campos de búsqueda con los nombres de los propietarios
@@ -288,9 +335,39 @@ const PropertyForm: FC<{ isEditing?: boolean }> = ({ isEditing = false }) => {
     }
   };
 
+  const handlePlaceSelect = () => {
+    if (autocompleteRef.current) {
+      const place = autocompleteRef.current.getPlace();
+      if (place.geometry) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        setCoordinates({ lat, lng });
+        setProperty(prev => prev ? {
+          ...prev,
+          location: place.formatted_address,
+          latitude: lat,
+          longitude: lng
+        } : null);
+      }
+    }
+  };
+
+  const handleMarkerDragEnd = (e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
+      setCoordinates({ lat, lng });
+      setProperty(prev => prev ? {
+        ...prev,
+        latitude: lat,
+        longitude: lng
+      } : null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user?.id) {
       toast({
         title: 'Error',
@@ -320,14 +397,30 @@ const PropertyForm: FC<{ isEditing?: boolean }> = ({ isEditing = false }) => {
 
     setLoading(true);
     try {
+      // Intentar geocodificar la dirección si no tenemos coordenadas
+      if (property.location && (!property.latitude || !property.longitude)) {
+        const coords = await geocodeAddress(property.location);
+        if (coords) {
+          property.latitude = coords.latitude;
+          property.longitude = coords.longitude;
+          setCoordinates({ lat: coords.latitude, lng: coords.longitude });
+        }
+      }
+
+      const propertyData = {
+        ...property,
+        updated_at: new Date().toISOString(),
+      };
+
       // Calculamos los precios de los shares basados en el precio total
       const propertyToSave = {
-        ...property,
-        share1_price: property.price * 0.25,
-        share2_price: property.price * 0.25,
-        share3_price: property.price * 0.25,
-        share4_price: property.price * 0.25,
-        features: property.features && property.features.length > 0 ? property.features : []
+        ...propertyData,
+        share1_price: propertyData.price * 0.25,
+        share2_price: propertyData.price * 0.25,
+        share3_price: propertyData.price * 0.25,
+        share4_price: propertyData.price * 0.25,
+        features: propertyData.features && propertyData.features.length > 0 ? propertyData.features : [],
+        nearby_services: propertyData.nearby_services && propertyData.nearby_services.length > 0 ? propertyData.nearby_services : []
       };
 
       if (isEditing && id) {
@@ -748,12 +841,64 @@ const PropertyForm: FC<{ isEditing?: boolean }> = ({ isEditing = false }) => {
 
                 <div className="space-y-6">
                   <div>
-                    <Label htmlFor="location">Ubicación</Label>
-                    <Input
-                      id="location"
-                      value={property.location || ''}
-                      onChange={(e) => setProperty({ ...property, location: e.target.value })}
-                    />
+                    <Label htmlFor="location">Dirección</Label>
+                    {isLoaded ? (
+                      <Autocomplete
+                        onLoad={ref => (autocompleteRef.current = ref)}
+                        onPlaceChanged={() => {
+                          const place = autocompleteRef.current.getPlace();
+                          if (place && place.geometry) {
+                            const lat = place.geometry.location.lat();
+                            const lng = place.geometry.location.lng();
+                            setCoordinates({ lat, lng });
+                            setProperty(prev => prev ? { ...prev, location: place.formatted_address } : prev);
+                          }
+                        }}
+                      >
+                        <Input
+                          id="location"
+                          value={property.location || ''}
+                          onChange={e => setProperty({ ...property, location: e.target.value })}
+                          placeholder="Busca una dirección..."
+                          autoComplete="off"
+                        />
+                      </Autocomplete>
+                    ) : (
+                      <Input
+                        id="location"
+                        value={property.location || ''}
+                        onChange={e => setProperty({ ...property, location: e.target.value })}
+                        placeholder="Busca una dirección..."
+                        autoComplete="off"
+                      />
+                    )}
+                    {isLoaded && coordinates && (
+                      <div className="mt-4">
+                        <GoogleMap
+                          mapContainerStyle={{ width: '100%', height: '250px', borderRadius: '8px' }}
+                          center={coordinates}
+                          zoom={16}
+                          onClick={e => {
+                            if (e.latLng) {
+                              const lat = e.latLng.lat();
+                              const lng = e.latLng.lng();
+                              setCoordinates({ lat, lng });
+                              setProperty(prev => prev ? {
+                                ...prev,
+                                latitude: lat,
+                                longitude: lng
+                              } : null);
+                            }
+                          }}
+                        >
+                          <Marker 
+                            position={coordinates} 
+                            draggable={true} 
+                            onDragEnd={handleMarkerDragEnd}
+                          />
+                        </GoogleMap>
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
@@ -799,25 +944,62 @@ const PropertyForm: FC<{ isEditing?: boolean }> = ({ isEditing = false }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <h3 className="text-lg font-semibold mb-2">Características</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {FEATURES.map(f => (
-                        <label key={f.key} className="flex items-center gap-2 cursor-pointer">
+                    <h3 className="text-xl font-semibold mb-4">Características Destacadas</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {FEATURES.map(feature => (
+                        <label
+                          key={feature.key}
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors ${
+                            property?.features?.includes(feature.key)
+                              ? 'bg-blue-50 border-blue-500 border'
+                              : 'bg-white border hover:bg-gray-50 border-gray-200'
+                          }`}
+                        >
                           <input
                             type="checkbox"
-                            checked={property.features?.includes(f.key) || false}
-                            onChange={e => {
-                              setProperty(prev => prev ? {
-                                ...prev,
-                                features: e.target.checked
-                                  ? [...(prev.features || []), f.key]
-                                  : (prev.features || []).filter(k => k !== f.key)
-                              } : null);
+                            className="hidden"
+                            checked={property?.features?.includes(feature.key)}
+                            onChange={(e) => {
+                              if (!property) return;
+                              const updatedFeatures = e.target.checked
+                                ? [...(property.features || []), feature.key]
+                                : (property.features || []).filter((f) => f !== feature.key);
+                              setProperty({ ...property, features: updatedFeatures });
                             }}
-                            className="accent-blue-600"
                           />
-                          {f.icon}
-                          <span>{f.label}</span>
+                          {feature.icon}
+                          <span className="font-medium">{feature.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-semibold mb-4">Servicios Cercanos</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {NEARBY_SERVICES.map((service) => (
+                        <label
+                          key={service.key}
+                          className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors ${
+                            property?.nearby_services?.includes(service.key)
+                              ? 'bg-blue-50 border-blue-500 border'
+                              : 'bg-white border hover:bg-gray-50 border-gray-200'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            className="hidden"
+                            checked={property?.nearby_services?.includes(service.key)}
+                            onChange={(e) => {
+                              if (!property) return;
+                              const updatedServices = e.target.checked
+                                ? [...(property.nearby_services || []), service.key]
+                                : (property.nearby_services || []).filter((f) => f !== service.key);
+                              setProperty({ ...property, nearby_services: updatedServices });
+                            }}
+                          />
+                          {service.icon}
+                          <span className="font-medium">{service.label}</span>
                         </label>
                       ))}
                     </div>

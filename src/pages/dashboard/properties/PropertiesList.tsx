@@ -73,7 +73,7 @@ export const PropertiesList: React.FC<PropertiesListProps> = ({ properties, onDe
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-poppins">
+    <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 px-1 sm:px-2 font-poppins">
       {properties.map((property) => {
         const shareStatus = [
           property.share1_status,
@@ -100,7 +100,7 @@ export const PropertiesList: React.FC<PropertiesListProps> = ({ properties, onDe
         return (
           <Card
             key={property.id}
-            className="relative w-full max-w-[500px] h-[290px] bg-[#333] rounded-xl outline outline-1 outline-white/50 outline-offset-[-12px] shadow-lg overflow-hidden mx-auto group cursor-pointer font-poppins"
+            className="relative w-full max-w-md self-center h-[170px] sm:h-[200px] lg:h-[220px] bg-[#333] rounded-xl outline outline-1 outline-white/50 outline-offset-[-12px] shadow-lg overflow-hidden mx-auto group cursor-pointer font-poppins"
             onClick={() => navigate(`/dashboard/properties/${property.id}`)}
           >
             <img
@@ -108,16 +108,16 @@ export const PropertiesList: React.FC<PropertiesListProps> = ({ properties, onDe
               alt={property.title}
               className="absolute inset-0 w-full h-full object-cover opacity-60 transition-all duration-1000 group-hover:scale-110 group-hover:opacity-70"
             />
-            <h3 className="absolute left-4 bottom-3 text-2xl md:text-3xl text-white font-semibold drop-shadow-lg">
+            <h3 className="absolute left-4 bottom-3 text-lg sm:text-xl md:text-2xl text-white font-semibold drop-shadow-lg">
               {property.title}
             </h3>
-            <div className="absolute left-4 top-4 flex flex-col gap-2 z-10">
+            <div className="absolute left-3 top-3 flex flex-col gap-1 z-10">
               <Badge className={getStatusColor(property.status)}>
                 {formatStatus(property.status)}
               </Badge>
-              <span className="bg-blue-700 text-white px-2 py-1 rounded text-sm font-bold shadow">€{mainSharePrice.toLocaleString()}</span>
+              <span className="bg-blue-700 text-white px-1 py-0.5 rounded text-xs font-bold shadow">€{mainSharePrice.toLocaleString()}</span>
             </div>
-            <div className="absolute right-4 top-4 flex flex-col gap-2 z-10">
+            <div className="absolute right-3 top-3 flex flex-col gap-1 z-10">
               <Button
                 variant="outline"
                 size="sm"
@@ -140,43 +140,23 @@ export const PropertiesList: React.FC<PropertiesListProps> = ({ properties, onDe
                 <HiOutlineEye className="h-5 w-5" />
               </Button>
             </div>
-            <div className="absolute left-4 bottom-16 flex flex-col gap-1 z-10 bg-black/50 rounded-lg px-3 py-2 text-white text-xs min-w-[180px]">
+            <div className="absolute left-3 bottom-14 flex flex-col gap-0.5 z-10 bg-black/50 rounded-lg px-2 py-1 text-white text-xs min-w-[110px]">
               <div className="flex items-center gap-2">
-                <HiOutlineHome className="w-4 h-4" />
+                <HiOutlineHome className="w-4 h-4 sm:w-7 sm:h-7" />
                 <span>{property.bedrooms || 0} hab.</span>
-                <HiOutlineUser className="w-4 h-4 ml-3" />
+                <HiOutlineUser className="w-4 h-4 ml-3 sm:w-7 sm:h-7 sm:ml-4" />
                 <span>{property.bathrooms || 0} baños</span>
               </div>
               <div className="flex items-center gap-2">
-                <HiOutlineDocumentText className="w-4 h-4" />
+                <HiOutlineDocumentText className="w-4 h-4 sm:w-7 sm:h-7" />
                 <span>{property.area || 0} m²</span>
               </div>
               <div className="flex items-center gap-2">
-                <HiOutlineMapPin className="w-4 h-4" />
+                <HiOutlineMapPin className="w-4 h-4 sm:w-7 sm:h-7" />
                 <span className="truncate max-w-[120px]">{property.location}</span>
               </div>
             </div>
-            <CardContent className="pt-[300px] pb-4 px-4 font-poppins">
-              <div className="grid grid-cols-2 gap-1 mt-2">
-                {[0,1,2,3].map(idx => {
-                  const sharePrice = sharePrices[idx] ?? property.price/4;
-                  return (
-                    <div key={idx} className={`border rounded p-1 flex flex-col items-center text-[11px] leading-tight font-medium ${
-                      shareStatus[idx] === 'disponible' ? 'bg-green-100 text-green-800 border-green-300' :
-                      shareStatus[idx] === 'reservado' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' :
-                      shareStatus[idx] === 'vendido' ? 'bg-purple-200 text-purple-800 border-purple-400' :
-                      'bg-gray-200 text-gray-600 border-gray-300'
-                    }`}>
-                      <span className="text-gray-600 text-[10px] font-normal text-center mb-1">{shareLabels[idx]}</span>
-                      <span className="px-1 py-0.5 rounded text-[11px] font-semibold mb-1 capitalize">
-                        {shareStatus[idx] ? shareStatus[idx].charAt(0).toUpperCase() + shareStatus[idx].slice(1) : 'Sin estado'}
-                      </span>
-                      <span className="text-blue-700 font-bold">€{sharePrice.toLocaleString()}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
+            <CardContent className="pt-[120px] sm:pt-[140px] md:pt-[160px] pb-2 px-4 font-poppins" />
           </Card>
         );
       })}

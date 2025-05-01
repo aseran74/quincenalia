@@ -1,20 +1,16 @@
+import type { Database } from './database.types';
 
-export interface Property {
-  id: string;
-  title: string;
-  description: string;
-  address: string;
-  city: string;
-  price: number;
-  bedrooms: number;
-  bathrooms: number;
-  area: number;
-  images: string[];
-  ownerId: string;
-  agentId?: string;
-  available: boolean;
-  availableDates?: DateRange[];
-}
+export type Property = Database['public']['Tables']['properties']['Row'] & {
+  images?: string[];
+  latitude?: number;
+  longitude?: number;
+  agent?: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+  };
+};
 
 export interface DateRange {
   startDate: Date;
