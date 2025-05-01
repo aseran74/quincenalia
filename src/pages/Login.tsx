@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,8 +8,9 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '../components/layout/AppLayout';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'react-hot-toast';
+import { supabase } from '@/lib/supabase';
+import { toast } from '@/components/ui/use-toast';
+import { Loader2 } from 'lucide-react';
 
 const getDashboardPath = (role: string) => {
   switch (role) {
@@ -52,15 +53,37 @@ const Login: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
     try {
-      const success = await login(loginData.email, loginData.password);
-      if (success) {
-        toast.success('¡Inicio de sesión exitoso!');
-      } else {
-        toast.error('Error al iniciar sesión. Por favor, verifica tus credenciales.');
+      const { data: { user }, error } = await supabase.auth.signInWithPassword({
+        email: loginData.email,
+        password: loginData.password,
+      });
+
+      if (error) throw error;
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        await login(user);
+        
+        toast({
+          title: "¡Bienvenido!",
+          description: "Has iniciado sesión correctamente.",
+        });
+
+        navigate(getDashboardPath(profile?.role || 'user'));
       }
-    } catch (error) {
-      toast.error('Error al iniciar sesión');
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Ha ocurrido un error al iniciar sesión.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -78,6 +101,35 @@ const Login: React.FC = () => {
       }
     } catch (error) {
       toast.error('Error al registrarse');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: loginData.email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "¡Enlace enviado!",
+        description: "Revisa tu correo electrónico para iniciar sesión.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Ha ocurrido un error al enviar el enlace.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -143,7 +195,14 @@ const Login: React.FC = () => {
                     </CardContent>
                     <CardFooter>
                       <Button type="submit" className="w-full" disabled={isLoading}>
-                        {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Iniciando sesión...
+                          </>
+                        ) : (
+                          'Iniciar Sesión'
+                        )}
                       </Button>
                     </CardFooter>
                   </form>

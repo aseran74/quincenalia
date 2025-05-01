@@ -18,17 +18,23 @@ const MessageInput: React.FC<MessageInputProps> = ({ selectedAgent }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || !user) return;
+    if (!message.trim() || !user || !selectedAgent?.user_id) {
+      toast({
+        title: "Error",
+        description: "Por favor, escribe un mensaje válido.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setSending(true);
     try {
       const { error } = await supabase.from('messages').insert({
         sender_id: user.id,
-        sender_role: user.role,
         receiver_id: selectedAgent.user_id,
-        receiver_role: 'agent' in selectedAgent ? 'agent' : 'owner',
         content: message.trim(),
-        read_at: null
+        sender_role: user.role || 'user',
+        receiver_role: 'agent' in selectedAgent ? 'agent' : 'owner'
       });
 
       if (error) throw error;
@@ -38,11 +44,11 @@ const MessageInput: React.FC<MessageInputProps> = ({ selectedAgent }) => {
         title: "Mensaje enviado",
         description: "Tu mensaje ha sido enviado correctamente.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending message:', error);
       toast({
         title: "Error al enviar mensaje",
-        description: "No se pudo enviar el mensaje. Por favor, intenta de nuevo.",
+        description: error.message || "No se pudo enviar el mensaje. Por favor, intenta de nuevo.",
         variant: "destructive"
       });
     } finally {

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
+import { Link } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import type { Database } from '@/types/supabase';
 
 type Property = Database['public']['Tables']['properties']['Row'];
 

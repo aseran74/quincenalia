@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -15,19 +15,7 @@ import { toast } from '@/components/ui/use-toast';
 import { LayoutGrid, List, Plus, Pencil, Trash2 } from 'lucide-react';
 import { PropertiesList } from './PropertiesList';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-
-interface Property {
-  id: string;
-  title: string;
-  description?: string;
-  price: number;
-  status?: 'disponible' | 'reservado' | 'vendido';
-  images?: string[];
-  bedrooms?: number;
-  bathrooms?: number;
-  area?: number;
-  location?: string;
-}
+import type { Property } from '@/types/property';
 
 const TableView = ({ properties, onDelete }: { properties: Property[], onDelete: (id: string) => void }) => {
   const navigate = useNavigate();
@@ -67,16 +55,16 @@ const TableView = ({ properties, onDelete }: { properties: Property[], onDelete:
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/dashboard/properties/${property.id}`)}
+                      onClick={() => navigate(`/dashboard/admin/properties/${property.id}`)}
                     >
                       Ver
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/dashboard/properties/${property.id}/edit`)}
+                      onClick={() => navigate(`/dashboard/admin/properties/${property.id}/reservations`)}
                     >
-                      Editar
+                      Reservas
                     </Button>
                     <Button
                       variant="destructive"
@@ -149,7 +137,7 @@ function PropertyMobileCard({ property, onDelete, onEdit }) {
     <Card className="mb-4 overflow-hidden relative">
       <div
         className="relative w-full h-40 group cursor-pointer"
-        onClick={() => navigate(`/dashboard/properties/${property.id}`)}
+        onClick={() => navigate(`/dashboard/admin/properties/${property.id}`)}
       >
         {currentImg ? (
           <img src={currentImg} alt={property.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 group-hover:opacity-80" />
@@ -220,8 +208,7 @@ const Properties = () => {
     try {
       const { data, error } = await supabase
         .from('properties')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
 
       if (error) throw error;
       setProperties(data || []);
@@ -229,7 +216,7 @@ const Properties = () => {
       console.error('Error:', error);
       toast({
         title: 'Error',
-        description: 'Error al cargar las propiedades',
+        description: 'No se pudieron cargar las propiedades',
         variant: 'destructive',
       });
     } finally {
@@ -266,12 +253,51 @@ const Properties = () => {
   };
 
   const handleEdit = (id: string) => {
-    navigate(`/dashboard/properties/${id}/edit`);
+    navigate(`/dashboard/admin/properties/${id}/edit`);
   };
 
   // Filtrado por nombre
   const filteredProperties = properties.filter((property) =>
     property.title.toLowerCase().includes(filter.toLowerCase())
+  );
+
+  const PropertyCard = ({ property }: { property: Property }) => (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+      <div className="relative h-48">
+        <img
+          src={property.images?.[0] || '/placeholder-property.jpg'}
+          alt={property.title}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute top-2 right-2">
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            property.status === 'disponible' ? 'bg-green-100 text-green-800' :
+            property.status === 'reservado' ? 'bg-yellow-100 text-yellow-800' :
+            'bg-red-100 text-red-800'
+          }`}>
+            {property.status}
+          </span>
+        </div>
+      </div>
+      <div className="p-4">
+        <h3 className="text-lg font-semibold mb-2">{property.title}</h3>
+        <p className="text-gray-600 text-sm mb-4">{property.location}</p>
+        <div className="flex justify-between items-center">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate(`/dashboard/admin/properties/${property.id}`)}
+          >
+            Ver detalles
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/dashboard/admin/properties/${property.id}/reservations`)}
+          >
+            Reservas
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 
   if (loading) {
@@ -306,9 +332,9 @@ const Properties = () => {
               </TabsList>
             </Tabs>
           </div>
-          <Button onClick={() => navigate('/dashboard/properties/add')}>
+          <Button onClick={() => navigate('/dashboard/admin/properties/new')}>
             <Plus className="mr-2 h-4 w-4" />
-            Agregar Propiedad
+            Nueva Propiedad
           </Button>
         </CardHeader>
         <CardContent>

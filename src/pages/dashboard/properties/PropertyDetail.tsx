@@ -277,7 +277,7 @@ const PropertyDetail = () => {
       <div className="container mx-auto py-8 px-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Propiedad no encontrada</h1>
-          <Button onClick={() => navigate('/dashboard/properties')}>
+          <Button onClick={() => navigate('/dashboard/admin/properties')}>
             <HiOutlineArrowLeft className="h-5 w-5 mr-2" />
             Volver a propiedades
           </Button>
@@ -308,13 +308,13 @@ const PropertyDetail = () => {
       <div className="flex justify-between items-center mb-6">
         <Button
           variant="outline"
-          onClick={() => navigate('/dashboard/properties')}
+          onClick={() => navigate('/dashboard/admin/properties')}
         >
           <HiOutlineArrowLeft className="h-5 w-5 mr-2" />
           Volver
         </Button>
         <Button
-          onClick={() => navigate(`/dashboard/properties/${id}/edit`)}
+          onClick={() => navigate(`/dashboard/admin/properties/${id}/edit`)}
         >
           <HiOutlinePencil className="h-5 w-5 mr-2" />
           Editar

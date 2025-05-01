@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import {
   Building, Users, Calendar, FileText, AlertTriangle, MessageSquare, DollarSign,
-  User, LogOut, Home, Menu, ChevronLeft
+  User, LogOut, Home, Menu, ChevronLeft, PhoneCall
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -23,7 +23,8 @@ const menuItems = [
   { icon: <MessageSquare className="w-5 h-5 text-white" />, label: 'Mensajes', path: '/dashboard/admin/messages' },
   { icon: <DollarSign className="w-5 h-5 text-white" />, label: 'Comisiones', path: '/dashboard/admin/commissions' },
   { icon: <Building className="w-5 h-5 text-white" />, label: 'Agencias', path: '/dashboard/admin/agencies' },
-  { icon: <Users className="w-5 h-5 text-white" />, label: 'Agentes', path: '/dashboard/admin/agents' }
+  { icon: <Users className="w-5 h-5 text-white" />, label: 'Agentes', path: '/dashboard/admin/agents' },
+  { icon: <PhoneCall className="w-5 h-5 text-white" />, label: 'Solicitudes de Contacto', path: '/dashboard/admin/contact-requests' }
 ];
 
 const AdminDashboard = () => {

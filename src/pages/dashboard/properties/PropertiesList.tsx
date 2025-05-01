@@ -101,7 +101,7 @@ export const PropertiesList: React.FC<PropertiesListProps> = ({ properties, onDe
           <Card
             key={property.id}
             className="relative w-full max-w-md self-center h-[170px] sm:h-[200px] lg:h-[220px] bg-[#333] rounded-xl outline outline-1 outline-white/50 outline-offset-[-12px] shadow-lg overflow-hidden mx-auto group cursor-pointer font-poppins"
-            onClick={() => navigate(`/dashboard/properties/${property.id}`)}
+            onClick={() => navigate(`/dashboard/admin/properties/${property.id}`)}
           >
             <img
               src={currentImg}
@@ -121,7 +121,7 @@ export const PropertiesList: React.FC<PropertiesListProps> = ({ properties, onDe
               <Button
                 variant="outline"
                 size="sm"
-                onClick={e => { e.stopPropagation(); navigate(`/dashboard/properties/${property.id}/edit`); }}
+                onClick={e => { e.stopPropagation(); navigate(`/dashboard/admin/properties/${property.id}/edit`); }}
               >
                 <HiOutlinePencil className="h-5 w-5" />
               </Button>
@@ -135,7 +135,7 @@ export const PropertiesList: React.FC<PropertiesListProps> = ({ properties, onDe
               <Button
                 variant="outline"
                 size="sm"
-                onClick={e => { e.stopPropagation(); navigate(`/dashboard/properties/${property.id}`); }}
+                onClick={e => { e.stopPropagation(); navigate(`/dashboard/admin/properties/${property.id}`); }}
               >
                 <HiOutlineEye className="h-5 w-5" />
               </Button>

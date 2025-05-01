@@ -440,9 +440,9 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
 
       toast({
         title: 'Éxito',
-        description: `Propiedad ${isEditing ? 'actualizada' : 'creada'} correctamente`,
+        description: isEditing ? 'Propiedad actualizada correctamente' : 'Propiedad creada correctamente'
       });
-      navigate('/dashboard/properties');
+      navigate('/dashboard/admin/properties');
     } catch (error) {
       console.error('Error:', error);
       toast({
@@ -468,7 +468,10 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
       <div className="flex flex-col space-y-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <Button variant="outline" onClick={() => navigate('/dashboard/properties')}>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/dashboard/admin/properties')}
+            >
               <HiOutlineArrowLeft className="h-5 w-5 mr-2" />
               Volver
             </Button>

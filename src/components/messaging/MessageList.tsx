@@ -11,6 +11,13 @@ interface Message {
   receiver_id: string;
   content: string;
   created_at: string;
+  updated_at: string | null;
+  deleted: boolean;
+  group_type: string | null;
+  group_id: string | null;
+  sender_role: string;
+  receiver_role: string;
+  read_at: string | null;
 }
 
 interface MessageListProps {
@@ -31,15 +38,16 @@ const MessageList: React.FC<MessageListProps> = ({ selectedAgent }) => {
     const fetchMessages = async () => {
       if (!selectedAgent?.user_id || !user?.id) return;
       setLoading(true);
+      
       const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .or(
-          `and(sender_id.eq.${user.id},receiver_id.eq.${selectedAgent.user_id}),and(sender_id.eq.${selectedAgent.user_id},receiver_id.eq.${user.id})`
-        )
+        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${selectedAgent.user_id}),and(sender_id.eq.${selectedAgent.user_id},receiver_id.eq.${user.id})`)
+        .eq('deleted', false)
         .order('created_at', { ascending: true });
 
       if (error) {
+        console.error('Error fetching messages:', error);
         setMessages([]);
       } else {
         setMessages(data || []);
@@ -53,7 +61,12 @@ const MessageList: React.FC<MessageListProps> = ({ selectedAgent }) => {
     if (!user?.id || !selectedAgent?.user_id) return;
     
     const channel = supabase.channel('private-messages')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, (payload) => {
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'messages',
+        filter: `deleted=eq.false`
+      }, (payload) => {
         const msg = payload.new as Message;
         if (
           (msg.sender_id === user.id && msg.receiver_id === selectedAgent.user_id) ||

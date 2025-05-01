@@ -35,6 +35,7 @@ import { OwnerInvoices, OwnerMessages } from './pages/dashboard/owner/OwnerDashb
 import OwnerHome from './pages/dashboard/owner/OwnerHome';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminHome from './pages/admin/AdminHome';
+import AgentRequests from './pages/admin/AgentRequests';
 
 const Profile = () => (
   <div style={{ padding: 32 }}>
@@ -110,6 +111,7 @@ function App() {
             <Route path="agents/new" element={<AgentForm />} />
             <Route path="agents/:id" element={<AgentDetail />} />
             <Route path="agents/:id/edit" element={<AgentForm isEditing />} />
+            <Route path="contact-requests" element={<AgentRequests />} />
           </Route>
 
           {/* Dashboard de Agencias */}
@@ -137,7 +139,11 @@ function App() {
 const DashboardRedirect = () => {
   const { user } = useAuth();
   
-  switch (user?.role) {
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  switch (user.role) {
     case 'admin':
       return <Navigate to="/dashboard/admin" replace />;
     case 'owner':
@@ -147,7 +153,7 @@ const DashboardRedirect = () => {
     case 'agent':
       return <Navigate to="/dashboard/agents" replace />;
     default:
-      return <DashboardHome />;
+      return <Navigate to="/dashboard" replace />;
   }
 };
 

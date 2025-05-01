@@ -1,15 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ChevronLeft, ChevronRight, Bed, Bath, Square } from 'lucide-react';
 import { FaSwimmingPool, FaHotTub, FaChild, FaGamepad, FaUmbrellaBeach, FaParking, FaStore, FaHospital, 
   FaBus, FaSchool, FaUtensils, FaShoppingCart, FaMapMarkerAlt, FaHome, FaImages, FaInfoCircle, 
-  FaUserTie, FaSearch, FaArrowLeft, FaGlassCheers, FaTree, FaWater, FaShip, FaPrescriptionBottleAlt, FaUsers } from 'react-icons/fa';
+  FaUserTie, FaSearch, FaArrowLeft, FaGlassCheers, FaTree, FaWater, FaShip, FaPrescriptionBottleAlt, FaUsers, FaPhone } from 'react-icons/fa';
 import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
 import type { Property } from '@/types/property';
+import ContactForm from '@/components/ContactForm';
 
 const FEATURES = [
   { key: 'piscina_privada', label: 'Piscina privada', icon: <FaSwimmingPool className="w-6 h-6 text-blue-500" /> },
@@ -209,6 +210,7 @@ export const PropertyDetail = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const mapsLoaded = useGoogleMaps(GOOGLE_MAPS_API_KEY);
+  const [showContactForm, setShowContactForm] = useState(false);
 
   // Geocodificar la dirección cuando cambie
   useEffect(() => {
@@ -258,6 +260,7 @@ export const PropertyDetail = () => {
           images: Array.isArray((propertyData as any).images) ? (propertyData as any).images : [],
           features: Array.isArray((propertyData as any).features) ? (propertyData as any).features : [],
           nearby_services: Array.isArray((propertyData as any).nearby_services) ? (propertyData as any).nearby_services : [],
+          location: (propertyData as any).location || 'Ubicación no especificada'
         };
 
         console.log('Property data:', formattedProperty); // Para debug
@@ -307,8 +310,13 @@ export const PropertyDetail = () => {
     }
   };
 
+  const handleContactClick = () => {
+    setShowContactForm(true);
+    document.getElementById('contactForm')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto px-4 py-8">
       {/* Navbar sticky */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm shadow-sm rounded-lg mb-6 p-4">
         <ul className="flex flex-wrap gap-6 justify-center items-center text-sm font-medium">
@@ -580,46 +588,65 @@ export const PropertyDetail = () => {
                 <p className="text-xs text-gray-500 mt-2 text-center">* Cuota mensual estimada con 30% de entrada y 20 años de hipoteca</p>
               </div>
 
-              {/* Información del agente */}
-              {property.agent && (
-                <div id="agente" className="bg-gray-50 rounded-lg p-6 scroll-mt-24">
-                  <h2 className="text-xl font-semibold mb-4">Agente Inmobiliario</h2>
-                  <div className="flex items-center gap-4 mb-4">
-                    {property.agent.photo_url && (
-                      <img
-                        src={property.agent.photo_url}
-                        alt={`${property.agent.first_name} ${property.agent.last_name}`}
-                        className="w-16 h-16 rounded-full object-cover"
-                      />
-                    )}
-                    <div>
-                      <h3 className="font-semibold">
-                        {property.agent.first_name} {property.agent.last_name}
-                      </h3>
-                      <p className="text-gray-600">{property.agent.email}</p>
-                      {property.agent.phone && (
-                        <p className="text-gray-600">{property.agent.phone}</p>
-                      )}
-                    </div>
-                  </div>
-                  {property.agent.bio && (
-                    <p className="text-gray-600 mb-4">{property.agent.bio}</p>
-                  )}
-                  {property.agent.specialization && (
-                    <p className="text-sm text-gray-500">
-                      Especialización: {property.agent.specialization}
-                    </p>
-                  )}
-                  <Button className="w-full mt-4">
-                    Contactar con el agente
-                  </Button>
-                </div>
-              )}
-
               {/* Calculadora de hipoteca */}
               <div id="hipoteca" className="bg-gray-50 rounded-lg p-6 scroll-mt-24">
                 <h2 className="text-xl font-semibold mb-4">Calculadora de Hipoteca para Copropiedad</h2>
                 <MortgageCalculator propertyPrice={property.price} />
+              </div>
+
+              {/* Información del agente y contacto */}
+              <div id="contactForm" className="bg-gray-50 rounded-lg p-6 scroll-mt-24">
+                <h2 className="text-xl font-semibold mb-4">Contactar con el agente</h2>
+                
+                {/* Información del agente */}
+                {property.agent && (
+                  <div className="mb-6">
+                    <div className="flex items-center gap-4 mb-4">
+                      {property.agent.photo_url && (
+                        <img
+                          src={property.agent.photo_url}
+                          alt={`${property.agent.first_name} ${property.agent.last_name}`}
+                          className="w-16 h-16 rounded-full object-cover"
+                        />
+                      )}
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg">
+                          {property.agent.first_name} {property.agent.last_name}
+                        </h3>
+                        <p className="text-gray-600">
+                          <a href={`mailto:${property.agent.email}`} className="hover:text-blue-600">
+                            {property.agent.email}
+                          </a>
+                        </p>
+                        {property.agent.phone && (
+                          <p className="text-gray-600">
+                            <a href={`tel:${property.agent.phone}`} className="hover:text-blue-600 flex items-center gap-1">
+                              <FaPhone className="w-4 h-4" />
+                              {property.agent.phone}
+                            </a>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    {property.agent.bio && (
+                      <p className="text-gray-600 mb-4">{property.agent.bio}</p>
+                    )}
+                    {property.agent.specialization && (
+                      <p className="text-sm text-gray-500">
+                        Especialización: {property.agent.specialization}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Formulario de contacto */}
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-medium mb-4">Enviar mensaje al agente</h3>
+                  <ContactForm 
+                    agentId={property?.agent?.id} 
+                    className="w-full"
+                  />
+                </div>
               </div>
             </div>
           </div>
