@@ -84,6 +84,7 @@ const FEATURES = [
 ];
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyBy4MuV_fOnPJF-WoxQbBlnKj8dMF6KuxM";
+const GOOGLE_MAPS_LIBRARIES: ["places"] = ["places"];
 
 interface PropertyFormProps {
   isEditing?: boolean;
@@ -105,7 +106,7 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
   const [ownerQuery3, setOwnerQuery3] = useState('');
   const [ownerQuery4, setOwnerQuery4] = useState('');
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
-  const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY, libraries: ['places'] });
+  const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY, libraries: GOOGLE_MAPS_LIBRARIES });
   const autocompleteRef = React.useRef<any>(null);
 
   useEffect(() => {
@@ -225,23 +226,25 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
 
   const fetchAgents = async () => {
     const { data, error } = await supabase
-      .from('real_estate_agents')
-      .select('id, first_name, last_name, email, phone')
+      .from('profiles')
+      .select('id, first_name, last_name, email, phone, name, role')
+      .eq('role', 'agent')
       .order('first_name');
     if (!error && data) {
       setAgents(data.map(agent => ({
         id: agent.id,
-        name: `${agent.first_name} ${agent.last_name}`,
+        name: agent.first_name && agent.last_name ? `${agent.first_name} ${agent.last_name}` : (agent.name || ''),
         email: agent.email,
-        phone: agent.phone
+        phone: agent.phone || ''
       })));
     }
   };
 
   const fetchOwners = async () => {
     const { data, error } = await supabase
-      .from('property_owners')
+      .from('profiles')
       .select('id, first_name, last_name, email, phone')
+      .eq('role', 'owner')
       .order('first_name');
     if (!error && data) {
       setOwners(data.map(owner => ({
@@ -544,7 +547,8 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
                           onValueChange={(value) => setProperty({ 
                             ...property, 
                             share1_status: value as ShareStatus,
-                            share1_price: property.price * 0.25 
+                            share1_price: property.price * 0.25,
+                            share1_owner_id: value === 'disponible' ? null : property.share1_owner_id
                           })}
                         >
                           <SelectTrigger>
@@ -609,7 +613,8 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
                           onValueChange={(value) => setProperty({ 
                             ...property, 
                             share2_status: value as ShareStatus,
-                            share2_price: property.price * 0.25 
+                            share2_price: property.price * 0.25,
+                            share2_owner_id: value === 'disponible' ? null : property.share2_owner_id
                           })}
                         >
                           <SelectTrigger>
@@ -674,7 +679,8 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
                           onValueChange={(value) => setProperty({ 
                             ...property, 
                             share3_status: value as ShareStatus,
-                            share3_price: property.price * 0.25 
+                            share3_price: property.price * 0.25,
+                            share3_owner_id: value === 'disponible' ? null : property.share3_owner_id
                           })}
                         >
                           <SelectTrigger>
@@ -739,7 +745,8 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
                           onValueChange={(value) => setProperty({ 
                             ...property, 
                             share4_status: value as ShareStatus,
-                            share4_price: property.price * 0.25 
+                            share4_price: property.price * 0.25,
+                            share4_owner_id: value === 'disponible' ? null : property.share4_owner_id
                           })}
                         >
                           <SelectTrigger>

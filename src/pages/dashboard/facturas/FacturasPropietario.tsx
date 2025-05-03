@@ -539,6 +539,43 @@ const FacturasPropietario: React.FC = () => {
           )}
         </div>
       )}
+
+      {user?.role === 'admin' && facturas.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-2">Últimas 10 facturas emitidas</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm border rounded">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-2 py-1 text-left">Tipo</th>
+                  <th className="px-2 py-1 text-left">Importe</th>
+                  <th className="px-2 py-1 text-left">Estado</th>
+                  <th className="px-2 py-1 text-left">Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                {facturas.slice(0, 10).map(f => (
+                  <tr key={f.id} className="border-b hover:bg-gray-50">
+                    <td className="px-2 py-1">{TIPOS.find(t => t.value === f.type)?.label || f.type}</td>
+                    <td className="px-2 py-1">{Number(f.amount).toFixed(2)} €</td>
+                    <td className="px-2 py-1">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                        ${f.status === 'pagada' ? 'bg-green-100 text-green-800' : ''}
+                        ${f.status === 'pendiente' ? 'bg-yellow-100 text-yellow-800' : ''}
+                        ${f.status === 'devuelta' ? 'bg-red-100 text-red-800' : ''}
+                        ${f.status === 'enviado_banco' ? 'bg-blue-100 text-blue-800' : ''}
+                      `}>
+                        {ESTADOS.find(e => e.value === f.status)?.label}
+                      </span>
+                    </td>
+                    <td className="px-2 py-1">{new Date(f.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

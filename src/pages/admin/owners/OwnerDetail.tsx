@@ -41,10 +41,10 @@ const OwnerDetail: React.FC = () => {
     if (!id) return;
     const props = (propertiesData || []).map(p => {
       const shares = [];
-      if (p.share1_owner_id === id) shares.push({ num: 1, status: p.share1_status });
-      if (p.share2_owner_id === id) shares.push({ num: 2, status: p.share2_status });
-      if (p.share3_owner_id === id) shares.push({ num: 3, status: p.share3_status });
-      if (p.share4_owner_id === id) shares.push({ num: 4, status: p.share4_status });
+      if (p.share1_owner_id === id && ['vendida', 'reservada'].includes(p.share1_status)) shares.push({ num: 1, status: p.share1_status });
+      if (p.share2_owner_id === id && ['vendida', 'reservada'].includes(p.share2_status)) shares.push({ num: 2, status: p.share2_status });
+      if (p.share3_owner_id === id && ['vendida', 'reservada'].includes(p.share3_status)) shares.push({ num: 3, status: p.share3_status });
+      if (p.share4_owner_id === id && ['vendida', 'reservada'].includes(p.share4_status)) shares.push({ num: 4, status: p.share4_status });
       return shares.length > 0 ? { id: p.id, title: p.title, shares } : null;
     }).filter(Boolean);
     setProperties(props);

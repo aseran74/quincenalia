@@ -5,8 +5,12 @@ import { supabase } from '@/lib/supabase';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAuth } from '@/context/AuthContext';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Info } from 'lucide-react';
 
 // Configuración del Calendario
 const locales = { 'es': es };
@@ -28,6 +32,7 @@ interface Reservation {
   id: string;
   property_id: string;
   owner_id: string;
+  share_number: number;
   start_date: string;
   end_date: string;
   status: 'pendiente' | 'aprobada' | 'rechazada';
@@ -44,234 +49,232 @@ interface CalendarEvent {
 
 const OwnerReservations: React.FC = () => {
   const { user } = useAuth();
-  const [myProperty, setMyProperty] = useState<Property | null>(null);
-  const [allReservations, setAllReservations] = useState<Reservation[]>([]);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [reservations, setReservations] = useState<{ [propertyId: string]: Reservation[] }>({});
   const [loading, setLoading] = useState(true);
+  // Estado para el modal de reserva
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedProp, setSelectedProp] = useState<any>(null);
+  const [selectedShare, setSelectedShare] = useState<any>(null);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!user?.id) return;
-      
+    const fetchProperties = async () => {
       setLoading(true);
-      try {
-        // Obtener la propiedad del propietario y su número de share
-        const { data: propertyData } = await supabase
-          .from('properties')
-          .select('id, title, share1_owner_id, share2_owner_id, share3_owner_id, share4_owner_id')
-          .or(`share1_owner_id.eq.${user.id},share2_owner_id.eq.${user.id},share3_owner_id.eq.${user.id},share4_owner_id.eq.${user.id}`)
-          .single();
-
-        if (propertyData) {
-          let shareNumber = 0;
-          if (propertyData.share1_owner_id === user.id) shareNumber = 1;
-          else if (propertyData.share2_owner_id === user.id) shareNumber = 2;
-          else if (propertyData.share3_owner_id === user.id) shareNumber = 3;
-          else if (propertyData.share4_owner_id === user.id) shareNumber = 4;
-
-          setMyProperty({
-            id: propertyData.id,
-            title: propertyData.title,
-            share_number: shareNumber
-          });
-
-          // Obtener todas las reservas de la propiedad
-          const { data: resData } = await supabase
-            .from('property_reservations')
-            .select('*')
-            .eq('property_id', propertyData.id);
-
-          setAllReservations(resData || []);
-        }
-      } catch (error) {
-        console.error('Error al cargar datos:', error);
-        toast({
-          title: 'Error',
-          description: 'No se pudieron cargar los datos',
-          variant: 'destructive'
-        });
-      }
+      if (!user?.id) return;
+      const { data: propertiesData } = await supabase
+        .from('properties')
+        .select('id, title, share1_owner_id, share1_status, share2_owner_id, share2_status, share3_owner_id, share3_status, share4_owner_id, share4_status');
+      const props = (propertiesData || []).map(p => {
+        const shares = [];
+        if (p.share1_owner_id === user.id && ['vendida', 'reservada'].includes(p.share1_status)) shares.push({ num: 1, status: p.share1_status });
+        if (p.share2_owner_id === user.id && ['vendida', 'reservada'].includes(p.share2_status)) shares.push({ num: 2, status: p.share2_status });
+        if (p.share3_owner_id === user.id && ['vendida', 'reservada'].includes(p.share3_status)) shares.push({ num: 3, status: p.share3_status });
+        if (p.share4_owner_id === user.id && ['vendida', 'reservada'].includes(p.share4_status)) shares.push({ num: 4, status: p.share4_status });
+        return shares.length > 0 ? { id: p.id, title: p.title, shares } : null;
+      }).filter(Boolean);
+      setProperties(props);
       setLoading(false);
+      // Cargar reservas para cada propiedad
+      props.forEach(async (prop) => {
+        const { data: resData } = await supabase
+          .from('property_reservations')
+          .select('*')
+          .eq('property_id', prop.id);
+        setReservations(prev => ({ ...prev, [prop.id]: resData || [] }));
+      });
     };
-
-    fetchData();
+    fetchProperties();
   }, [user?.id]);
 
-  const handleSelectSlot = async ({ start, end }: { start: Date, end: Date }) => {
-    if (!user?.id || !myProperty) return;
-    
-    try {
-      // Verificar si ya existe una reserva en ese rango de fechas
-      const conflictingReservations = allReservations.filter(res => {
-        const resStart = new Date(res.start_date);
-        const resEnd = new Date(res.end_date);
-        const newStart = start;
-        const newEnd = end;
-        return (
-          (newStart >= resStart && newStart <= resEnd) ||
-          (newEnd >= resStart && newEnd <= resEnd) ||
-          (newStart <= resStart && newEnd >= resEnd)
-        );
-      });
-
-      if (conflictingReservations.length > 0) {
-        toast({
-          title: 'Error',
-          description: 'Ya existe una reserva en ese rango de fechas',
-          variant: 'destructive'
-        });
-        return;
-      }
-
-      const { error } = await supabase.from('property_reservations').insert([
-        {
-          property_id: myProperty.id,
-          owner_id: user.id,
-          start_date: format(start, 'yyyy-MM-dd'),
-          end_date: format(end, 'yyyy-MM-dd'),
-          status: 'pendiente'
-        }
-      ]);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Reserva creada',
-        description: 'Tu solicitud de reserva está pendiente de aprobación',
-      });
-
-      // Recargar reservas
-      const { data } = await supabase
-        .from('property_reservations')
-        .select('*')
-        .eq('property_id', myProperty.id);
-      
-      setAllReservations(data || []);
-
-    } catch (error) {
-      console.error('Error al crear reserva:', error);
-      toast({
-        title: 'Error',
-        description: 'No se pudo crear la reserva',
-        variant: 'destructive'
-      });
-    }
+  const handleOpenModal = (prop: any, share: any) => {
+    setSelectedProp(prop);
+    setSelectedShare(share);
+    setStartDate('');
+    setEndDate('');
+    setModalOpen(true);
   };
 
-  const events: CalendarEvent[] = allReservations.map((r) => ({
-    id: r.id,
-    title: r.owner_id === user?.id ? 
-      `Mi reserva - ${r.status}` : 
-      `Reservado por otro propietario`,
-    start: new Date(r.start_date + 'T00:00:00Z'),
-    end: new Date(r.end_date + 'T00:00:00Z'),
-    status: r.status,
-    isOwner: r.owner_id === user?.id
-  }));
-
-  const eventStyleGetter = (event: CalendarEvent) => {
-    let backgroundColor = '#4f8cff'; // pendiente
-    let opacity = 0.8;
-
-    if (!event.isOwner) {
-      backgroundColor = '#64748b'; // gris para reservas de otros
-      opacity = 0.5;
-    } else {
-      if (event.status === 'aprobada') backgroundColor = '#22c55e';
-      if (event.status === 'rechazada') backgroundColor = '#ef4444';
+  const handleReserve = async () => {
+    if (!user?.id || !selectedProp || !selectedShare || !startDate || !endDate) return;
+    const resList = reservations[selectedProp.id] || [];
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    // Verificar conflictos
+    const conflicting = resList.some(res => {
+      const resStart = new Date(res.start_date);
+      const resEnd = new Date(res.end_date);
+      return (
+        (start >= resStart && start <= resEnd) ||
+        (end >= resStart && end <= resEnd) ||
+        (start <= resStart && end >= resEnd)
+      );
+    });
+    if (conflicting) {
+      toast({ title: 'Error', description: 'Ya existe una reserva en ese rango de fechas', variant: 'destructive' });
+      return;
     }
-    
-    return {
-      style: {
-        backgroundColor,
-        borderRadius: '4px',
-        opacity,
-        color: 'white',
-        border: 'none',
-        display: 'block'
+    // LOG de depuración antes del insert
+    console.log('Insertando reserva:', {
+      property_id: selectedProp.id,
+      owner_id: user.id,
+      start_date: format(start, 'yyyy-MM-dd'),
+      end_date: format(end, 'yyyy-MM-dd'),
+      status: 'pendiente'
+    });
+    const { error } = await supabase.from('property_reservations').insert([
+      {
+        property_id: selectedProp.id,
+        owner_id: user.id,
+        start_date: format(start, 'yyyy-MM-dd'),
+        end_date: format(end, 'yyyy-MM-dd'),
+        status: 'pendiente'
       }
-    };
+    ]);
+    // LOG de depuración después del insert
+    if (error) {
+      console.error('Error al insertar reserva:', error);
+      toast({ title: 'Error', description: 'No se pudo crear la reserva', variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Reserva creada', description: 'Tu solicitud de reserva está pendiente de aprobación' });
+    setModalOpen(false);
+    // Recargar reservas
+    const { data: resData } = await supabase
+      .from('property_reservations')
+      .select('*')
+      .eq('property_id', selectedProp.id);
+    setReservations(prev => ({ ...prev, [selectedProp.id]: resData || [] }));
   };
 
-  if (loading) {
-    return <div className="p-4">Cargando...</div>;
-  }
-
-  if (!myProperty) {
-    return (
-      <div className="p-6">
-        <Card className="p-4">
-          <h2 className="text-xl font-semibold text-red-600">No tienes ninguna propiedad asignada</h2>
-          <p className="mt-2 text-gray-600">Contacta con el administrador si crees que esto es un error.</p>
-        </Card>
-      </div>
-    );
-  }
+  if (loading) return <div className="p-4">Cargando...</div>;
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Reservas de mi Propiedad</h1>
-      <p className="mb-4 text-gray-600">
-        Propiedad: {myProperty.title} (Share #{myProperty.share_number})
-      </p>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
-          <Card className="p-4">
-            <Calendar
-              localizer={localizer}
-              events={events}
-              startAccessor="start"
-              endAccessor="end"
-              style={{ height: 500 }}
-              selectable
-              onSelectSlot={handleSelectSlot}
-              eventPropGetter={eventStyleGetter}
-              messages={{
-                next: "Siguiente",
-                previous: "Anterior",
-                today: "Hoy",
-                month: "Mes",
-                week: "Semana",
-                day: "Día"
-              }}
-            />
-          </Card>
-        </div>
-        
-        <div>
-          <Card className="p-4">
-            <h2 className="text-xl font-semibold mb-4">Mis Reservas</h2>
-            <div className="space-y-4">
-              {allReservations.filter(r => r.owner_id === user?.id).length === 0 ? (
-                <p className="text-gray-500">No tienes reservas activas</p>
-              ) : (
-                allReservations
-                  .filter(r => r.owner_id === user?.id)
-                  .map(reservation => (
-                    <div 
-                      key={reservation.id} 
-                      className="p-3 rounded border"
-                    >
-                      <div className="text-sm text-gray-600">
-                        {format(new Date(reservation.start_date), 'dd/MM/yyyy')} - 
-                        {format(new Date(reservation.end_date), 'dd/MM/yyyy')}
-                      </div>
-                      <div className={`text-sm mt-1 ${
-                        reservation.status === 'aprobada' 
-                          ? 'text-green-600' 
-                          : reservation.status === 'rechazada'
-                          ? 'text-red-600'
-                          : 'text-blue-600'
-                      }`}>
-                        Estado: {reservation.status}
-                      </div>
+    <div className="container mx-auto p-6 font-poppins space-y-8">
+      {properties.length === 0 ? (
+        <Card className="max-w-2xl mx-auto">
+          <CardHeader>
+            <h1 className="text-2xl font-bold">Mis Copropiedades asignadas</h1>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-500">No tienes copropiedades reservadas ni compradas.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        properties.map(prop => (
+          <Card key={prop.id} className="max-w-2xl mx-auto">
+            <CardHeader>
+              <h2 className="text-xl font-bold">{prop.title}</h2>
+            </CardHeader>
+            <CardContent>
+              {prop.shares.map(share => {
+                const resList = (reservations[prop.id] || []).filter(r => r.share_number === share.num);
+                const events = (reservations[prop.id] || []).map(r => ({
+                  id: r.id,
+                  title: r.owner_id === user.id ? `Mi reserva - ${r.status}` : `Reservado por otro propietario`,
+                  start: new Date(r.start_date + 'T00:00:00Z'),
+                  end: new Date(r.end_date + 'T00:00:00Z'),
+                  status: r.status,
+                  isOwner: r.owner_id === user.id
+                }));
+                const eventStyleGetter = (event: any) => {
+                  let backgroundColor = '#4f8cff';
+                  let opacity = 0.8;
+                  if (!event.isOwner) {
+                    backgroundColor = '#64748b';
+                    opacity = 0.5;
+                  } else {
+                    if (event.status === 'aprobada') backgroundColor = '#22c55e';
+                    if (event.status === 'rechazada') backgroundColor = '#ef4444';
+                  }
+                  return {
+                    style: {
+                      backgroundColor,
+                      borderRadius: '4px',
+                      opacity,
+                      color: 'white',
+                      border: 'none',
+                      display: 'block'
+                    }
+                  };
+                };
+                return (
+                  <div key={share.num} className="mb-8">
+                    <div className="flex items-center mb-2 gap-2">
+                      <h3 className="font-semibold">Share #{share.num} ({share.status})</h3>
+                      <Button variant="ghost" size="icon" onClick={() => setHelpOpen(true)} title="¿Cómo reservar?">
+                        <Info className="w-5 h-5" />
+                      </Button>
                     </div>
-                  ))
-              )}
-            </div>
+                    <Calendar
+                      localizer={localizer}
+                      events={events}
+                      startAccessor="start"
+                      endAccessor="end"
+                      style={{ height: 400 }}
+                      selectable
+                      onSelectSlot={(slot) => {
+                        setSelectedProp(prop);
+                        setSelectedShare(share);
+                        setStartDate(format(slot.start, 'yyyy-MM-dd'));
+                        setEndDate(format(slot.end, 'yyyy-MM-dd'));
+                        setModalOpen(true);
+                      }}
+                      eventPropGetter={eventStyleGetter}
+                      messages={{
+                        next: "Siguiente",
+                        previous: "Anterior",
+                        today: "Hoy",
+                        month: "Mes",
+                        week: "Semana",
+                        day: "Día"
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </CardContent>
           </Card>
-        </div>
-      </div>
+        ))
+      )}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent aria-describedby="reserva-descripcion">
+          <DialogHeader>
+            <DialogTitle>Reservar semana</DialogTitle>
+          </DialogHeader>
+          <div id="reserva-descripcion" className="py-2 text-gray-600">
+            Selecciona la fecha de inicio y fin para tu reserva. Recuerda que no debe solaparse con otras reservas existentes.
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block mb-1">Fecha inicio</label>
+              <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+            </div>
+            <div>
+              <label className="block mb-1">Fecha fin</label>
+              <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleReserve} disabled={!startDate || !endDate}>Reservar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Cómo reservar?</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 text-gray-700">
+            Para reservar, selecciona un rango de fechas en el calendario y confirma en el modal que aparecerá.
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setHelpOpen(false)}>Entendido</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -37,6 +37,8 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminHome from './pages/admin/AdminHome';
 import AgentRequests from './pages/admin/AgentRequests';
 import AdminReservations from './pages/dashboard/admin/AdminReservations';
+import IncidentDetail from './pages/dashboard/incidencias/IncidentDetail';
+import DashboardRedirect from './pages/dashboard/DashboardRedirect';
 
 const Profile = () => (
   <div style={{ padding: 32 }}>
@@ -44,28 +46,6 @@ const Profile = () => (
     <p>Aquí irá la información del perfil.</p>
   </div>
 );
-
-// Componente para redirigir según el rol
-const DashboardRedirect = () => {
-  const { user } = useAuth();
-  
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  switch (user.role) {
-    case 'admin':
-      return <Navigate to="/dashboard/admin/agencies" replace />;
-    case 'owner':
-      return <Navigate to="/dashboard/owner" replace />;
-    case 'agency':
-      return <Navigate to="/dashboard/agencies" replace />;
-    case 'agent':
-      return <Navigate to="/dashboard/admin/agents" replace />;
-    default:
-      return <Navigate to="/dashboard" replace />;
-  }
-};
 
 function App() {
   return (
@@ -123,6 +103,7 @@ function App() {
             <Route path="invoices" element={<FacturasPropietario />} />
             <Route path="incidents" element={<IncidenciasPanel />} />
             <Route path="incidents/new" element={<IncidenciaForm />} />
+            <Route path="incidents/:id" element={<IncidentDetail />} />
             <Route path="messages" element={<MessagesBoard />} />
             <Route path="commissions" element={<ComisionesPanel />} />
             <Route path="profile" element={<ProfilePanel />} />

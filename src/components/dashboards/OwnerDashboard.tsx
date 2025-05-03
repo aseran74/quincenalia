@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,10 @@ const OwnerDashboard: React.FC = () => {
   const owner = user as Owner;
   
   const ownerProperties = mockProperties.filter(property => 
-    property.ownerId === owner.id
+    (property.share1_owner_id === owner.id && property.share1_status === 'vendida') ||
+    (property.share2_owner_id === owner.id && property.share2_status === 'vendida') ||
+    (property.share3_owner_id === owner.id && property.share3_status === 'vendida') ||
+    (property.share4_owner_id === owner.id && property.share4_status === 'vendida')
   );
   
   const ownerIncidents = mockIncidents.filter(incident => 

@@ -29,10 +29,16 @@ export interface Property {
   share2_price?: number;
   share3_price?: number;
   share4_price?: number;
+  share1_owner_id?: string;
+  share2_owner_id?: string;
+  share3_owner_id?: string;
+  share4_owner_id?: string;
   share1_status?: string;
   share2_status?: string;
   share3_status?: string;
   share4_status?: string;
+  address?: string;
+  city?: string;
 }
 
 export interface DateRange {
