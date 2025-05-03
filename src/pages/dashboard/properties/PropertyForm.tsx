@@ -72,6 +72,8 @@ interface Property {
   share4_owner_id: string | null;
   share4_price: number;
   nearby_services?: string[];
+  tipo_vivienda?: string;
+  features_extra?: string[];
 }
 
 const FEATURES = [
@@ -81,6 +83,32 @@ const FEATURES = [
   { key: 'videoconsolas', label: 'Videoconsolas', icon: <FaGamepad className="w-6 h-6 text-green-500" /> },
   { key: 'acceso_playa', label: 'Acceso playa', icon: <FaUmbrellaBeach className="w-6 h-6 text-cyan-500" /> },
   { key: 'parking_gratuito', label: 'Parking gratuito', icon: <FaParking className="w-6 h-6 text-gray-700" /> },
+];
+
+const TIPO_VIVIENDA_OPTIONS = [
+  { value: 'Piso', label: 'Piso' },
+  { value: 'Ático', label: 'Ático' },
+  { value: 'Dúplex', label: 'Dúplex' },
+  { value: 'Casa independiente', label: 'Casa independiente' },
+  { value: 'Casa pareada', label: 'Casa pareada' },
+  { value: 'Casa adosada', label: 'Casa adosada' },
+  { value: 'Casa rústica', label: 'Casa rústica' },
+];
+
+const FEATURES_EXTRA = [
+  'Aire acondicionado',
+  'Armarios empotrados',
+  'Ascensor',
+  'Balcón',
+  'Terraza',
+  'Exterior',
+  'Garaje',
+  'Jardín',
+  'Piscina',
+  'Trastero',
+  'Vivienda accesible',
+  'Vistas al mar',
+  'Vivienda de lujo',
 ];
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyBy4MuV_fOnPJF-WoxQbBlnKj8dMF6KuxM";
@@ -137,7 +165,9 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
         share3_price: 0,
         share4_status: 'disponible',
         share4_owner_id: null,
-        share4_price: 0
+        share4_price: 0,
+        tipo_vivienda: '',
+        features_extra: [],
       });
     }
   }, [user, authLoading, isEditing]);
@@ -418,6 +448,8 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
       // Calculamos los precios de los shares basados en el precio total
       const propertyToSave = {
         ...propertyData,
+        tipo_vivienda: propertyData.tipo_vivienda || null,
+        features_extra: propertyData.features_extra || [],
         share1_price: propertyData.price * 0.25,
         share2_price: propertyData.price * 0.25,
         share3_price: propertyData.price * 0.25,
@@ -953,14 +985,31 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-semibold mb-4">Características Destacadas</h3>
+                  <div>
+                    <Label htmlFor="tipo_vivienda">Tipo de vivienda</Label>
+                    <Select
+                      value={property.tipo_vivienda || ''}
+                      onValueChange={(value) => setProperty({ ...property, tipo_vivienda: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona el tipo de vivienda" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIPO_VIVIENDA_OPTIONS.map(opt => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2 mt-4">
+                    <h3 className="text-xl font-semibold mb-4">Características ampliadas</h3>
                     <div className="grid grid-cols-2 gap-4">
-                      {FEATURES.map(feature => (
+                      {FEATURES_EXTRA.map((feature) => (
                         <label
-                          key={feature.key}
+                          key={feature}
                           className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors ${
-                            property?.features?.includes(feature.key)
+                            property?.features_extra?.includes(feature)
                               ? 'bg-blue-50 border-blue-500 border'
                               : 'bg-white border hover:bg-gray-50 border-gray-200'
                           }`}
@@ -968,17 +1017,16 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
                           <input
                             type="checkbox"
                             className="hidden"
-                            checked={property?.features?.includes(feature.key)}
+                            checked={property?.features_extra?.includes(feature) || false}
                             onChange={(e) => {
                               if (!property) return;
-                              const updatedFeatures = e.target.checked
-                                ? [...(property.features || []), feature.key]
-                                : (property.features || []).filter((f) => f !== feature.key);
-                              setProperty({ ...property, features: updatedFeatures });
+                              const updated = e.target.checked
+                                ? [...(property.features_extra || []), feature]
+                                : (property.features_extra || []).filter((f) => f !== feature);
+                              setProperty({ ...property, features_extra: updated });
                             }}
                           />
-                          {feature.icon}
-                          <span className="font-medium">{feature.label}</span>
+                          <span className="font-medium">{feature}</span>
                         </label>
                       ))}
                     </div>

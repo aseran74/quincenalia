@@ -30,6 +30,8 @@ interface Property {
   agent_id?: string;
   copropiedad?: string;
   nearby_services?: string[];
+  tipo_vivienda?: string;
+  features_extra?: string[];
 }
 
 interface Agent {
@@ -377,6 +379,11 @@ const PropertyDetail = () => {
           </div>
           <div className="mb-6">
             <h1 className="text-3xl font-bold mb-2">{property.title}</h1>
+            {property.tipo_vivienda && (
+              <div className="mb-2">
+                <span className="inline-block bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full font-semibold mr-2">{property.tipo_vivienda}</span>
+              </div>
+            )}
             <div className="flex flex-wrap gap-6 items-center mb-2">
               <div className="flex items-center gap-2">
                 <HiOutlineHome className="text-blue-500 w-5 h-5" />
@@ -433,6 +440,18 @@ const PropertyDetail = () => {
                     <div key={feature.key} className="flex items-center gap-3 p-4 bg-white rounded-lg">
                       <div className="text-2xl">{feature.icon}</div>
                       <span className="font-medium">{feature.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {property.features_extra && property.features_extra.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold mb-4">Características ampliadas</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {property.features_extra.map((feature) => (
+                    <div key={feature} className="flex items-center gap-3 p-4 bg-white rounded-lg">
+                      <span className="font-medium">{feature}</span>
                     </div>
                   ))}
                 </div>

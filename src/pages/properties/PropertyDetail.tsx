@@ -1,24 +1,24 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ChevronLeft, ChevronRight, Bed, Bath, Square } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bed, Bath, Square, MapPin, Phone, Mail } from 'lucide-react';
 import { FaSwimmingPool, FaHotTub, FaChild, FaGamepad, FaUmbrellaBeach, FaParking, FaStore, FaHospital, 
   FaBus, FaSchool, FaUtensils, FaShoppingCart, FaMapMarkerAlt, FaHome, FaImages, FaInfoCircle, 
-  FaUserTie, FaSearch, FaArrowLeft, FaGlassCheers, FaTree, FaWater, FaShip, FaPrescriptionBottleAlt, FaUsers, FaPhone } from 'react-icons/fa';
-import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
+  FaUserTie, FaSearch, FaArrowLeft, FaGlassCheers, FaTree, FaWater, FaShip, FaPrescriptionBottleAlt, FaUsers } from 'react-icons/fa';
+import { GoogleMap, Marker } from '@react-google-maps/api';
 import type { Property } from '@/types/property';
 import ContactForm from '@/components/ContactForm';
 
 const FEATURES = [
-  { key: 'piscina_privada', label: 'Piscina privada', icon: <FaSwimmingPool className="w-6 h-6 text-blue-500" /> },
-  { key: 'jacuzzi', label: 'Jacuzzi', icon: <FaHotTub className="w-6 h-6 text-pink-500" /> },
-  { key: 'juegos_ninos', label: 'Juegos para niños', icon: <FaChild className="w-6 h-6 text-yellow-500" /> },
-  { key: 'videoconsolas', label: 'Videoconsolas', icon: <FaGamepad className="w-6 h-6 text-green-500" /> },
-  { key: 'acceso_playa', label: 'Acceso playa', icon: <FaUmbrellaBeach className="w-6 h-6 text-cyan-500" /> },
-  { key: 'parking_gratuito', label: 'Parking gratuito', icon: <FaParking className="w-6 h-6 text-gray-700" /> },
+  { key: 'piscina_privada', label: 'Piscina privada', icon: <FaSwimmingPool className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" /> },
+  { key: 'jacuzzi', label: 'Jacuzzi', icon: <FaHotTub className="w-5 h-5 sm:w-6 sm:h-6 text-pink-500" /> },
+  { key: 'juegos_ninos', label: 'Juegos para niños', icon: <FaChild className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500" /> },
+  { key: 'videoconsolas', label: 'Videoconsolas', icon: <FaGamepad className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" /> },
+  { key: 'acceso_playa', label: 'Acceso playa', icon: <FaUmbrellaBeach className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-500" /> },
+  { key: 'parking_gratuito', label: 'Parking gratuito', icon: <FaParking className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" /> },
 ];
 
 interface MortgageType {
@@ -33,8 +33,7 @@ interface MortgageType {
   };
 }
 
-// Mover las constantes fuera del componente
-const GOOGLE_MAPS_API_KEY = "AIzaSyBy4MuV_fOnPJF-WoxQbBlnKj8dMF6KuxM";
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const GOOGLE_MAPS_LIBRARIES: ("places")[] = ["places"];
 
 const PROPERTY_PERIODS = [
@@ -44,30 +43,58 @@ const PROPERTY_PERIODS = [
   { label: '2ª quincena Agosto + 10 sem', key: 'share4' }
 ];
 
-// Mapeo de servicios cercanos a iconos
-const SERVICE_ICONS = {
-  playa_cercana: <FaUmbrellaBeach className="w-6 h-6 text-cyan-500" />,
-  supermercados: <FaShoppingCart className="w-6 h-6 text-green-500" />,
-  vida_nocturna: <FaGlassCheers className="w-6 h-6 text-purple-500" />,
-  parques_naturales: <FaTree className="w-6 h-6 text-green-600" />,
-  deportes_nauticos: <FaWater className="w-6 h-6 text-blue-500" />,
-  puerto_deportivo: <FaShip className="w-6 h-6 text-blue-600" />,
-  farmacias: <FaPrescriptionBottleAlt className="w-6 h-6 text-red-500" />,
+const SERVICE_ICONS: { [key: string]: React.ReactNode } = {
+  playa_cercana: <FaUmbrellaBeach className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-500" />,
+  supermercados: <FaShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />,
+  vida_nocturna: <FaGlassCheers className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500" />,
+  parques_naturales: <FaTree className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />,
+  deportes_nauticos: <FaWater className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />,
+  puerto_deportivo: <FaShip className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />,
+  farmacias: <FaPrescriptionBottleAlt className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />,
+  default: <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
 };
 
 function MortgageCalculator({ propertyPrice }: { propertyPrice: number }) {
-  // Calculamos el precio de una copropiedad (25% del total)
-  const sharePrice = propertyPrice * 0.25;
-  
+  const sharePrice = useMemo(() => propertyPrice * 0.25, [propertyPrice]);
   const [mortgage, setMortgage] = useState<MortgageType>({
     value: sharePrice,
-    downPayment: sharePrice * 0.3, // 30% entrada inicial por defecto
+    downPayment: sharePrice * 0.3,
     interest: 2.1,
     years: 20,
     result: null
   });
-
-  // Calcular automáticamente al montar el componente y cuando cambie el precio
+  useEffect(() => {
+    const calculateMortgage = () => {
+      const loanAmount = mortgage.value - mortgage.downPayment;
+      if (loanAmount <= 0 || mortgage.interest <= 0 || mortgage.years <= 0) {
+          setMortgage(prev => ({ ...prev, result: null }));
+          return;
+      }
+      const monthlyInterestRate = (mortgage.interest / 100) / 12;
+      const numberOfPayments = mortgage.years * 12;
+      let monthlyPayment: number;
+      if (monthlyInterestRate === 0) {
+          monthlyPayment = loanAmount / numberOfPayments;
+      } else {
+          monthlyPayment = loanAmount * monthlyInterestRate / (1 - Math.pow(1 + monthlyInterestRate, -numberOfPayments));
+      }
+      const totalPayment = monthlyPayment * numberOfPayments;
+      const totalInterest = totalPayment - loanAmount;
+      if (isFinite(monthlyPayment) && isFinite(totalPayment) && isFinite(totalInterest)) {
+          setMortgage(prev => ({
+              ...prev,
+              result: {
+                  monthly: monthlyPayment,
+                  total: totalPayment,
+                  totalInterest: totalInterest
+              }
+          }));
+      } else {
+           setMortgage(prev => ({ ...prev, result: null }));
+      }
+    };
+    calculateMortgage();
+  }, [mortgage.value, mortgage.downPayment, mortgage.interest, mortgage.years]);
   useEffect(() => {
     const newSharePrice = propertyPrice * 0.25;
     setMortgage(prev => ({
@@ -76,130 +103,115 @@ function MortgageCalculator({ propertyPrice }: { propertyPrice: number }) {
       downPayment: newSharePrice * 0.3
     }));
   }, [propertyPrice]);
-
-  useEffect(() => {
-    calculateMortgage();
-  }, [mortgage.value, mortgage.downPayment]);
-
-  const calculateMortgage = () => {
-    const l = mortgage.value - mortgage.downPayment;
-    const r = (mortgage.interest / 100) / 12;
-    const n = mortgage.years * 12;
-    const P = l * r / (1 - Math.pow(1 + r, -n));
-    const total = P * n;
-    const totalInterest = total - l;
-
-    setMortgage(prev => ({
-      ...prev,
-      result: {
-        monthly: P,
-        total: total,
-        totalInterest: totalInterest
-      }
-    }));
-  };
-
   return (
     <div className="space-y-4">
-      <h3 className="text-xl font-semibold">Calculadora de Hipoteca</h3>
       <p className="text-sm text-gray-600 mb-4">
-        Cálculo basado en el precio de una copropiedad ({(sharePrice).toLocaleString()}€)
+        Cálculo basado en el precio de una copropiedad (<span className='font-medium'>{(sharePrice).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>)
       </p>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-sm text-gray-600">Precio de la copropiedad</label>
+          <label htmlFor="mortgageValue" className="block text-xs sm:text-sm text-gray-600 mb-1">Precio Copropiedad (€)</label>
           <Input
+            id="mortgageValue"
             type="number"
             value={mortgage.value}
-            onChange={(e) => {
-              setMortgage(prev => ({ ...prev, value: Number(e.target.value), downPayment: Number(e.target.value) * 0.3 }));
-            }}
-            disabled
+            readOnly
+            className="bg-gray-100"
           />
         </div>
         <div>
-          <label className="text-sm text-gray-600">Entrada inicial (30%)</label>
+          <label htmlFor="downPayment" className="block text-xs sm:text-sm text-gray-600 mb-1">Entrada (30%) (€)</label>
           <Input
+            id="downPayment"
             type="number"
             value={mortgage.downPayment}
-            onChange={(e) => {
-              setMortgage(prev => ({ ...prev, downPayment: Number(e.target.value) }));
-            }}
-            disabled
+            readOnly
+            className="bg-gray-100"
           />
         </div>
         <div>
-          <label className="text-sm text-gray-600">Tasa de interés (%)</label>
+          <label htmlFor="interestRate" className="block text-xs sm:text-sm text-gray-600 mb-1">Interés Anual (%)</label>
           <Input
+            id="interestRate"
             type="number"
             value={mortgage.interest}
-            onChange={(e) => {
-              setMortgage(prev => ({ ...prev, interest: Number(e.target.value) }));
-              calculateMortgage();
-            }}
+            onChange={(e) => setMortgage(prev => ({ ...prev, interest: Number(e.target.value) || 0 }))}
             step="0.1"
+            min="0"
           />
         </div>
         <div>
-          <label className="text-sm text-gray-600">Plazo (años)</label>
+          <label htmlFor="loanTerm" className="block text-xs sm:text-sm text-gray-600 mb-1">Plazo (años)</label>
           <Input
+            id="loanTerm"
             type="number"
             value={mortgage.years}
-            onChange={(e) => {
-              setMortgage(prev => ({ ...prev, years: Number(e.target.value) }));
-              calculateMortgage();
-            }}
+            onChange={(e) => setMortgage(prev => ({ ...prev, years: Number(e.target.value) || 0 }))}
+            min="1"
           />
         </div>
       </div>
-      {mortgage.result && (
-        <div className="mt-4 p-4 bg-white rounded-lg border">
-          <p className="text-lg font-semibold text-blue-600">Cuota mensual: {mortgage.result.monthly.toLocaleString()}€</p>
-          <p>Total a pagar: {mortgage.result.total.toLocaleString()}€</p>
-          <p>Total intereses: {mortgage.result.totalInterest.toLocaleString()}€</p>
+      {mortgage.result && mortgage.result.monthly > 0 && (
+        <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200 text-sm">
+          <p className="text-base sm:text-lg font-semibold text-blue-700 mb-1">
+            Cuota mensual: {mortgage.result.monthly.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+          </p>
+          <p className="text-gray-700">Total a pagar: {mortgage.result.total.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+          <p className="text-gray-600">Total intereses: {mortgage.result.totalInterest.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+        </div>
+      )}
+       {mortgage.result && mortgage.result.monthly <= 0 && (
+           <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200 text-sm text-yellow-800">
+               Revisa los datos introducidos para calcular la cuota.
         </div>
       )}
     </div>
   );
 }
 
-// Type guard para validar un agente
 function isValidAgent(agent: any): agent is Property['agent'] {
   return agent && typeof agent === 'object' && 'id' in agent && 'first_name' in agent && 'last_name' in agent && 'email' in agent;
 }
 
-// Hook personalizado para cargar Google Maps
-function useGoogleMaps(apiKey: string) {
+function useGoogleMaps(apiKey: string | undefined) {
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
+    if (!apiKey) {
+      console.warn("Google Maps API Key no proporcionada.");
+      return;
+    }
     if (window.google && window.google.maps) {
       setLoaded(true);
       return;
     }
+    const scriptId = 'google-maps-script';
+    if (document.getElementById(scriptId)) {
+      return;
+    }
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+    script.id = scriptId;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
     script.async = true;
+    script.defer = true;
     script.onload = () => setLoaded(true);
+    script.onerror = () => console.error("Error cargando Google Maps script.");
     document.body.appendChild(script);
-    return () => {
-      document.body.removeChild(script);
-    };
   }, [apiKey]);
   return loaded;
 }
 
-// Función para calcular el pago mensual
 const calculateMonthlyPayment = (totalPrice: number): number => {
-  const sharePrice = totalPrice * 0.25; // Precio de la copropiedad
-  const downPayment = sharePrice * 0.3; // 30% de entrada
+  if (totalPrice <= 0) return 0;
+  const sharePrice = totalPrice * 0.25;
+  const downPayment = sharePrice * 0.3;
   const loanAmount = sharePrice - downPayment;
-  const interestRate = 2.1 / 100 / 12; // 2.1% anual a mensual
-  const numberOfPayments = 20 * 12; // 20 años en meses
-  
+  if (loanAmount <= 0) return 0;
+  const interestRate = 2.1 / 100 / 12;
+  const numberOfPayments = 20 * 12;
+  if (interestRate === 0) return loanAmount / numberOfPayments;
   const monthlyPayment = loanAmount * interestRate * Math.pow(1 + interestRate, numberOfPayments) / 
     (Math.pow(1 + interestRate, numberOfPayments) - 1);
-    
-  return Math.round(monthlyPayment);
+  return isFinite(monthlyPayment) ? Math.round(monthlyPayment) : 0;
 };
 
 export const PropertyDetail = () => {
@@ -211,8 +223,8 @@ export const PropertyDetail = () => {
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const mapsLoaded = useGoogleMaps(GOOGLE_MAPS_API_KEY);
   const [showContactForm, setShowContactForm] = useState(false);
+  const contactFormRef = useRef<HTMLDivElement>(null);
 
-  // Geocodificar la dirección cuando cambie
   useEffect(() => {
     if (mapsLoaded && property?.location && !coordinates) {
       const geocoder = new window.google.maps.Geocoder();
@@ -222,429 +234,383 @@ export const PropertyDetail = () => {
             lat: results[0].geometry.location.lat(),
             lng: results[0].geometry.location.lng(),
           });
+        } else {
+            console.warn(`Geocode no tuvo éxito para la dirección "${property.location}" por la siguiente razón: ${status}`);
         }
       });
     }
-  }, [mapsLoaded, property?.location]);
+  }, [mapsLoaded, property?.location, coordinates]);
 
   useEffect(() => {
     const fetchProperty = async () => {
+      setLoading(true);
       try {
         const { data: propertyData, error } = await supabase
           .from('properties')
           .select(`
             *,
-            agent:real_estate_agents (
-              id,
-              first_name,
-              last_name,
-              email,
-              phone,
-              photo_url,
-              bio,
-              specialization,
-              license_number
-            )
+            agent:profiles ( * )
           `)
           .eq('id', id)
           .single();
-
-        if (error) throw error;
-
-        // Asegurarnos de que los datos tienen el formato correcto
+        if (error) {
+            if (error.code === 'PGRST116') {
+                setProperty(null);
+            } else {
+                throw error;
+            }
+        } else if (propertyData) {
         const formattedProperty: Property = {
           ...propertyData,
-          agent: isValidAgent((propertyData as any).agent) ? (propertyData as any).agent : null,
-          latitude: typeof (propertyData as any).latitude === 'number' ? (propertyData as any).latitude : null,
-          longitude: typeof (propertyData as any).longitude === 'number' ? (propertyData as any).longitude : null,
-          images: Array.isArray((propertyData as any).images) ? (propertyData as any).images : [],
-          features: Array.isArray((propertyData as any).features) ? (propertyData as any).features : [],
-          nearby_services: Array.isArray((propertyData as any).nearby_services) ? (propertyData as any).nearby_services : [],
-          location: (propertyData as any).location || 'Ubicación no especificada'
-        };
-
-        console.log('Property data:', formattedProperty); // Para debug
+                agent: isValidAgent(propertyData.agent) ? propertyData.agent : null,
+                latitude: typeof propertyData.latitude === 'number' ? propertyData.latitude : null,
+                longitude: typeof propertyData.longitude === 'number' ? propertyData.longitude : null,
+                images: Array.isArray(propertyData.images) ? propertyData.images : [],
+                features: Array.isArray(propertyData.features) ? propertyData.features : [],
+                nearby_services: Array.isArray(propertyData.nearby_services) ? propertyData.nearby_services : [],
+                location: propertyData.location || 'Ubicación no especificada',
+                share1_price: propertyData.share1_price ?? null,
+                share1_status: propertyData.share1_status ?? null,
+                share2_price: propertyData.share2_price ?? null,
+                share2_status: propertyData.share2_status ?? null,
+                share3_price: propertyData.share3_price ?? null,
+                share3_status: propertyData.share3_status ?? null,
+                share4_price: propertyData.share4_price ?? null,
+                share4_status: propertyData.share4_status ?? null,
+            };
         setProperty(formattedProperty);
+        } else {
+            setProperty(null);
+        }
       } catch (error) {
         console.error('Error fetching property:', error);
+        setProperty(null);
       } finally {
         setLoading(false);
       }
     };
-
     if (id) {
       fetchProperty();
+    } else {
+        setLoading(false);
+        setProperty(null);
     }
   }, [id]);
 
+  const nextImage = () => {
+    if (property?.images && property.images.length > 1) {
+      setCurrentImageIndex((prev) => (prev + 1) % property.images!.length);
+    }
+  };
+  const previousImage = () => {
+    if (property?.images && property.images.length > 1) {
+      setCurrentImageIndex((prev) => (prev - 1 + property.images!.length) % property.images!.length);
+    }
+  };
+  const handleContactClick = () => {
+    setShowContactForm(true);
+    setTimeout(() => {
+        contactFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
   if (loading) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="animate-pulse">
-          <div className="h-96 bg-gray-200 rounded-lg mb-4" />
-          <div className="h-8 bg-gray-200 rounded mb-4" />
-          <div className="h-4 bg-gray-200 rounded mb-2" />
-          <div className="h-4 bg-gray-200 rounded mb-4" />
+      <div className="container mx-auto px-4 py-8">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 w-1/4 bg-gray-200 rounded mb-6"></div>
+          <div className="h-[300px] sm:h-[400px] lg:h-[500px] bg-gray-200 rounded-lg mb-4" />
+          <div className="h-6 w-3/4 mx-auto bg-gray-200 rounded mb-2" />
+          <div className="h-6 w-1/4 mx-auto bg-gray-200 rounded mb-6" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <div className="h-32 bg-gray-200 rounded"/>
+              <div className="h-40 bg-gray-200 rounded"/>
+              <div className="h-48 bg-gray-200 rounded"/>
+            </div>
+            <div className="space-y-6">
+              <div className="h-32 bg-gray-200 rounded"/>
+              <div className="h-64 bg-gray-200 rounded"/>
+              <div className="h-56 bg-gray-200 rounded"/>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
-
   if (!property) {
     return (
-      <div className="container mx-auto p-4">
+      <div className="container mx-auto px-4 py-8 text-center">
+         <Button variant="outline" onClick={() => navigate('/')} className="mb-6">
+           <FaArrowLeft className="mr-2 h-4 w-4" /> Volver a la búsqueda
+         </Button>
         <h1 className="text-2xl font-bold text-red-600">Propiedad no encontrada</h1>
+        <p className="text-gray-600 mt-2">La propiedad que buscas no existe o no está disponible.</p>
       </div>
     );
   }
-
-  const nextImage = () => {
-    if (property.images) {
-      setCurrentImageIndex((prev) => (prev + 1) % property.images!.length);
-    }
-  };
-
-  const previousImage = () => {
-    if (property.images) {
-      setCurrentImageIndex((prev) => (prev - 1 + property.images!.length) % property.images!.length);
-    }
-  };
-
-  const handleContactClick = () => {
-    setShowContactForm(true);
-    document.getElementById('contactForm')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Navbar sticky */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm shadow-sm rounded-lg mb-6 p-4">
-        <ul className="flex flex-wrap gap-6 justify-center items-center text-sm font-medium">
-          <li>
-            <Button 
-              variant="ghost" 
-              className="flex items-center gap-2" 
-              onClick={() => window.location.href = '/'}
-            >
-              <FaArrowLeft className="w-4 h-4" />
-              <span>Volver</span>
-            </Button>
-          </li>
-          <li>
-            <Button 
-              variant="ghost" 
-              className="flex items-center gap-2"
-              onClick={() => window.location.href = 'http://localhost:8080/properties/'}
-            >
-              <FaSearch className="w-4 h-4" />
-              <span>Buscar</span>
-            </Button>
-          </li>
-          <div className="h-6 w-px bg-gray-300 mx-2" />
-          <li>
-            <a href="#galeria" className="flex items-center gap-2 text-gray-600 hover:text-blue-600">
-              <FaImages className="w-4 h-4" />
-              <span>Galería</span>
-            </a>
-          </li>
-          <li>
+    <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8">
+       <div className="mb-4 sm:mb-6">
             <Button
-              variant="ghost"
-              className="flex items-center gap-2"
-              onClick={() => document.getElementById('copropiedades')?.scrollIntoView({ behavior: 'smooth' })}
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.href = 'http://localhost:8080/propiedades'}
+              className="flex items-center gap-2 text-sm"
             >
-              <FaUsers className="w-4 h-4" />
-              <span>Copropiedades</span>
+              <FaArrowLeft className="w-3 h-3" />
+              <span>Volver a Propiedades</span>
             </Button>
-          </li>
-          <li>
-            <a href="#descripcion" className="flex items-center gap-2 text-gray-600 hover:text-blue-600">
-              <FaInfoCircle className="w-4 h-4" />
-              <span>Descripción</span>
-            </a>
-          </li>
-          <li>
-            <a href="#agente" className="flex items-center gap-2 text-gray-600 hover:text-blue-600">
-              <FaUserTie className="w-4 h-4" />
-              <span>Agente</span>
-            </a>
-          </li>
-        </ul>
-      </nav>
-
-      <Card className="overflow-hidden">
-        <div className="p-6 space-y-8">
-          {/* Galería de fotos */}
-          <div id="galeria" className="space-y-4 scroll-mt-24">
-            {/* Foto principal */}
-            <div className="relative h-[500px]">
+       </div>
+      <Card className="overflow-hidden shadow-lg">
+         <div id="galeria" className="relative group">
               {property.images && property.images.length > 0 ? (
+            <>
+                <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden">
                 <img
                   src={property.images[currentImageIndex]}
                   alt={`${property.title} - Imagen ${currentImageIndex + 1}`}
-                  className="w-full h-full object-cover rounded-lg"
+                    className="w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
                 />
-              ) : (
-                <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-lg">
-                  <p className="text-gray-500">No hay imágenes disponibles</p>
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
                 </div>
-              )}
-            </div>
-            
-            {/* Miniaturas */}
-            {property.images && property.images.length > 1 && (
-              <div className="grid grid-cols-4 gap-4">
+                {property.images.length > 1 && (
+                <>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={previousImage}
+                        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/70 hover:bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label="Imagen anterior"
+                    >
+                        <ChevronLeft className="h-5 w-5" />
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={nextImage}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/70 hover:bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label="Siguiente imagen"
+                    >
+                        <ChevronRight className="h-5 w-5" />
+                    </Button>
+                </>
+                )}
+                {/* Miniaturas debajo de la imagen principal */}
+                <div className="flex gap-2 mt-3 overflow-x-auto pb-2" style={{scrollBehavior: 'smooth'}}>
                 {property.images.map((image, index) => (
                   <button
                     key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`relative h-24 ${
-                      index === currentImageIndex ? 'ring-2 ring-blue-500' : ''
-                    }`}
+                      onClick={() => {
+                        setCurrentImageIndex(index);
+                        // Hacer scroll automático a la miniatura seleccionada
+                        setTimeout(() => {
+                          const thumb = document.getElementById(`miniatura-${index}`);
+                          thumb?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                        }, 50);
+                      }}
+                      id={`miniatura-${index}`}
+                      className={`relative h-16 w-24 flex-shrink-0 border-2 rounded-lg overflow-hidden transition-all duration-200 ${index === currentImageIndex ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200'}`}
+                      aria-label={`Miniatura ${index + 1}`}
                   >
                     <img
                       src={image}
-                      alt={`${property.title} - Miniatura ${index + 1}`}
-                      className="w-full h-full object-cover rounded-lg"
+                        alt={`Miniatura ${index + 1}`}
+                        className="w-full h-full object-cover"
                     />
                   </button>
                 ))}
               </div>
+            </>
+            ) : (
+                <div className="w-full h-[250px] sm:h-[350px] bg-gray-200 flex items-center justify-center rounded-t-lg">
+                    <FaImages className="w-12 h-12 text-gray-400" />
+                    <p className="ml-2 text-gray-500">No hay imágenes disponibles</p>
+                </div>
             )}
           </div>
-
-          {/* Título y precio */}
-          <div className="text-center">
-            <h1 className="text-3xl font-bold mb-4">{property.title}</h1>
-            <p className="text-2xl font-bold text-blue-600 mb-6">
-              {property.price.toLocaleString()}€
+         <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
+            <div className="border-b pb-4 sm:pb-6">
+                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 text-gray-800">{property.title}</h1>
+                 <p className="text-base sm:text-lg text-gray-500 flex items-center gap-2 mb-3">
+                    <MapPin className="w-4 h-4 text-gray-400"/>
+                    {property.location}
+                 </p>
+                 <p className="text-2xl sm:text-3xl font-bold text-blue-600">
+                    {property.price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                 </p>
+                 {/* Precio de la hipoteca (cuota mensual) */}
+                 <p className="text-base sm:text-lg font-semibold text-blue-700 mt-1">
+                    {calculateMonthlyPayment(property.price).toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span className="text-gray-500 font-normal">/mes*</span>
             </p>
           </div>
-
-          {/* Contenedor principal de dos columnas */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Columna izquierda */}
-            <div className="space-y-8">
-              {/* Copropiedades */}
-              <div className="mt-8">
-                <h2 className="text-xl font-semibold mb-4 text-center">Copropiedades</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  {PROPERTY_PERIODS.slice(0, 2).map(period => {
-                    const monthlyPayment = calculateMonthlyPayment(property.price);
-                    return (
-                      <div key={period.key} className="p-4 border rounded-lg flex flex-col items-center bg-white">
-                        <span className="font-medium text-sm mb-2 text-center">{period.label}</span>
-                        <div className="flex flex-col items-center">
-                          <span className="text-xl mb-1">
-                            {property[`${period.key}_price` as keyof Property]?.toLocaleString() ?? '-'}€
-                          </span>
-                          <span className="text-sm text-blue-600 font-semibold">
-                            {monthlyPayment.toLocaleString()}€/mes*
-                          </span>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+                    <div id="caracteristicas" className="bg-gray-50 rounded-lg p-4 sm:p-6">
+                        <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Detalles Principales</h2>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                            <div className="text-center p-3 bg-white rounded-lg border flex flex-col items-center justify-center">
+                                <Bed className="w-6 h-6 sm:w-7 sm:h-7 text-blue-500 mb-1" />
+                                <p className="text-xs sm:text-sm text-gray-600">Hab.</p>
+                                <p className="text-base sm:text-lg font-semibold">{property.bedrooms}</p>
                         </div>
-                        <span className={`text-sm font-medium mt-2 ${
-                          property[`${period.key}_status` as keyof Property] === 'vendida' 
-                            ? 'text-red-500' 
-                            : 'text-green-600'
-                        }`}>
-                          {(property[`${period.key}_status` as keyof Property] as string) ?? '-'}
-                        </span>
+                            <div className="text-center p-3 bg-white rounded-lg border flex flex-col items-center justify-center">
+                                <Bath className="w-6 h-6 sm:w-7 sm:h-7 text-blue-500 mb-1" />
+                                <p className="text-xs sm:text-sm text-gray-600">Baños</p>
+                                <p className="text-base sm:text-lg font-semibold">{property.bathrooms}</p>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Características básicas */}
-              <div id="caracteristicas" className="bg-gray-50 rounded-lg p-6 scroll-mt-24">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-white rounded-lg flex flex-col items-center">
-                    <Bed className="w-8 h-8 text-blue-500 mb-2" />
-                    <p className="text-gray-600">Habitaciones</p>
-                    <p className="text-xl font-semibold">{property.bedrooms}</p>
-                  </div>
-                  <div className="text-center p-4 bg-white rounded-lg flex flex-col items-center">
-                    <Bath className="w-8 h-8 text-blue-500 mb-2" />
-                    <p className="text-gray-600">Baños</p>
-                    <p className="text-xl font-semibold">{property.bathrooms}</p>
-                  </div>
-                  <div className="text-center p-4 bg-white rounded-lg flex flex-col items-center">
-                    <Square className="w-8 h-8 text-blue-500 mb-2" />
-                    <p className="text-gray-600">Área</p>
-                    <p className="text-xl font-semibold">{property.area}m²</p>
+                            <div className="text-center p-3 bg-white rounded-lg border flex flex-col items-center justify-center">
+                                <Square className="w-6 h-6 sm:w-7 sm:h-7 text-blue-500 mb-1" />
+                                <p className="text-xs sm:text-sm text-gray-600">Área</p>
+                                <p className="text-base sm:text-lg font-semibold">{property.area} m²</p>
                   </div>
                 </div>
               </div>
-
-              {/* Descripción */}
-              <div id="descripcion" className="bg-gray-50 rounded-lg p-6 scroll-mt-24">
-                <h2 className="text-xl font-semibold mb-4">Descripción</h2>
-                <p className="text-gray-600">{property.description}</p>
+                    <div id="descripcion" className="bg-gray-50 rounded-lg p-4 sm:p-6">
+                        <h2 className="text-lg sm:text-xl font-semibold mb-3 text-gray-700">Descripción</h2>
+                        <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{property.description || "No hay descripción disponible."}</p>
               </div>
-
-              {/* Features destacados */}
               {property.features && property.features.length > 0 && (
-                <div id="features" className="bg-gray-50 rounded-lg p-6 scroll-mt-24">
-                  <h2 className="text-xl font-semibold mb-4">Características Destacadas</h2>
-                  <div className="grid grid-cols-2 gap-4">
+                        <div id="features" className="bg-gray-50 rounded-lg p-4 sm:p-6">
+                            <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Características Destacadas</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     {FEATURES.filter(f => property.features?.includes(f.key)).map(feature => (
-                      <div key={feature.key} className="flex items-center gap-3 p-4 bg-white rounded-lg">
-                        <div className="text-2xl">{feature.icon}</div>
-                        <span className="font-medium">{feature.label}</span>
+                                <div key={feature.key} className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+                                    {feature.icon}
+                                    <span className="text-sm sm:text-base font-medium text-gray-700">{feature.label}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-
-              {/* Servicios cercanos */}
               {property.nearby_services && property.nearby_services.length > 0 && (
-                <div id="servicios" className="bg-gray-50 rounded-lg p-6 scroll-mt-24">
-                  <h2 className="text-xl font-semibold mb-4">Servicios Cercanos</h2>
-                  <div className="grid grid-cols-2 gap-4">
+                        <div id="servicios" className="bg-gray-50 rounded-lg p-4 sm:p-6">
+                            <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Servicios Cercanos</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     {property.nearby_services.map((service) => (
-                      <div key={service} className="flex items-center gap-3 p-4 bg-white rounded-lg">
-                        {SERVICE_ICONS[service] || <FaMapMarkerAlt className="w-6 h-6 text-gray-400" />}
-                        <span className="font-medium capitalize">{service.replace('_', ' ')}</span>
+                                <div key={service} className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+                                    {SERVICE_ICONS[service] || SERVICE_ICONS.default}
+                                    <span className="text-sm sm:text-base font-medium capitalize text-gray-700">{service.replace(/_/g, ' ')}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-
-              {/* Ubicación y mapa */}
-              <div id="ubicacion" className="bg-gray-50 rounded-lg p-6 scroll-mt-24">
-                <h2 className="text-xl font-semibold mb-4">Ubicación</h2>
-                <p className="text-gray-600 mb-4">{property?.location}</p>
-                {mapsLoaded && coordinates ? (
-                  <div className="h-[400px] w-full rounded-lg overflow-hidden border">
+                    <div id="ubicacion" className="bg-gray-50 rounded-lg p-4 sm:p-6">
+                        <h2 className="text-lg sm:text-xl font-semibold mb-3 text-gray-700">Ubicación</h2>
+                        <p className="text-sm sm:text-base text-gray-600 mb-4">{property.location}</p>
+                        <div className="h-[300px] sm:h-[400px] w-full rounded-lg overflow-hidden border">
+                            {mapsLoaded ? (
+                                coordinates ? (
                     <GoogleMap
                       mapContainerStyle={{ width: '100%', height: '100%' }}
                       center={coordinates}
-                      zoom={16}
+                                    zoom={15}
                       options={{
                         zoomControl: true,
-                        streetViewControl: true,
-                        mapTypeControl: true,
+                                        streetViewControl: false,
+                                        mapTypeControl: false,
                         fullscreenControl: true,
-                        styles: [
-                          {
-                            featureType: "poi",
-                            elementType: "labels",
-                            stylers: [{ visibility: "on" }]
-                          }
-                        ],
-                        mapTypeId: "roadmap"
                       }}
                     >
-                      <Marker 
-                        position={coordinates}
-                        options={{
-                          animation: window.google?.maps?.Animation?.DROP
-                        }}
-                      />
+                                    <Marker position={coordinates} />
                     </GoogleMap>
+                                ) : (
+                                <div className="h-full w-full flex items-center justify-center bg-gray-100">
+                                    <p className="text-gray-500 text-sm">No se pudo obtener la ubicación exacta.</p>
                   </div>
+                                )
                 ) : (
-                  <div className="h-[400px] w-full rounded-lg bg-gray-100 flex items-center justify-center">
-                    <p className="text-gray-500">
-                      {!mapsLoaded ? "Cargando mapa..." : "Ubicación no disponible"}
-                    </p>
+                                <div className="h-full w-full flex items-center justify-center bg-gray-100 animate-pulse">
+                                    <p className="text-gray-500 text-sm">Cargando mapa...</p>
                   </div>
                 )}
               </div>
             </div>
-
-            {/* Columna derecha */}
-            <div className="space-y-8">
-              {/* Segunda sección de Copropiedades */}
-              <div className="mt-8">
-                <h2 className="text-xl font-semibold mb-4 text-center">Copropiedades</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  {PROPERTY_PERIODS.slice(2).map(period => {
+                </div>
+                <div className="lg:col-span-1 space-y-6 sm:space-y-8">
+                    <div id="copropiedades" className="bg-gray-50 rounded-lg p-4 sm:p-6 scroll-mt-20">
+                        <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Copropiedades Disponibles</h2>
+                        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-4">
+                          {PROPERTY_PERIODS.map(period => {
+                            const price = property[`${period.key}_price` as keyof Property] as number | null;
+                            const status = property[`${period.key}_status` as keyof Property] as string | null;
                     const monthlyPayment = calculateMonthlyPayment(property.price);
                     return (
-                      <div key={period.key} className="p-4 border rounded-lg flex flex-col items-center bg-white">
-                        <span className="font-medium text-sm mb-2 text-center">{period.label}</span>
-                        <div className="flex flex-col items-center">
-                          <span className="text-xl mb-1">
-                            {property[`${period.key}_price` as keyof Property]?.toLocaleString() ?? '-'}€
+                              <div key={period.key} className={`p-3 border rounded-lg flex flex-col items-center text-center ${status === 'vendida' ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}>
+                                <span className="text-xs sm:text-sm font-medium text-gray-700 mb-1 leading-tight">{period.label}</span>
+                                {price !== null && price !== undefined ? (
+                                  <span className="text-base sm:text-lg font-bold text-gray-800 mb-0.5">
+                                    {price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
                           </span>
-                          <span className="text-sm text-blue-600 font-semibold">
-                            {monthlyPayment.toLocaleString()}€/mes*
+                                ) : (
+                                    <span className="text-base sm:text-lg font-bold text-gray-400 mb-0.5">-</span>
+                                )}
+                                {monthlyPayment > 0 && status !== 'vendida' && (
+                                  <span className="text-xs sm:text-sm text-blue-600 font-semibold">
+                                    {monthlyPayment.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 })}/mes*
                           </span>
-                        </div>
-                        <span className={`text-sm font-medium mt-2 ${
-                          property[`${period.key}_status` as keyof Property] === 'vendida' 
-                            ? 'text-red-500' 
-                            : 'text-green-600'
+                                )}
+                                <span className={`text-xs sm:text-sm font-semibold mt-1.5 ${
+                                  status === 'vendida' ? 'text-red-600' : 'text-green-600'
                         }`}>
-                          {(property[`${period.key}_status` as keyof Property] as string) ?? '-'}
+                                  {status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Disponible'}
                         </span>
                       </div>
                     );
                   })}
                 </div>
-                <p className="text-xs text-gray-500 mt-2 text-center">* Cuota mensual estimada con 30% de entrada y 20 años de hipoteca</p>
+                        <p className="text-xs text-gray-500 mt-3 text-center">* Cuota mensual estimada (hipoteca a 20 años, 30% entrada).</p>
               </div>
-
-              {/* Calculadora de hipoteca */}
-              <div id="hipoteca" className="bg-gray-50 rounded-lg p-6 scroll-mt-24">
-                <h2 className="text-xl font-semibold mb-4">Calculadora de Hipoteca para Copropiedad</h2>
+                    <div id="hipoteca" className="bg-gray-50 rounded-lg p-4 sm:p-6 scroll-mt-20">
+                        <h2 className="text-lg sm:text-xl font-semibold mb-3 text-gray-700">Calculadora Hipoteca</h2>
                 <MortgageCalculator propertyPrice={property.price} />
               </div>
-
-              {/* Información del agente y contacto */}
-              <div id="contactForm" className="bg-gray-50 rounded-lg p-6 scroll-mt-24">
-                <h2 className="text-xl font-semibold mb-4">Contactar con el agente</h2>
-                
-                {/* Información del agente */}
-                {property.agent && (
-                  <div className="mb-6">
-                    <div className="flex items-center gap-4 mb-4">
-                      {property.agent.photo_url && (
+                    <div id="agente" className="bg-gray-50 rounded-lg p-4 sm:p-6 scroll-mt-20">
+                        <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Contactar Agente</h2>
+                        {property.agent ? (
+                            <div className="mb-6 flex flex-col sm:flex-row items-center gap-4">
+                                {property.agent.photo_url ? (
                         <img
                           src={property.agent.photo_url}
                           alt={`${property.agent.first_name} ${property.agent.last_name}`}
-                          className="w-16 h-16 rounded-full object-cover"
+                                    className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-md flex-shrink-0"
                         />
+                                ) : (
+                                    <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                                        <FaUserTie className="w-10 h-10 text-gray-400"/>
+                                    </div>
                       )}
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg">
+                                <div className="text-center sm:text-left">
+                                    <h3 className="font-semibold text-base sm:text-lg text-gray-800">
                           {property.agent.first_name} {property.agent.last_name}
                         </h3>
-                        <p className="text-gray-600">
-                          <a href={`mailto:${property.agent.email}`} className="hover:text-blue-600">
+                                    <div className="text-xs sm:text-sm text-gray-600 mt-1 space-y-0.5">
+                                        <a href={`mailto:${property.agent.email}`} className="flex items-center gap-1.5 hover:text-blue-600 justify-center sm:justify-start">
+                                            <Mail className="w-3 h-3 sm:w-4 sm:h-4"/>
                             {property.agent.email}
                           </a>
-                        </p>
                         {property.agent.phone && (
-                          <p className="text-gray-600">
-                            <a href={`tel:${property.agent.phone}`} className="hover:text-blue-600 flex items-center gap-1">
-                              <FaPhone className="w-4 h-4" />
+                                            <a href={`tel:${property.agent.phone}`} className="flex items-center gap-1.5 hover:text-blue-600 justify-center sm:justify-start">
+                                                <Phone className="w-3 h-3 sm:w-4 sm:h-4" />
                               {property.agent.phone}
                             </a>
-                          </p>
                         )}
                       </div>
                     </div>
-                    {property.agent.bio && (
-                      <p className="text-gray-600 mb-4">{property.agent.bio}</p>
+                            </div>
+                        ) : (
+                            <p className="text-sm text-gray-500 mb-4">No hay información del agente disponible.</p>
                     )}
-                    {property.agent.specialization && (
-                      <p className="text-sm text-gray-500">
-                        Especialización: {property.agent.specialization}
-                      </p>
+                        {!showContactForm && property.agent?.id && (
+                             <Button onClick={handleContactClick} className="w-full">
+                                Enviar Mensaje
+                             </Button>
                     )}
-                  </div>
-                )}
-
-                {/* Formulario de contacto */}
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-medium mb-4">Enviar mensaje al agente</h3>
+                        <div ref={contactFormRef} className={`border-t pt-6 mt-6 ${showContactForm ? 'block' : 'hidden'}`}>
+                             <h3 className="text-base sm:text-lg font-medium mb-4 text-gray-700">Enviar mensaje al agente</h3>
                   <ContactForm 
-                    agentId={property?.agent?.id} 
-                    className="w-full"
+                                agentId={property.agent?.id}
+                                propertyId={property.id}
                   />
                 </div>
               </div>

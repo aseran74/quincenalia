@@ -45,6 +45,10 @@ interface CalendarEvent {
   owner_id: string;
 }
 
+interface ReservationCalendarProps {
+  propertyId?: string;
+}
+
 // --- Configuración del Calendario ---
 const locales = { 'es': es };
 const localizer = dateFnsLocalizer({
@@ -57,9 +61,9 @@ const localizer = dateFnsLocalizer({
 
 const Colores = ['#4f8cff', '#ffb84f', '#4fff8c', '#ff4f8c', '#8c4fff', '#ff7b4f', '#4fffc3'];
 
-const ReservationCalendar: React.FC = () => {
+const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId }) => {
   const { user } = useAuth();
-  const { id: propertyId } = useParams();
+  const params = useParams();
   const navigate = useNavigate();
   const [propiedades, setPropiedades] = useState<Property[]>([]);
   const [propiedadSeleccionada, setPropiedadSeleccionada] = useState<Property | null>(null);
@@ -92,9 +96,10 @@ const ReservationCalendar: React.FC = () => {
 
         setPropiedades(data || []);
 
-        // Si hay un propertyId en la URL o el usuario es propietario con una sola propiedad
-        if (propertyId) {
-          const selectedProperty = data?.find(p => p.id === propertyId);
+        // Usar propertyId de prop si existe, si no, usar params
+        const propId = propertyId || params.id;
+        if (propId) {
+          const selectedProperty = data?.find(p => p.id === propId);
           if (selectedProperty) {
             setPropiedadSeleccionada(selectedProperty);
           } else {
@@ -114,7 +119,7 @@ const ReservationCalendar: React.FC = () => {
     };
 
     fetchProperties();
-  }, [propertyId, user]);
+  }, [propertyId, params.id, user]);
 
   // Cargar Propietarios y Reservas cuando cambia la propiedad seleccionada
   useEffect(() => {

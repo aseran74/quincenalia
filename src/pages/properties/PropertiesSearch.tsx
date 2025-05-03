@@ -1,51 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import PropertyFilters from '@/components/properties/PropertyFilters';
 import PropertyMap from '@/components/properties/PropertyMap';
 import { Card } from '@/components/ui/card';
 import { MapIcon, ListBulletIcon } from '@heroicons/react/24/outline';
+import { Link } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
 
 const PropertiesSearch = () => {
   const [viewMode, setViewMode] = useState<'map' | 'list'>('list');
   const [filters, setFilters] = useState({});
-  const [selectedProperty, setSelectedProperty] = useState<number | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Datos de ejemplo con coordenadas
-  const properties = [
-    {
-      id: 1,
-      title: 'Villa con vistas al mar',
-      price: 450000,
-      bedrooms: 3,
-      bathrooms: 2,
-      size: 180,
-      location: 'Costa del Sol, Málaga',
-      coordinates: [36.7213, -4.4367], // Málaga
-      image: '/property-1.jpg',
-    },
-    {
-      id: 2,
-      title: 'Ático de lujo en el centro',
-      price: 650000,
-      bedrooms: 4,
-      bathrooms: 3,
-      size: 200,
-      location: 'Salamanca, Madrid',
-      coordinates: [40.4168, -3.7038], // Madrid
-      image: '/property-2.jpg',
-    },
-    {
-      id: 3,
-      title: 'Casa con jardín',
-      price: 380000,
-      bedrooms: 3,
-      bathrooms: 2,
-      size: 150,
-      location: 'L\'Eixample, Barcelona',
-      coordinates: [41.3851, 2.1734], // Barcelona
-      image: '/property-3.jpg',
-    },
-  ];
+  useEffect(() => {
+    setLoading(true);
+    supabase
+      .from('properties')
+      .select('*')
+      .then(({ data }) => {
+        setProperties(data || []);
+        setLoading(false);
+      });
+  }, []);
 
   const handlePropertyClick = (property: any) => {
     setSelectedProperty(property.id);
@@ -94,15 +72,14 @@ const PropertiesSearch = () => {
 
           {/* Contenido principal */}
           <div className="flex-1">
-            {viewMode === 'map' ? (
+            {loading ? (
+              <div className="text-center py-8 text-gray-500">Cargando propiedades...</div>
+            ) : viewMode === 'map' ? (
               // Vista de mapa
               <div className="bg-white rounded-lg shadow-lg h-[calc(100vh-200px)]">
                 <div className="h-full rounded-lg overflow-hidden">
                   <PropertyMap 
-                    properties={properties.map(property => ({
-                      ...property,
-                      coordinates: [property.coordinates[0], property.coordinates[1]]
-                    }))}
+                    properties={properties}
                     onPropertyClick={handlePropertyClick}
                   />
                 </div>
@@ -120,21 +97,23 @@ const PropertiesSearch = () => {
                   >
                     <div className="aspect-video relative">
                       <img
-                        src={property.image}
+                        src={property.image_url || property.image || '/placeholder.svg'}
                         alt={property.title}
                         className="absolute inset-0 w-full h-full object-cover"
                       />
                       <div className="absolute top-4 right-4 bg-primary text-white px-3 py-1 rounded-full text-sm font-semibold">
-                        {property.price.toLocaleString()}€
+                        {property.price?.toLocaleString?.() || ''}€
                       </div>
                     </div>
                     <div className="p-4">
                       <h3 className="text-lg font-semibold">{property.title}</h3>
                       <div className="mt-2 text-sm text-gray-600">
                         <p>{property.bedrooms} habitaciones • {property.bathrooms} baños</p>
-                        <p>{property.size}m² • {property.location}</p>
+                        <p>{property.area || property.size}m² • {property.location}</p>
                       </div>
-                      <Button className="w-full mt-4">Ver detalles</Button>
+                      <Link to={`/properties/${property.id}`}>
+                        <Button className="w-full mt-4">Ver detalles</Button>
+                      </Link>
                     </div>
                   </Card>
                 ))}
