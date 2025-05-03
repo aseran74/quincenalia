@@ -12,6 +12,7 @@ import {
 import {
     PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const FAQS = [
   {
@@ -289,9 +290,11 @@ const HomePage = () => {
              style={{ textShadow: '0 1px 5px rgba(0,0,0,0.4)' }}>
             Accede a propiedades exclusivas por una fracción del coste. Disfruta, rentabiliza e intercambia.
           </p>
-          <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-3 text-base font-semibold shadow-lg transform transition hover:scale-105">
-            Explorar Propiedades
-            <ArrowRight className="ml-2 h-5 w-5" />
+          <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-3 text-base font-semibold shadow-lg transform transition hover:scale-105" asChild>
+            <Link to="/propiedades">
+              Explorar Propiedades
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
           </Button>
         </div>
       </section>

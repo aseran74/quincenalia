@@ -39,6 +39,7 @@ export interface Property {
   share4_status?: string;
   address?: string;
   city?: string;
+  type?: string;
 }
 
 export interface DateRange {

@@ -1,285 +1,478 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LayoutGrid, MapPin } from 'lucide-react';
+import {
+  LayoutGrid, MapPin, Home, Bed, Bath, Building, TreePalm, SquareArrowUp, Building2, Warehouse, UserCheck, Waves, Sparkles, ParkingCircle, Wind, SlidersHorizontal, ChevronDown, ChevronUp, Filter, X, Plus, Minus, Check, Search, Trash2, ArrowLeft
+} from 'lucide-react';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import type { Property } from '@/types/property';
 
+// --- Tipos y Constantes ---
 type Filters = {
-  minPrice: string;
-  maxPrice: string;
-  bedrooms: string;
-  bathrooms: string;
-  propertyType: string;
+  minPrice: number | string;
+  maxPrice: number | string;
+  bedrooms: number | string;
+  bathrooms: number | string;
+  propertyTypes: string[];
+  features: string[];
 };
 
 const initialFilters: Filters = {
-  minPrice: '',
-  maxPrice: '',
-  bedrooms: 'all',
-  bathrooms: 'all',
-  propertyType: 'all',
+  minPrice: 'any',
+  maxPrice: 'any',
+  bedrooms: 'any',
+  bathrooms: 'any',
+  propertyTypes: [],
+  features: [],
 };
 
-const propertyTypes = [
-  'Apartamento',
-  'Casa',
-  'Chalet',
-  'Ático',
-  'Dúplex',
-  'Local',
-  'Oficina',
+const priceOptions = [
+    { value: 50000, label: '50.000€' },
+    { value: 100000, label: '100.000€' },
+    { value: 150000, label: '150.000€' },
+    { value: 200000, label: '200.000€' },
+    { value: 300000, label: '300.000€' },
+    { value: 500000, label: '500.000€' },
+    { value: 750000, label: '750.000€' },
+    { value: 1000000, label: '1.000.000€+' },
 ];
 
-const getImageUrl = (path: string) => {
-  if (!path) return '/placeholder.svg';
-  if (path.startsWith('http')) return path;
-  return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/properties/${path}`;
+const roomOptions = [
+    { value: 1, label: '1+' },
+    { value: 2, label: '2+' },
+    { value: 3, label: '3+' },
+    { value: 4, label: '4+' },
+    { value: 5, label: '5+' },
+];
+
+const propertyTypesWithIcons = [
+  { value: 'Apartamento', label: 'Apartamento', icon: <Building className="w-4 h-4 text-muted-foreground" /> },
+  { value: 'Casa', label: 'Casa', icon: <Home className="w-4 h-4 text-muted-foreground" /> },
+  { value: 'Chalet', label: 'Chalet', icon: <TreePalm className="w-4 h-4 text-muted-foreground" /> },
+  { value: 'Ático', label: 'Ático', icon: <SquareArrowUp className="w-4 h-4 text-muted-foreground" /> },
+  { value: 'Dúplex', label: 'Dúplex', icon: <Building2 className="w-4 h-4 text-muted-foreground" /> },
+  { value: 'Local', label: 'Local', icon: <Warehouse className="w-4 h-4 text-muted-foreground" /> },
+  { value: 'Oficina', label: 'Oficina', icon: <UserCheck className="w-4 h-4 text-muted-foreground" /> },
+];
+
+const FEATURES_LIST = [
+  { key: 'Piscina', label: 'Piscina', icon: <Waves className="w-4 h-4 text-blue-500" /> },
+  { key: 'Jardín', label: 'Jardín', icon: <TreePalm className="w-4 h-4 text-green-600" /> },
+  { key: 'Garaje', label: 'Garaje', icon: <ParkingCircle className="w-4 h-4 text-gray-700" /> },
+  { key: 'Terraza', label: 'Terraza', icon: <SquareArrowUp className="w-4 h-4 text-yellow-500" /> },
+  { key: 'Aire acondicionado', label: 'Aire Acond.', icon: <Wind className="w-4 h-4 text-cyan-500" /> },
+  { key: 'Ascensor', label: 'Ascensor', icon: <ChevronUp className="w-4 h-4 text-purple-500" /> },
+  { key: 'Trastero', label: 'Trastero', icon: <Warehouse className="w-4 h-4 text-orange-500" /> },
+  { key: 'Vistas al mar', label: 'Vistas al mar', icon: <Waves className="w-4 h-4 text-blue-400" /> },
+  { key: 'Vivienda accesible', label: 'Accesible', icon: <UserCheck className="w-4 h-4 text-pink-500" /> },
+  { key: 'Vivienda de lujo', label: 'Lujo', icon: <Sparkles className="w-4 h-4 text-amber-600" /> },
+];
+
+const formatPriceSimple = (price: number) => {
+  return price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 };
+
+// Helper para obtener el precio de copropiedad más bajo
+function getMinSharePrice(property: Property): number | null {
+  const shares = [property.share1_price, property.share2_price, property.share3_price, property.share4_price].filter((p): p is number => typeof p === 'number');
+  if (shares.length === 0) return null;
+  return Math.min(...shares);
+}
 
 export const PropertiesPage = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'grid' | 'map'>('grid');
   const [filters, setFilters] = useState<Filters>(initialFilters);
-
-  const applyFilters = (properties: Property[]) => {
-    return properties.filter(property => {
-      const matchesMinPrice = !filters.minPrice || property.price >= parseInt(filters.minPrice);
-      const matchesMaxPrice = !filters.maxPrice || property.price <= parseInt(filters.maxPrice);
-      const matchesBedrooms = filters.bedrooms === 'all' || property.bedrooms === parseInt(filters.bedrooms);
-      const matchesBathrooms = filters.bathrooms === 'all' || property.bathrooms === parseInt(filters.bathrooms);
-      const matchesType = filters.propertyType === 'all' || property.type === filters.propertyType;
-
-      return matchesMinPrice && matchesMaxPrice && matchesBedrooms && matchesBathrooms && matchesType;
-    });
-  };
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [showTypeChecklist, setShowTypeChecklist] = useState(false);
+  const typeChecklistRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchProperties = async () => {
+      setLoading(true);
       try {
-        console.log('Fetching properties from Supabase...');
-        const { data, error } = await supabase
-          .from('properties')
-          .select('*');
-        
-        if (error) {
-          console.error('Supabase error:', error);
-          throw error;
-        }
-        
-        console.log('Properties received:', data);
-        if (data) {
-          console.log('Propiedades con coordenadas:', data.filter(p => p.latitude && p.longitude));
-          data.forEach(property => {
-            console.log('Propiedad:', property.id, {
-              title: property.title,
-              lat: property.latitude,
-              lng: property.longitude,
-              hasCoords: Boolean(property.latitude && property.longitude)
-            });
-          });
-        }
+        const { data, error } = await supabase.from('properties').select('*');
+        if (error) throw error;
         setProperties(data || []);
       } catch (error) {
         console.error('Error fetching properties:', error);
+        setProperties([]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchProperties();
   }, []);
 
-  const PropertyCard = ({ property }: { property: Property }) => {
-    console.log('Images for property:', property.id, property.images);
-    const imageUrl = property.images && property.images.length > 0 ? property.images[0] : '/placeholder.svg';
-    console.log('Using image URL:', imageUrl);
+  const applyFilters = (propertiesToFilter: Property[]): Property[] => {
+    return propertiesToFilter.filter(property => {
+      const minShare = getMinSharePrice(property);
+      const minPriceFilter = filters.minPrice === 'any' ? -Infinity : Number(filters.minPrice);
+      const maxPriceFilter = filters.maxPrice === 'any' ? Infinity : Number(filters.maxPrice);
+      if (minShare === null || minShare < 0) return false;
+      if (minShare < minPriceFilter || minShare > maxPriceFilter) return false;
+      const matchesBedrooms = filters.bedrooms === 'any' || property.bedrooms >= Number(filters.bedrooms);
+      const matchesBathrooms = filters.bathrooms === 'any' || property.bathrooms >= Number(filters.bathrooms);
+      const matchesType = filters.propertyTypes.length === 0 || (property.type && filters.propertyTypes.includes(property.type));
+      const matchesFeatures = filters.features.length === 0 || (property.features && filters.features.every(f => property.features!.includes(f)));
+      return matchesBedrooms && matchesBathrooms && matchesType && matchesFeatures;
+    });
+  };
 
+  const filteredProperties = applyFilters(properties);
+
+  const resetFilters = () => {
+    setFilters(initialFilters);
+    setShowAdvancedFilters(false);
+    setShowTypeChecklist(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (typeChecklistRef.current && !typeChecklistRef.current.contains(event.target as Node)) {
+        setShowTypeChecklist(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const activeFilterCount = () => {
+      let count = 0;
+      if (filters.minPrice !== 'any') count++;
+      if (filters.maxPrice !== 'any') count++;
+      if (filters.bedrooms !== 'any') count++;
+      if (filters.bathrooms !== 'any') count++;
+      count += filters.propertyTypes.length;
+      count += filters.features.length;
+      return count;
+  };
+  const numActiveFilters = activeFilterCount();
+
+  const PropertyCard = ({ property }: { property: Property }) => {
+    const imageUrl = property.images && property.images.length > 0 ? property.images[0] : '/placeholder-property.jpg';
+    const minShare = getMinSharePrice(property);
     return (
-      <Link to={`/properties/${property.id}`}>
-        <Card className="overflow-hidden hover:shadow-lg transition-all duration-300">
-          <img
-            src={imageUrl}
-            alt={property.title}
-            className="w-full h-48 object-cover"
-            onError={(e) => {
-              console.error('Error loading image:', imageUrl);
-              (e.target as HTMLImageElement).src = '/placeholder.svg';
-            }}
-          />
-          <div className="p-4">
-            <h3 className="text-xl font-semibold mb-2">{property.title}</h3>
-            <p className="text-gray-600 mb-4">
-              {property.bedrooms} habitaciones • {property.bathrooms} baños • {property.area}m²
-            </p>
-            <p className="text-lg font-bold mb-4">
-              {property.price.toLocaleString()}€
-            </p>
-            <Button variant="outline" className="w-full">
-              Ver detalles
-            </Button>
+      <Link to={`/properties/${property.id}`} className="group block h-full">
+        <Card className="overflow-hidden h-full flex flex-col border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 bg-card">
+          <div className="relative overflow-hidden h-36 flex-shrink-0">
+            {minShare && (
+              <span className="absolute top-2 left-2 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow z-10">
+                Desde {formatPriceSimple(minShare)}
+              </span>
+            )}
+            <img
+              src={imageUrl}
+              alt={`Imagen de ${property.title}`}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
+            />
+            <span className="absolute bottom-2 left-2 bg-white/80 text-xs text-muted-foreground px-2 py-1 rounded shadow">
+              Precio total: {formatPriceSimple(property.price)}
+            </span>
+            <span className="absolute bottom-2 right-2 flex items-center gap-1 bg-primary/90 text-white text-xs font-medium px-2 py-1 rounded-full shadow group-hover:bg-primary">
+              <ChevronDown className="h-4 w-4" />
+              Más detalles
+            </span>
           </div>
+          <CardContent className="p-2 sm:p-3 flex-grow flex flex-col">
+            <h3 className="text-sm font-semibold mb-1 text-card-foreground truncate" title={property.title}>
+                {property.title}
+            </h3>
+            <div className="flex items-center text-xs text-muted-foreground space-x-2 mb-1">
+                <span className="flex items-center" title={`${property.bedrooms} habitaciones`}>
+                    <Bed className="w-3 h-3 mr-1"/> {property.bedrooms}
+                </span>
+                <span className="flex items-center" title={`${property.bathrooms} baños`}>
+                    <Bath className="w-3 h-3 mr-1"/> {property.bathrooms}
+                </span>
+                <span className="flex items-center" title={`${property.area} m²`}>
+                    <SquareArrowUp className="w-3 h-3 mr-1"/> {property.area}m²
+                </span>
+            </div>
+            {property.location && (
+                <p className="text-xs text-muted-foreground mb-1 flex items-center">
+                    <MapPin className="w-3 h-3 mr-1 flex-shrink-0"/>
+                    <span className="truncate">{property.location}</span>
+                </p>
+            )}
+          </CardContent>
         </Card>
       </Link>
     );
   };
 
   const FilterSection = () => (
-    <div className="mb-6 grid grid-cols-2 md:grid-cols-5 gap-4">
-      <Input
-        type="number"
-        placeholder="Precio mínimo"
-        value={filters.minPrice}
-        onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
-      />
-      <Input
-        type="number"
-        placeholder="Precio máximo"
-        value={filters.maxPrice}
-        onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
-      />
-      <Select
-        value={filters.bedrooms}
-        onValueChange={(value) => setFilters({ ...filters, bedrooms: value })}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Habitaciones" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todas</SelectItem>
-          {[1, 2, 3, 4, 5].map((num) => (
-            <SelectItem key={num} value={num.toString()}>
-              {num} {num === 1 ? 'habitación' : 'habitaciones'}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select
-        value={filters.bathrooms}
-        onValueChange={(value) => setFilters({ ...filters, bathrooms: value })}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Baños" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todos</SelectItem>
-          {[1, 2, 3, 4].map((num) => (
-            <SelectItem key={num} value={num.toString()}>
-              {num} {num === 1 ? 'baño' : 'baños'}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select
-        value={filters.propertyType}
-        onValueChange={(value) => setFilters({ ...filters, propertyType: value })}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Tipo" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todos</SelectItem>
-          {propertyTypes.map((type) => (
-            <SelectItem key={type} value={type}>
-              {type}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <Card className="mb-6 bg-card border shadow-sm rounded-lg">
+      <CardContent className="p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+          {/* Precio Min */}
+          <div>
+             <label htmlFor="filterMinPrice" className="block text-xs font-medium text-muted-foreground mb-1">Precio Mín.</label>
+             <Select
+                value={String(filters.minPrice)}
+                onValueChange={value => setFilters({ ...filters, minPrice: value === 'any' ? 'any' : Number(value) })}
+             >
+                <SelectTrigger id="filterMinPrice" className="text-sm h-9">
+                    <SelectValue placeholder="Mínimo" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
+                    {priceOptions.map(opt => (
+                       (filters.maxPrice === 'any' || opt.value < Number(filters.maxPrice)) &&
+                       <SelectItem key={`min-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
+                    ))}
+                </SelectContent>
+             </Select>
+          </div>
+          {/* Precio Max */}
+          <div>
+             <label htmlFor="filterMaxPrice" className="block text-xs font-medium text-muted-foreground mb-1">Precio Máx.</label>
+             <Select
+                value={String(filters.maxPrice)}
+                onValueChange={value => setFilters({ ...filters, maxPrice: value === 'any' ? 'any' : Number(value) })}
+             >
+                <SelectTrigger id="filterMaxPrice" className="text-sm h-9">
+                    <SelectValue placeholder="Máximo" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
+                    {priceOptions.map(opt => (
+                        (filters.minPrice === 'any' || opt.value > Number(filters.minPrice)) &&
+                        <SelectItem key={`max-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
+                    ))}
+                     {priceOptions[priceOptions.length - 1].value < Infinity && (
+                           <SelectItem value={String(Infinity)} className="text-sm">1.000.000€+</SelectItem>
+                     )}
+                </SelectContent>
+             </Select>
+          </div>
+          {/* Habitaciones */}
+          <div>
+             <label htmlFor="filterBedrooms" className="block text-xs font-medium text-muted-foreground mb-1">Habitaciones (mín.)</label>
+             <Select
+                value={String(filters.bedrooms)}
+                onValueChange={value => setFilters({ ...filters, bedrooms: value === 'any' ? 'any' : Number(value) })}
+             >
+                <SelectTrigger id="filterBedrooms" className="text-sm h-9">
+                    <SelectValue placeholder="Hab." />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
+                    {roomOptions.map(opt => (
+                        <SelectItem key={`bed-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
+                    ))}
+                </SelectContent>
+             </Select>
+          </div>
+          {/* Baños */}
+          <div>
+             <label htmlFor="filterBathrooms" className="block text-xs font-medium text-muted-foreground mb-1">Baños (mín.)</label>
+             <Select
+                value={String(filters.bathrooms)}
+                onValueChange={value => setFilters({ ...filters, bathrooms: value === 'any' ? 'any' : Number(value) })}
+             >
+                <SelectTrigger id="filterBathrooms" className="text-sm h-9">
+                    <SelectValue placeholder="Baños" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
+                    {roomOptions.map(opt => (
+                        <SelectItem key={`bath-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
+                    ))}
+                </SelectContent>
+             </Select>
+          </div>
+        </div>
+        {/* Fila para Tipo y Botón Avanzados */}
+        <div className="mt-4 pt-4 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+           {/* Tipo de Vivienda (Checklist desplegable) */}
+           <div className="relative w-full sm:w-auto sm:min-w-[200px]" ref={typeChecklistRef}>
+                <label htmlFor="filterTypeButton" className="block text-xs font-medium text-muted-foreground mb-1">Tipo de Vivienda</label>
+                <Button
+                    id="filterTypeButton"
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-between text-sm h-9 font-normal"
+                    onClick={() => setShowTypeChecklist(v => !v)}
+                    aria-expanded={showTypeChecklist}
+                >
+                    <span className="truncate pr-2">
+                        {filters.propertyTypes.length === 0
+                        ? 'Cualquiera'
+                        : filters.propertyTypes.length === 1
+                        ? propertyTypesWithIcons.find(t => t.value === filters.propertyTypes[0])?.label || 'Seleccionado'
+                        : `${filters.propertyTypes.length} tipos seleccionados`
+                        }
+                    </span>
+                    <ChevronDown className={`ml-2 h-4 w-4 transition-transform flex-shrink-0 ${showTypeChecklist ? 'rotate-180' : ''}`} />
+                </Button>
+                {showTypeChecklist && (
+                    <div className="absolute z-20 mt-1 w-full max-h-60 overflow-y-auto bg-popover border border-border rounded-md shadow-lg p-2 space-y-1">
+                    {propertyTypesWithIcons
+                        .map(type => (
+                        <div key={type.value} className="flex items-center space-x-2 hover:bg-accent rounded p-1.5">
+                             <Checkbox
+                                id={`type-${type.value}`}
+                                checked={filters.propertyTypes.includes(type.value)}
+                                onCheckedChange={(checked) => {
+                                setFilters(f => ({
+                                    ...f,
+                                    propertyTypes: checked
+                                    ? [...f.propertyTypes, type.value]
+                                    : f.propertyTypes.filter(v => v !== type.value)
+                                }));
+                                }}
+                                className="h-4 w-4"
+                             />
+                             <label
+                                htmlFor={`type-${type.value}`}
+                                className="text-sm font-medium leading-none flex items-center gap-2 cursor-pointer w-full"
+                             >
+                                {type.icon}
+                                {type.label}
+                             </label>
+                        </div>
+                    ))}
+                    </div>
+                )}
+           </div>
+           {/* Botón Avanzados y Reset */}
+           <div className="flex flex-col sm:flex-row gap-2 items-center pt-2 sm:pt-0">
+               <Button
+                  variant="ghost"
+                  className="text-sm p-0 h-9 flex items-center text-primary hover:bg-transparent"
+                  onClick={() => setShowAdvancedFilters(v => !v)}
+                >
+                  <SlidersHorizontal className="w-4 h-4 mr-1" />
+                  {showAdvancedFilters ? 'Menos filtros' : 'Más filtros'}
+                  {showAdvancedFilters ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+                </Button>
+                {numActiveFilters > 0 && (
+                    <Button variant="ghost" size="sm" onClick={resetFilters} className="text-xs text-muted-foreground h-9">
+                        <Trash2 className="w-3.5 h-3.5 mr-1" /> Limpiar ({numActiveFilters})
+                    </Button>
+                )}
+           </div>
+        </div>
+        {/* Características Adicionales (condicional) */}
+        {showAdvancedFilters && (
+          <div className="mt-4 pt-4 border-t border-border animate-fade-in">
+            <label className="block text-sm font-medium text-foreground mb-3">Características</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-2">
+              {FEATURES_LIST.map(feature => (
+                <div key={feature.key} className="flex items-center space-x-2">
+                   <Checkbox
+                      id={`feature-${feature.key}`}
+                      checked={filters.features.includes(feature.key)}
+                      onCheckedChange={(checked) => {
+                         setFilters(prevFilters => ({
+                            ...prevFilters,
+                            features: checked
+                            ? [...prevFilters.features, feature.key]
+                            : prevFilters.features.filter(f => f !== feature.key),
+                         }));
+                      }}
+                      className="h-4 w-4"
+                   />
+                   <label
+                      htmlFor={`feature-${feature.key}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-1.5"
+                   >
+                      <span className="flex-shrink-0">{feature.icon}</span>
+                      {feature.label}
+                   </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 
-  if (loading) {
+ if (loading) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="grid md:grid-cols-3 gap-8">
-          {[1, 2, 3].map((item) => (
-            <Card key={item} className="overflow-hidden animate-pulse">
-              <div className="w-full h-48 bg-gray-200" />
-              <div className="p-4">
-                <div className="h-6 bg-gray-200 rounded mb-2" />
-                <div className="h-4 bg-gray-200 rounded mb-4" />
-                <div className="h-10 bg-gray-200 rounded" />
-              </div>
-            </Card>
-          ))}
-        </div>
+      <div className="container mx-auto p-4 animate-pulse">
+         <div className="flex justify-between items-center mb-6"> <div className="h-8 bg-gray-200 rounded w-1/4"></div> <div className="h-10 bg-gray-200 rounded w-32"></div> </div> <div className="h-40 bg-gray-200 rounded mb-6"></div>
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"> {[...Array(6)].map((_, i) => ( <Card key={i} className="overflow-hidden"> <div className="w-full h-48 bg-gray-300" /> <CardContent className="p-4 space-y-2"> <div className="h-5 bg-gray-300 rounded w-3/4" /> <div className="h-4 bg-gray-300 rounded w-1/2" /> <div className="h-6 bg-gray-300 rounded w-1/3 mt-2" /> </CardContent> </Card> ))} </div>
       </div>
     );
   }
 
-  const filteredProperties = applyFilters(properties);
-
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Propiedades</h1>
-        <Tabs defaultValue={view} onValueChange={(v) => setView(v as 'grid' | 'map')}>
-          <TabsList>
-            <TabsTrigger value="grid">
-              <LayoutGrid className="h-4 w-4 mr-2" />
-              Lista
-            </TabsTrigger>
-            <TabsTrigger value="map">
-              <MapPin className="h-4 w-4 mr-2" />
-              Mapa
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-
-      <FilterSection />
-
-      {view === 'grid' ? (
-        <div className="grid md:grid-cols-3 gap-8">
-          {filteredProperties.map((property) => (
-            <PropertyCard key={property.id} property={property} />
-          ))}
+    <>
+      <div className="container mx-auto px-4 py-6">
+        <div className="mb-6">
+          <Button asChild variant="secondary" className="flex items-center gap-2">
+            <Link to="/">
+              <ArrowLeft className="w-4 h-4" />
+              Volver a inicio
+            </Link>
+          </Button>
         </div>
-      ) : (
-        <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
-          <GoogleMap
-            mapContainerClassName="h-[600px] w-full rounded-lg"
-            center={{ lat: 40.4637, lng: -3.7492 }}
-            zoom={6}
-            options={{
-              gestureHandling: 'greedy',
-              minZoom: 5,
-              maxZoom: 18,
-              mapTypeControl: true,
-              fullscreenControl: true,
-              streetViewControl: true,
-              zoomControl: true
-            }}
-          >
-            {filteredProperties.map((property) => {
-              console.log('Intentando renderizar marcador para:', property.id, {
-                lat: property.latitude,
-                lng: property.longitude,
-                hasCoords: Boolean(property.latitude && property.longitude)
-              });
-              return property.latitude && property.longitude ? (
-                <Marker
-                  key={property.id}
-                  position={{
-                    lat: Number(property.latitude),
-                    lng: Number(property.longitude)
-                  }}
-                  title={property.title}
-                  onClick={() => window.location.href = `/properties/${property.id}`}
-                />
-              ) : null;
-            })}
-          </GoogleMap>
-        </LoadScript>
-      )}
-    </div>
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Propiedades</h1>
+          <Tabs defaultValue={view} onValueChange={(v) => setView(v as 'grid' | 'map')} className="w-full sm:w-auto">
+            <TabsList className="grid w-full grid-cols-2 sm:w-auto">
+              <TabsTrigger value="grid"> <LayoutGrid className="h-4 w-4 mr-2" /> Lista </TabsTrigger>
+              <TabsTrigger value="map"> <MapPin className="h-4 w-4 mr-2" /> Mapa </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+        <FilterSection />
+        <div className="mb-6 text-sm text-muted-foreground">
+          {filteredProperties.length} {filteredProperties.length === 1 ? 'propiedad encontrada' : 'propiedades encontradas'}
+          {numActiveFilters > 0 && <span className='ml-1'>(con {numActiveFilters} {numActiveFilters === 1 ? 'filtro aplicado' : 'filtros aplicados'})</span>}
+        </div>
+        {view === 'grid' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {filteredProperties.length > 0 ? (
+              filteredProperties.map((property) => (
+                <PropertyCard key={property.id} property={property} />
+              ))
+            ) : (
+              <div className="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-12 text-muted-foreground bg-card border rounded-lg">
+                  <Search className="mx-auto h-10 w-10 text-gray-400 mb-3" />
+                  <p className="font-semibold">No hay propiedades que coincidan</p>
+                  <p className="text-sm mt-1">Prueba a modificar o limpiar los filtros.</p>
+                  {numActiveFilters > 0 && <Button variant="link" size="sm" onClick={resetFilters} className="mt-2 text-primary">Limpiar filtros</Button>}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="h-[65vh] w-full rounded-lg overflow-hidden border shadow-sm">
+            <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
+              <GoogleMap
+                mapContainerClassName="w-full h-full"
+                center={{ lat: 40.4637, lng: -3.7492 }}
+                zoom={5}
+                options={{}}
+              >
+                {filteredProperties
+                  .filter(p => p.latitude && p.longitude)
+                  .map((property) => (
+                    <Marker
+                      key={property.id}
+                      position={{ lat: Number(property.latitude), lng: Number(property.longitude) }}
+                      title={`${property.title} (${formatPriceSimple(property.price)})`}
+                      onClick={() => window.location.href = `/properties/${property.id}`}
+                    />
+                ))}
+              </GoogleMap>
+            </LoadScript>
+          </div>
+        )}
+      </div>
+    </>
   );
 };
 

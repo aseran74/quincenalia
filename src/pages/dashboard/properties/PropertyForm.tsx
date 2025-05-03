@@ -26,6 +26,7 @@ import {
 import { FaSwimmingPool, FaHotTub, FaChild, FaGamepad, FaUmbrellaBeach, FaParking, FaShoppingCart, FaGlassCheers, FaTree, FaWater, FaShip, FaPrescriptionBottleAlt } from 'react-icons/fa';
 import { GoogleMap, Marker, useLoadScript, Autocomplete } from '@react-google-maps/api';
 import { geocodeAddress } from '@/utils/geocoding';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type ShareStatus = 'disponible' | 'reservada' | 'vendida';
 
@@ -74,6 +75,7 @@ interface Property {
   nearby_services?: string[];
   tipo_vivienda?: string;
   features_extra?: string[];
+  destacada?: boolean;
 }
 
 const FEATURES = [
@@ -168,6 +170,7 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
         share4_price: 0,
         tipo_vivienda: '',
         features_extra: [],
+        destacada: false,
       });
     }
   }, [user, authLoading, isEditing]);
@@ -443,6 +446,7 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
       const propertyData = {
         ...property,
         updated_at: new Date().toISOString(),
+        destacada: !!property.destacada,
       };
 
       // Calculamos los precios de los shares basados en el precio total
@@ -1103,6 +1107,18 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
                           <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                         </div>
                       )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="destacada">Propiedad destacada</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Checkbox
+                        id="destacada"
+                        checked={!!property.destacada}
+                        onCheckedChange={(checked) => setProperty({ ...property, destacada: checked })}
+                      />
+                      <span className="text-sm text-muted-foreground">Si está marcado, la propiedad aparecerá en la home</span>
                     </div>
                   </div>
                 </div>
