@@ -16,19 +16,18 @@ interface RealEstateAgency {
   logo_url?: string;
 }
 
-interface RealEstateAgent {
+interface AgentProfile {
   id: string;
   first_name: string;
   last_name: string;
   email: string;
-  phone: string;
-  photo_url?: string;
+  profile_image?: string;
 }
 
 const AgencyDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [agency, setAgency] = useState<RealEstateAgency | null>(null);
-  const [agents, setAgents] = useState<RealEstateAgent[]>([]);
+  const [agents, setAgents] = useState<AgentProfile[]>([]);
 
   useEffect(() => {
     fetchAgency();
@@ -46,10 +45,12 @@ const AgencyDetail: React.FC = () => {
 
   const fetchAgents = async () => {
     const { data, error } = await supabase
-      .from('real_estate_agents')
-      .select('id, first_name, last_name, email, phone, photo_url')
+      .from('agency_agents')
+      .select('agent_id, profiles:agent_id (id, first_name, last_name, email, profile_image)')
       .eq('agency_id', id);
-    if (!error) setAgents(data || []);
+    if (!error && data) {
+      setAgents(data.map(a => Array.isArray(a.profiles) ? a.profiles[0] : a.profiles).filter(Boolean));
+    }
   };
 
   if (!agency) return <div className="p-8">Cargando agencia...</div>;
@@ -79,8 +80,8 @@ const AgencyDetail: React.FC = () => {
             ) : (
               agents.map(agent => (
                 <Link to={`/dashboard/agents/${agent.id}`} key={agent.id} className="flex items-center gap-3 p-2 rounded hover:bg-gray-100">
-                  {agent.photo_url ? (
-                    <img src={agent.photo_url} alt={agent.first_name} className="w-12 h-12 rounded-full object-cover border" />
+                  {agent.profile_image ? (
+                    <img src={agent.profile_image} alt={agent.first_name} className="w-12 h-12 rounded-full object-cover border" />
                   ) : (
                     <HiOutlineUserCircle className="w-12 h-12 text-gray-300" />
                   )}

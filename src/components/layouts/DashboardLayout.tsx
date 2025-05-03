@@ -4,7 +4,9 @@ import {
   HiOutlineBuildingOffice2,
   HiOutlineUsers,
   HiOutlineClipboardDocument,
+  HiOutlineCalendarDays,
 } from 'react-icons/hi2';
+import { useAuth } from '@/context/AuthContext';
 
 interface SidebarLinkProps {
   to: string;
@@ -33,6 +35,8 @@ const SidebarLink = ({ to, icon, children }: SidebarLinkProps) => {
 };
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex">
@@ -44,7 +48,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           <nav className="space-y-4">
             <div className="space-y-1">
               <SidebarLink
-                to="/dashboard/agencies"
+                to={user?.role === 'admin' ? '/dashboard/admin/agencies' : '/dashboard/agencies'}
                 icon={<HiOutlineBuildingOffice2 className="h-5 w-5" />}
               >
                 Listado de Agencias
@@ -56,7 +60,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 Crear Agencia
               </SidebarLink>
               <SidebarLink
-                to="/dashboard/agents"
+                to={user?.role === 'admin' ? '/dashboard/admin/agents' : '/dashboard/agents'}
                 icon={<HiOutlineUsers className="h-5 w-5" />}
               >
                 Agentes Inmobiliarios
@@ -66,6 +70,12 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 icon={<HiOutlineClipboardDocument className="h-5 w-5" />}
               >
                 Crear Agente
+              </SidebarLink>
+              <SidebarLink
+                to={user?.role === 'admin' ? '/dashboard/admin/reservations' : '/dashboard/reservations'}
+                icon={<HiOutlineCalendarDays className="h-5 w-5" />}
+              >
+                Reservas
               </SidebarLink>
             </div>
           </nav>

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 const Index: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -19,12 +19,12 @@ const Index: React.FC = () => {
           <div className="space-x-4">
             {isAuthenticated ? (
               <>
-                <Link to="/dashboard/agencies">
+                <Link to={user?.role === 'admin' ? '/dashboard/admin/agencies' : '/dashboard/agencies'}>
                   <Button size="lg" className="bg-orange-500 hover:bg-orange-600">
                     Gestionar Agencias
                   </Button>
                 </Link>
-                <Link to="/dashboard/agents">
+                <Link to={user?.role === 'admin' ? '/dashboard/admin/agents' : '/dashboard/agents'}>
                   <Button size="lg" className="bg-blue-500 hover:bg-blue-600">
                     Gestionar Agentes
                   </Button>
@@ -148,7 +148,7 @@ const Index: React.FC = () => {
               </p>
             </div>
             
-            <Link to={isAuthenticated ? "/dashboard/agencies" : "/login"} className="text-center p-6 border rounded-lg hover:shadow-lg transition-shadow">
+            <Link to={user?.role === 'admin' ? '/dashboard/admin/agencies' : '/dashboard/agencies'} className="text-center p-6 border rounded-lg hover:shadow-lg transition-shadow">
               <div className="text-4xl mb-4 text-blue-600">🏢</div>
               <h3 className="text-xl font-semibold mb-2">Agencias Inmobiliarias</h3>
               <p className="text-gray-600">
@@ -156,7 +156,7 @@ const Index: React.FC = () => {
               </p>
             </Link>
             
-            <Link to={isAuthenticated ? "/dashboard/agents" : "/login"} className="text-center p-6 border rounded-lg hover:shadow-lg transition-shadow">
+            <Link to={user?.role === 'admin' ? '/dashboard/admin/agents' : '/dashboard/agents'} className="text-center p-6 border rounded-lg hover:shadow-lg transition-shadow">
               <div className="text-4xl mb-4 text-blue-600">👨‍💼</div>
               <h3 className="text-xl font-semibold mb-2">Agentes Inmobiliarios</h3>
               <p className="text-gray-600">

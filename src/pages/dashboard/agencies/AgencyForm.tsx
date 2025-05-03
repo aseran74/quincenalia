@@ -21,12 +21,11 @@ interface RealEstateAgency {
   logo_url?: string;
 }
 
-interface RealEstateAgent {
+interface AgentProfile {
   id: string;
   first_name: string;
   last_name: string;
   email: string;
-  agency_id: string | null;
 }
 
 interface AgencyFormProps {
@@ -46,7 +45,7 @@ const AgencyForm: React.FC<AgencyFormProps> = ({ isEditing = false }) => {
     email: '',
     website: '',
   });
-  const [agents, setAgents] = useState<RealEstateAgent[]>([]);
+  const [agents, setAgents] = useState<AgentProfile[]>([]);
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -81,12 +80,17 @@ const AgencyForm: React.FC<AgencyFormProps> = ({ isEditing = false }) => {
 
   const fetchAgents = async () => {
     const { data, error } = await supabase
-      .from('real_estate_agents')
-      .select('id, first_name, last_name, email, agency_id');
+      .from('profiles')
+      .select('id, first_name, last_name, email')
+      .eq('role', 'agent');
     if (!error && data) {
       setAgents(data);
       if (isEditing && id) {
-        setSelectedAgents(data.filter(a => a.agency_id === id).map(a => a.id));
+        const { data: agencyAgents } = await supabase
+          .from('agency_agents')
+          .select('agent_id')
+          .eq('agency_id', id);
+        setSelectedAgents((agencyAgents || []).map(a => a.agent_id));
       }
     }
   };
@@ -176,22 +180,37 @@ const AgencyForm: React.FC<AgencyFormProps> = ({ isEditing = false }) => {
         agencyId = data.id;
         toast({ title: 'Usuario creado', description: `Contraseña temporal: ${password}` });
       }
-      await supabase
-        .from('real_estate_agents')
-        .update({ agency_id: agencyId })
-        .in('id', selectedAgents);
-      await supabase
-        .from('real_estate_agents')
-        .update({ agency_id: null })
-        .not('id', 'in', `(${selectedAgents.join(',')})`)
-        .eq('agency_id', agencyId);
+      // --- VINCULACIÓN DE AGENTES ---
+      if (agencyId) {
+        console.log('Vinculando agentes:', selectedAgents, 'a la agencia:', agencyId);
+        // 1. Elimina todos los vínculos actuales
+        const { error: deleteError } = await supabase
+          .from('agency_agents')
+          .delete()
+          .eq('agency_id', agencyId);
+        if (deleteError) {
+          console.error('Error eliminando vínculos antiguos:', deleteError);
+          toast({ title: 'Error', description: 'No se pudieron eliminar los vínculos antiguos', variant: 'destructive' });
+        }
+        // 2. Inserta los nuevos vínculos
+        if (selectedAgents.length > 0) {
+          const inserts = selectedAgents.map(agentId => ({ agency_id: agencyId, agent_id: agentId }));
+          const { error: insertError } = await supabase
+            .from('agency_agents')
+            .insert(inserts);
+          if (insertError) {
+            console.error('Error insertando vínculos nuevos:', insertError);
+            toast({ title: 'Error', description: 'No se pudieron vincular los agentes: ' + insertError.message, variant: 'destructive' });
+          }
+        }
+      }
       toast({
         title: 'Éxito',
         description: `Agencia ${isEditing ? 'actualizada' : 'creada'} correctamente`,
       });
-      navigate('/dashboard/agencies');
+      navigate('/dashboard/admin/agencies');
     } catch (error) {
-      console.error('Error:', error);
+      console.error(error);
       toast({
         title: 'Error',
         description: `Error al ${isEditing ? 'actualizar' : 'crear'} la agencia`,
@@ -336,7 +355,7 @@ const AgencyForm: React.FC<AgencyFormProps> = ({ isEditing = false }) => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate('/dashboard/agencies')}
+                onClick={() => navigate('/dashboard/admin/agencies')}
               >
                 Cancelar
               </Button>

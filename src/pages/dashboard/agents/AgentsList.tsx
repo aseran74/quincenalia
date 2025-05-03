@@ -2,63 +2,52 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { HiOutlineUserCircle } from 'react-icons/hi2';
 
-interface RealEstateAgent {
+interface AgentProfile {
   id: string;
   first_name: string;
   last_name: string;
   email: string;
   phone: string;
-  photo_url?: string;
-  avatar_url?: string;
-  agency_id?: string;
+  profile_image?: string;
 }
 
-interface RealEstateAgency {
-  id: string;
-  name: string;
+interface AgentsListProps {
+  adminMode?: boolean;
 }
 
-const AgentsList = () => {
-  const [agents, setAgents] = useState<RealEstateAgent[]>([]);
-  const [agencies, setAgencies] = useState<RealEstateAgency[]>([]);
+const AgentsList = ({ adminMode = false }: AgentsListProps) => {
+  const [agents, setAgents] = useState<AgentProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'grid' | 'table'>('grid');
   const { user } = useAuth();
 
+  const basePath = adminMode ? '/dashboard/admin/agents' : '/dashboard/agents';
+
   useEffect(() => {
-    fetchData();
+    fetchAgents();
   }, []);
 
-  const fetchData = async () => {
+  const fetchAgents = async () => {
     setLoading(true);
-    const { data: agentsData } = await supabase
-      .from('real_estate_agents')
-      .select('*')
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name, email, phone, profile_image')
+      .eq('role', 'agent')
       .order('first_name');
-    const { data: agenciesData } = await supabase
-      .from('real_estate_agencies')
-      .select('id, name');
-    setAgents(agentsData || []);
-    setAgencies(agenciesData || []);
+    setAgents(data || []);
     setLoading(false);
-  };
-
-  const getAgencyName = (agency_id?: string) => {
-    if (!agency_id) return 'Sin agencia';
-    const agency = agencies.find(a => a.id === agency_id);
-    return agency ? agency.name : 'Sin agencia';
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('¿Seguro que quieres eliminar este agente?')) return;
     const { error } = await supabase
-      .from('real_estate_agents')
+      .from('profiles')
       .delete()
       .eq('id', id);
     if (!error) {
@@ -69,10 +58,14 @@ const AgentsList = () => {
     }
   };
 
+  if (user?.role === 'admin' && !adminMode) {
+    return <Navigate to="/dashboard/admin/agents" replace />;
+  }
+
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Agentes Inmobiliarios</h1>
+        <h1 className="text-2xl font-bold">Agentes Inmobiliarios {adminMode && <span className="ml-2 px-2 py-1 bg-blue-200 text-blue-800 rounded text-xs">Admin</span>}</h1>
         <div className="flex gap-2">
           <Button
             variant={view === 'grid' ? 'default' : 'outline'}
@@ -86,7 +79,7 @@ const AgentsList = () => {
           >
             Tabla
           </Button>
-          <Link to="/dashboard/agents/new">
+          <Link to={`${basePath}/new`}>
             <Button>Nuevo Agente</Button>
           </Link>
         </div>
@@ -111,24 +104,23 @@ const AgentsList = () => {
             <Card key={agent.id} className="overflow-hidden">
               <CardHeader>
                 <div className="flex items-center gap-4">
-                  {agent.photo_url ? (
-                    <img src={agent.photo_url} alt={agent.first_name} className="w-16 h-16 object-cover rounded-full" />
+                  {agent.profile_image ? (
+                    <img src={agent.profile_image} alt={agent.first_name} className="w-16 h-16 object-cover rounded-full" />
                   ) : (
                     <HiOutlineUserCircle className="w-16 h-16 text-gray-300" />
                   )}
                   <div>
-                    <Link to={`/dashboard/agents/${agent.id}`} className="hover:underline">
+                    <Link to={`${basePath}/${agent.id}`} className="hover:underline">
                       <h2 className="text-xl font-semibold">{agent.first_name} {agent.last_name}</h2>
                     </Link>
                     <p className="text-gray-600 text-sm">{agent.email}</p>
                     <p className="text-gray-600 text-sm">{agent.phone}</p>
-                    <p className="text-gray-600 text-sm">{getAgencyName(agent.agency_id)}</p>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-2 justify-end">
-                  <Link to={`/dashboard/agents/${agent.id}/edit`}>
+                  <Link to={`${basePath}/${agent.id}/edit`}>
                     <Button size="icon" variant="ghost"><Pencil /></Button>
                   </Link>
                   {user?.role === 'admin' && (
@@ -147,7 +139,6 @@ const AgentsList = () => {
                 <th className="px-4 py-2 border">Nombre</th>
                 <th className="px-4 py-2 border">Email</th>
                 <th className="px-4 py-2 border">Teléfono</th>
-                <th className="px-4 py-2 border">Agencia</th>
                 <th className="px-4 py-2 border">Acciones</th>
               </tr>
             </thead>
@@ -155,20 +146,19 @@ const AgentsList = () => {
               {agents.map((agent) => (
                 <tr key={agent.id}>
                   <td className="px-4 py-2 border flex items-center gap-2">
-                    {agent.photo_url ? (
-                      <img src={agent.photo_url} alt={agent.first_name} className="w-8 h-8 object-cover rounded-full" />
+                    {agent.profile_image ? (
+                      <img src={agent.profile_image} alt={agent.first_name} className="w-8 h-8 object-cover rounded-full" />
                     ) : (
                       <HiOutlineUserCircle className="w-8 h-8 text-gray-300" />
                     )}
-                    <Link to={`/dashboard/agents/${agent.id}`} className="hover:underline">
+                    <Link to={`${basePath}/${agent.id}`} className="hover:underline">
                       {agent.first_name} {agent.last_name}
                     </Link>
                   </td>
                   <td className="px-4 py-2 border">{agent.email}</td>
                   <td className="px-4 py-2 border">{agent.phone}</td>
-                  <td className="px-4 py-2 border">{getAgencyName(agent.agency_id)}</td>
                   <td className="px-4 py-2 border flex gap-2">
-                    <Link to={`/dashboard/agents/${agent.id}/edit`}>
+                    <Link to={`${basePath}/${agent.id}/edit`}>
                       <Button size="icon" variant="ghost"><Pencil /></Button>
                     </Link>
                     {user?.role === 'admin' && (

@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Building, Users, FileText, MessageSquare, AlertTriangle } from 'lucide-react';
 import { mockProperties, mockUsers, mockInvoices, mockAppointments, mockIncidents } from '../../data/mockData';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 
 const AdminDashboard: React.FC = () => {
+  const { user } = useAuth();
   const agentUsers = mockUsers.filter(user => user.role === 'agent');
   const ownerUsers = mockUsers.filter(user => user.role === 'owner');
   
@@ -44,7 +46,7 @@ const AdminDashboard: React.FC = () => {
               agentes activos
             </p>
             <Button asChild className="w-full mt-4" variant="outline">
-              <Link to="/dashboard/agents">Ver agentes</Link>
+              <Link to={user?.role === 'admin' ? '/dashboard/admin/agents' : '/dashboard/agents'}>Ver agentes</Link>
             </Button>
           </CardContent>
         </Card>

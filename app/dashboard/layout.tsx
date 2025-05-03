@@ -1,7 +1,10 @@
 import React from 'react'
 import { Link, Outlet } from 'react-router-dom'
+import { useAuth } from '../src/context/AuthContext'
 
 export default function DashboardLayout() {
+  const { user } = useAuth();
+
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
@@ -21,7 +24,7 @@ export default function DashboardLayout() {
             Propiedades
           </Link>
           <Link
-            to="/dashboard/agents"
+            to={user?.role === 'admin' ? '/dashboard/admin/agents' : '/dashboard/agents'}
             className="block py-2 px-4 rounded hover:bg-gray-700"
           >
             Agentes

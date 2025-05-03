@@ -49,7 +49,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, requireAuth = true }) =
       case 'owner':
         return <Navigate to="/dashboard/owner" />;
       case 'admin':
-        return <Navigate to="/dashboard/admin" />;
+        return <Navigate to="/dashboard/admin/agencies" />;
       case 'agency':
         return <Navigate to="/dashboard/agencies" />;
       case 'agent':

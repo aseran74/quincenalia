@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Pencil, Trash2 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
@@ -18,14 +18,22 @@ interface RealEstateAgency {
   logo_url?: string;
 }
 
-const AgenciesList = () => {
+interface AgenciesListProps {
+  adminMode?: boolean;
+}
+
+const AgenciesList = ({ adminMode = false }: AgenciesListProps) => {
   const [agencies, setAgencies] = useState<RealEstateAgency[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'grid' | 'table'>('grid');
   const { user } = useAuth();
+  const [agentsCount, setAgentsCount] = useState<{ [agencyId: string]: number }>({});
+
+  const basePath = adminMode ? '/dashboard/admin/agencies' : '/dashboard/agencies';
 
   useEffect(() => {
     fetchAgencies();
+    fetchAgentsCount();
   }, []);
 
   const fetchAgencies = async () => {
@@ -36,6 +44,20 @@ const AgenciesList = () => {
       .order('name');
     if (!error) setAgencies(data || []);
     setLoading(false);
+  };
+
+  const fetchAgentsCount = async () => {
+    const { data, error } = await supabase
+      .from('agency_agents')
+      .select('agency_id', { count: 'exact', head: false });
+    if (!error && data) {
+      // Contar cuántos agentes hay por agencia
+      const countMap: { [agencyId: string]: number } = {};
+      data.forEach((row: any) => {
+        countMap[row.agency_id] = (countMap[row.agency_id] || 0) + 1;
+      });
+      setAgentsCount(countMap);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -52,10 +74,14 @@ const AgenciesList = () => {
     }
   };
 
+  if (user?.role === 'admin' && !adminMode) {
+    return <Navigate to="/dashboard/admin/agencies" replace />;
+  }
+
   return (
     <div className="container mx-auto p-6 font-poppins">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Agencias Inmobiliarias</h1>
+        <h1 className="text-2xl font-bold">Agencias Inmobiliarias {adminMode && <span className="ml-2 px-2 py-1 bg-blue-200 text-blue-800 rounded text-xs">Admin</span>}</h1>
         <div className="flex gap-2">
           <Button
             variant={view === 'grid' ? 'default' : 'outline'}
@@ -69,7 +95,7 @@ const AgenciesList = () => {
           >
             Tabla
           </Button>
-          <Link to="/dashboard/agencies/new">
+          <Link to={`${basePath}/new`}>
             <Button>Nueva Agencia</Button>
           </Link>
         </div>
@@ -101,7 +127,7 @@ const AgenciesList = () => {
                   </div>
                 )}
                 <div className="flex gap-2 justify-center mt-2">
-                  <Link to={`/dashboard/agencies/${agency.id}/edit`}>
+                  <Link to={`${basePath}/${agency.id}/edit`}>
                     <Button size="icon" variant="ghost" className="text-gray-500"><Pencil size={18} /></Button>
                   </Link>
                   {user?.role === 'admin' && (
@@ -110,11 +136,12 @@ const AgenciesList = () => {
                 </div>
               </div>
               <CardHeader className="pt-2 pb-1 text-center bg-white">
-                <Link to={`/dashboard/agencies/${agency.id}`} className="hover:underline">
+                <Link to={`${basePath}/${agency.id}`} className="hover:underline">
                   <h2 className="text-xl font-semibold text-gray-900 drop-shadow-none">{agency.name}</h2>
                 </Link>
                 <p className="text-gray-600 text-sm">{agency.email}</p>
                 <p className="text-gray-600 text-sm">{agency.phone}</p>
+                <p className="text-gray-500 text-xs mt-1">{agentsCount[agency.id] || 0} agentes vinculados</p>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-700 text-sm line-clamp-2 mb-2 max-h-[2.5em] overflow-hidden pt-4">{agency.description}</p>
@@ -137,14 +164,14 @@ const AgenciesList = () => {
               {agencies.map((agency) => (
                 <tr key={agency.id}>
                   <td className="px-4 py-2 border">
-                    <Link to={`/dashboard/agencies/${agency.id}`} className="hover:underline">
+                    <Link to={`${basePath}/${agency.id}`} className="hover:underline">
                       {agency.name}
                     </Link>
                   </td>
                   <td className="px-4 py-2 border">{agency.email}</td>
                   <td className="px-4 py-2 border">{agency.phone}</td>
                   <td className="px-4 py-2 border flex gap-2">
-                    <Link to={`/dashboard/agencies/${agency.id}/edit`}>
+                    <Link to={`${basePath}/${agency.id}/edit`}>
                       <Button size="icon" variant="ghost"><Pencil /></Button>
                     </Link>
                     {user?.role === 'admin' && (
