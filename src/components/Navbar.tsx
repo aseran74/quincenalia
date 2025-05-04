@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,6 +20,26 @@ const Navbar = () => {
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  // Scroll suave a un id de sección
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // Handler para enlaces de ancla
+  const handleAnchorClick = (id: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsMobileMenuOpen(false);
+    if (location.pathname === '/' || location.pathname === '/home') {
+      setTimeout(() => scrollToSection(id), 50);
+    } else {
+      navigate('/');
+      setTimeout(() => scrollToSection(id), 350); // Espera a que cargue la home
+    }
   };
 
   return (
@@ -37,26 +59,20 @@ const Navbar = () => {
           </div>
           
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/#menu" className={`${
-              isScrolled ? 'text-gray-700' : 'text-white'
-            } hover:text-primary transition-colors`}>
-              Menú
-            </Link>
             <Link to="/propiedades" className={`${
               isScrolled ? 'text-gray-700' : 'text-white'
             } hover:text-primary transition-colors`}>
               Buscar Propiedades
             </Link>
-            <Link to="/#como-funciona" className={`${
-              isScrolled ? 'text-gray-700' : 'text-white'
-            } hover:text-primary transition-colors`}>
-              Cómo Funciona
-            </Link>
-            <Link to="/#contacto" className={`${
-              isScrolled ? 'text-gray-700' : 'text-white'
-            } hover:text-primary transition-colors`}>
+            <a href="#reinventada" onClick={handleAnchorClick('reinventada')} className={`${isScrolled ? 'text-gray-700' : 'text-white'} hover:text-primary transition-colors`}>
+              Cómo funciona
+            </a>
+            <a href="#faq" onClick={handleAnchorClick('faq')} className={`${isScrolled ? 'text-gray-700' : 'text-white'} hover:text-primary transition-colors`}>
+              FAQ
+            </a>
+            <a href="#contacto" onClick={handleAnchorClick('contacto')} className={`${isScrolled ? 'text-gray-700' : 'text-white'} hover:text-primary transition-colors`}>
               Contacto
-            </Link>
+            </a>
           </div>
 
           <div className="flex items-center space-x-4">
@@ -94,15 +110,6 @@ const Navbar = () => {
           isScrolled ? 'bg-white/80 backdrop-blur-md' : 'bg-black/80 backdrop-blur-md'
         }`}>
           <Link 
-            to="/#menu" 
-            className={`block py-2 text-base font-medium ${
-              isScrolled ? 'text-gray-700' : 'text-white'
-            } hover:text-primary transition-colors`}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Menú
-          </Link>
-          <Link 
             to="/propiedades" 
             className={`block py-2 text-base font-medium ${
               isScrolled ? 'text-gray-700' : 'text-white'
@@ -111,24 +118,27 @@ const Navbar = () => {
           >
             Buscar Propiedades
           </Link>
-          <Link 
-            to="/#como-funciona" 
-            className={`block py-2 text-base font-medium ${
-              isScrolled ? 'text-gray-700' : 'text-white'
-            } hover:text-primary transition-colors`}
-            onClick={() => setIsMobileMenuOpen(false)}
+          <a 
+            href="#reinventada" 
+            className={`block py-2 text-base font-medium ${isScrolled ? 'text-gray-700' : 'text-white'} hover:text-primary transition-colors`}
+            onClick={handleAnchorClick('reinventada')}
           >
-            Cómo Funciona
-          </Link>
-          <Link 
-            to="/#contacto" 
-            className={`block py-2 text-base font-medium ${
-              isScrolled ? 'text-gray-700' : 'text-white'
-            } hover:text-primary transition-colors`}
-            onClick={() => setIsMobileMenuOpen(false)}
+            Cómo funciona
+          </a>
+          <a 
+            href="#faq" 
+            className={`block py-2 text-base font-medium ${isScrolled ? 'text-gray-700' : 'text-white'} hover:text-primary transition-colors`}
+            onClick={handleAnchorClick('faq')}
+          >
+            FAQ
+          </a>
+          <a 
+            href="#contacto" 
+            className={`block py-2 text-base font-medium ${isScrolled ? 'text-gray-700' : 'text-white'} hover:text-primary transition-colors`}
+            onClick={handleAnchorClick('contacto')}
           >
             Contacto
-          </Link>
+          </a>
           <Link 
             to="/login" 
             className="block pt-4"

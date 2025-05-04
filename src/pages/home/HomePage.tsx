@@ -178,7 +178,7 @@ function ComoFunciona() {
   ];
 
   return (
-    <section id="como-funciona" className="py-16 sm:py-20 bg-gradient-to-b from-white to-slate-50">
+    <section id="reinventada" className="py-16 sm:py-20 bg-gradient-to-b from-white to-slate-50">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4 text-gray-800">Tu Segunda Residencia, Reinventada</h2>
         <p className="text-lg text-center text-gray-600 mb-10 sm:mb-12 max-w-3xl mx-auto">Descubre cómo Quincenalia combina propiedad, disfrute y rentabilidad de forma única.</p>
