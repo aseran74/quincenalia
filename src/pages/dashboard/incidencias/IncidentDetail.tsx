@@ -43,7 +43,7 @@ const IncidentDetail: React.FC = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('incidents')
-        .select('*, properties(title), property_owners(first_name, last_name)')
+        .select('*, properties(title), profiles!incidents_owner_id_fkey(first_name, last_name)')
         .eq('id', id)
         .single();
       if (error) {
@@ -54,7 +54,7 @@ const IncidentDetail: React.FC = () => {
       setIncident({
         ...data,
         property_title: data.properties?.title,
-        owner_name: data.property_owners ? `${data.property_owners.first_name} ${data.property_owners.last_name}` : 'Desconocido',
+        owner_name: data.profiles ? `${data.profiles.first_name} ${data.profiles.last_name}` : 'Desconocido',
       });
       setLoading(false);
     };

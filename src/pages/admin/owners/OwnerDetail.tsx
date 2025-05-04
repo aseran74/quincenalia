@@ -27,9 +27,10 @@ const OwnerDetail: React.FC = () => {
 
   const fetchOwner = async () => {
     const { data } = await supabase
-      .from('property_owners')
+      .from('profiles')
       .select('*')
       .eq('id', id)
+      .eq('role', 'owner')
       .single();
     if (data) setOwner(data);
   };

@@ -79,8 +79,9 @@ const AdminReservations: React.FC = () => {
         .order('title');
       if (propertiesError) throw propertiesError;
       const { data: ownersData, error: ownersError } = await supabase
-        .from('property_owners')
+        .from('profiles')
         .select('id, first_name, last_name')
+        .eq('role', 'owner')
         .order('last_name').order('first_name');
       if (ownersError) throw ownersError;
       setReservations(reservationsData || []);
@@ -149,7 +150,7 @@ const AdminReservations: React.FC = () => {
       const { data, error } = await supabase
         .from('property_reservations')
         .insert({ property_id, owner_id, start_date, end_date, status })
-        .select(`*, properties (id, title), property_owners (id, first_name, last_name)`).single();
+        .select(`*, properties (id, title), profiles (id, first_name, last_name)`).single();
       if (error) throw error;
       if (data) {
         setReservations(prev => [data, ...prev]);

@@ -53,13 +53,13 @@ const roomOptions = [
 ];
 
 const propertyTypesWithIcons = [
-  { value: 'Apartamento', label: 'Apartamento', icon: <Building className="w-4 h-4 text-muted-foreground" /> },
-  { value: 'Casa', label: 'Casa', icon: <Home className="w-4 h-4 text-muted-foreground" /> },
-  { value: 'Chalet', label: 'Chalet', icon: <TreePalm className="w-4 h-4 text-muted-foreground" /> },
+  { value: 'Piso', label: 'Piso', icon: <Building className="w-4 h-4 text-muted-foreground" /> },
   { value: 'Ático', label: 'Ático', icon: <SquareArrowUp className="w-4 h-4 text-muted-foreground" /> },
   { value: 'Dúplex', label: 'Dúplex', icon: <Building2 className="w-4 h-4 text-muted-foreground" /> },
-  { value: 'Local', label: 'Local', icon: <Warehouse className="w-4 h-4 text-muted-foreground" /> },
-  { value: 'Oficina', label: 'Oficina', icon: <UserCheck className="w-4 h-4 text-muted-foreground" /> },
+  { value: 'Casa independiente', label: 'Casa independiente', icon: <Home className="w-4 h-4 text-muted-foreground" /> },
+  { value: 'Casa pareada', label: 'Casa pareada', icon: <Home className="w-4 h-4 text-muted-foreground" /> },
+  { value: 'Casa adosada', label: 'Casa adosada', icon: <Home className="w-4 h-4 text-muted-foreground" /> },
+  { value: 'Casa rústica', label: 'Casa rústica', icon: <TreePalm className="w-4 h-4 text-muted-foreground" /> },
 ];
 
 const FEATURES_LIST = [
@@ -85,6 +85,16 @@ function getMinSharePrice(property: Property): number | null {
   if (shares.length === 0) return null;
   return Math.min(...shares);
 }
+
+const calcularCuotaHipoteca = (precio: number) => {
+  // Hipoteca a 25 años, 3% interés, 80% financiación
+  const principal = precio * 0.8;
+  const years = 25;
+  const interest = 0.03;
+  const n = years * 12;
+  const monthlyRate = interest / 12;
+  return principal * (monthlyRate * Math.pow(1 + monthlyRate, n)) / (Math.pow(1 + monthlyRate, n) - 1);
+};
 
 export const PropertiesPage = () => {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -205,6 +215,13 @@ export const PropertiesPage = () => {
                 </p>
             )}
           </CardContent>
+          <CardFooter className="p-2 sm:p-3 pt-0 flex items-center border-t border-border">
+            {minShare && (
+              <span className="text-base font-bold text-primary">
+                {formatPriceSimple(Math.round(calcularCuotaHipoteca(minShare)))} <span className="text-xs text-muted-foreground font-normal">/mes*</span>
+              </span>
+            )}
+          </CardFooter>
         </Card>
       </Link>
     );
@@ -349,12 +366,12 @@ export const PropertiesPage = () => {
            <div className="flex flex-col sm:flex-row gap-2 items-center pt-2 sm:pt-0">
                <Button
                   variant="ghost"
-                  className="text-sm p-0 h-9 flex items-center text-primary hover:bg-transparent"
+                  className="text-[16px] px-3 h-10 flex items-center text-primary hover:bg-transparent gap-2 font-semibold"
                   onClick={() => setShowAdvancedFilters(v => !v)}
                 >
-                  <SlidersHorizontal className="w-4 h-4 mr-1" />
+                  <SlidersHorizontal className="w-5 h-5 mr-1" />
                   {showAdvancedFilters ? 'Menos filtros' : 'Más filtros'}
-                  {showAdvancedFilters ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+                  {showAdvancedFilters ? <ChevronUp className="w-5 h-5 ml-1" /> : <ChevronDown className="w-5 h-5 ml-1" />}
                 </Button>
                 {numActiveFilters > 0 && (
                     <Button variant="ghost" size="sm" onClick={resetFilters} className="text-xs text-muted-foreground h-9">

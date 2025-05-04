@@ -74,20 +74,20 @@ const AgencyDetail: React.FC = () => {
         <CardContent>
           <p className="text-gray-700 mb-4">{agency.description}</p>
           <h2 className="text-lg font-semibold mb-2">Agentes vinculados</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {agents.length === 0 ? (
               <p className="text-gray-500 col-span-2">No hay agentes vinculados a esta agencia.</p>
             ) : (
               agents.map(agent => (
-                <Link to={`/dashboard/agents/${agent.id}`} key={agent.id} className="flex items-center gap-3 p-2 rounded hover:bg-gray-100">
+                <Link to={`/dashboard/agents/${agent.id}`} key={agent.id} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded hover:bg-gray-100">
                   {agent.profile_image ? (
-                    <img src={agent.profile_image} alt={agent.first_name} className="w-12 h-12 rounded-full object-cover border" />
+                    <img src={agent.profile_image} alt={agent.first_name} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border" />
                   ) : (
-                    <HiOutlineUserCircle className="w-12 h-12 text-gray-300" />
+                    <HiOutlineUserCircle className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300" />
                   )}
                   <div>
-                    <div className="font-semibold">{agent.first_name} {agent.last_name}</div>
-                    <div className="text-gray-500 text-sm">{agent.email}</div>
+                    <div className="font-semibold text-sm sm:text-base line-clamp-1">{agent.first_name} {agent.last_name}</div>
+                    <div className="text-gray-500 text-xs sm:text-sm line-clamp-1">{agent.email}</div>
                   </div>
                 </Link>
               ))

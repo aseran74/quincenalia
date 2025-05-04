@@ -96,52 +96,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobile }) => {
         !isOpen && !isMobile && "md:items-center",
         !isOpen && isMobile && "overflow-hidden"
       )}>
-        {/* Header con Avatar y Toggle */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className={cn(
-                "relative h-10 rounded-lg hover:bg-gray-100 flex items-center gap-2 px-2 w-full justify-start",
-                !isOpen && "md:w-12 md:justify-center md:px-0"
-              )}>
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.profileImage} alt={user?.name} />
-                  <AvatarFallback>{user?.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                {isOpen && (
-                  <div className="flex flex-col items-start overflow-hidden whitespace-nowrap">
-                    <span className="text-sm font-medium truncate">{user?.name}</span>
-                    <span className="text-xs text-gray-500 truncate">{user?.email}</span>
-                  </div>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="start" forceMount>
-              <DropdownMenuItem onClick={() => {}}>
-                <User className="mr-2 h-4 w-4" />
-                <span>Perfil</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => logout()} className="text-red-600">
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Cerrar Sesión</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Botón Toggle para Desktop */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsOpen(!isOpen)}
-            className="hidden md:flex"
-          >
-            <ChevronLeft className={cn(
-              "h-4 w-4 transition-transform",
-              !isOpen && "rotate-180"
-            )} />
-          </Button>
-        </div>
+        {/* Header con Avatar y Toggle - Solo visible en desktop */}
+        {!isMobile && (
+          <div className="flex items-center gap-4 p-4 border-b">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={user?.profileImage} alt={user?.name} />
+              <AvatarFallback>{user?.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col overflow-hidden">
+              <span className="text-sm font-medium truncate">{user?.name}</span>
+              <span className="text-xs text-gray-500 truncate">{user?.email}</span>
+            </div>
+          </div>
+        )}
 
         {/* Navegación */}
         <nav className="mt-4 flex-1 overflow-y-auto">

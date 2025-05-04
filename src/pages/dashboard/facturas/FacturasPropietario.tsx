@@ -47,8 +47,9 @@ const FacturasPropietario: React.FC = () => {
     const fetchOwners = async () => {
       if (user?.role === 'admin') {
         const { data } = await supabase
-          .from('property_owners')
-          .select('id, first_name, last_name');
+          .from('profiles')
+          .select('id, first_name, last_name')
+          .eq('role', 'owner');
         setOwners(data || []);
       } else if (user?.role === 'owner') {
         setOwnerId(user.id);
@@ -61,13 +62,7 @@ const FacturasPropietario: React.FC = () => {
     try {
       let query = supabase
         .from('invoices')
-        .select(`
-          *,
-          property_owners (
-            first_name,
-            last_name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (user?.role === 'owner') {

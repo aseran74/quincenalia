@@ -31,7 +31,7 @@ import { PropertyDetail as PublicPropertyDetail } from './pages/properties/Prope
 import OwnerDashboard from './pages/dashboard/owner/OwnerDashboard';
 import OwnerIncidents from './pages/dashboard/owner/OwnerIncidents';
 import OwnerReservations from './pages/dashboard/owner/OwnerReservations';
-import { OwnerInvoices, OwnerMessages } from './pages/dashboard/owner/OwnerDashboard';
+import OwnerInvoicesBoard from './pages/dashboard/owner/OwnerInvoicesBoard';
 import OwnerHome from './pages/dashboard/owner/OwnerHome';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminHome from './pages/admin/AdminHome';
@@ -39,6 +39,7 @@ import AgentRequests from './pages/admin/AgentRequests';
 import AdminReservations from './pages/dashboard/admin/AdminReservations';
 import IncidentDetail from './pages/dashboard/incidencias/IncidentDetail';
 import DashboardRedirect from './pages/dashboard/DashboardRedirect';
+import OwnerMessagesBoard from './pages/dashboard/owner/OwnerMessagesBoard';
 
 const Profile = () => (
   <div style={{ padding: 32 }}>
@@ -74,8 +75,8 @@ function App() {
             <Route index element={<OwnerHome />} />
             <Route path="incidents" element={<OwnerIncidents />} />
             <Route path="reservations" element={<OwnerReservations />} />
-            <Route path="invoices" element={<OwnerInvoices />} />
-            <Route path="messages" element={<OwnerMessages />} />
+            <Route path="invoices" element={<OwnerInvoicesBoard />} />
+            <Route path="messages" element={<OwnerMessagesBoard />} />
             <Route path="profile" element={<ProfilePanel />} />
           </Route>
 

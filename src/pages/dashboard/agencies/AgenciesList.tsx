@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, LayoutGrid, List } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { cn } from '@/lib/utils';
 
 interface RealEstateAgency {
   id: string;
@@ -42,35 +43,57 @@ const AgenciesList = ({ adminMode = false }: AgenciesListProps) => {
       .from('real_estate_agencies')
       .select('*')
       .order('name');
-    if (!error) setAgencies(data || []);
+
+    if (error) {
+      console.error("Error fetching agencies:", error);
+      toast({ title: 'Error', description: 'No se pudieron cargar las agencias.', variant: 'destructive' });
+      setAgencies([]);
+    } else {
+      setAgencies(data || []);
+    }
     setLoading(false);
   };
 
   const fetchAgentsCount = async () => {
-    const { data, error } = await supabase
-      .from('agency_agents')
-      .select('agency_id', { count: 'exact', head: false });
-    if (!error && data) {
-      // Contar cuántos agentes hay por agencia
-      const countMap: { [agencyId: string]: number } = {};
-      data.forEach((row: any) => {
-        countMap[row.agency_id] = (countMap[row.agency_id] || 0) + 1;
-      });
-      setAgentsCount(countMap);
-    }
+      try {
+          const { data: detailedData, error: detailedError } = await supabase
+              .from('agency_agents')
+              .select('agency_id');
+
+          if (detailedError) throw detailedError;
+
+          if (detailedData) {
+              const countMap: { [agencyId: string]: number } = {};
+              detailedData.forEach((row: any) => {
+                  countMap[row.agency_id] = (countMap[row.agency_id] || 0) + 1;
+              });
+              setAgentsCount(countMap);
+          }
+      } catch (error: any) {
+          console.error("Error fetching agents count:", error);
+      }
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('¿Seguro que quieres eliminar esta agencia?')) return;
-    const { error } = await supabase
-      .from('real_estate_agencies')
-      .delete()
-      .eq('id', id);
-    if (!error) {
-      setAgencies(agencies.filter(a => a.id !== id));
-      toast({ title: 'Éxito', description: 'Elemento eliminado correctamente' });
-    } else {
-      toast({ title: 'Error', description: 'Error al realizar la acción', variant: 'destructive' });
+    if (!window.confirm('¿Seguro que quieres eliminar esta agencia? Esta acción no se puede deshacer.')) return;
+    try {
+      const { error } = await supabase
+        .from('real_estate_agencies')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setAgencies(prevAgencies => prevAgencies.filter(a => a.id !== id));
+      toast({ title: 'Éxito', description: 'Agencia eliminada correctamente.' });
+
+    } catch (error: any) {
+      console.error("Error deleting agency:", error);
+      toast({
+        title: 'Error',
+        description: `No se pudo eliminar la agencia. ${error.message || ''}`,
+        variant: 'destructive'
+      });
     }
   };
 
@@ -79,105 +102,140 @@ const AgenciesList = ({ adminMode = false }: AgenciesListProps) => {
   }
 
   return (
-    <div className="container mx-auto p-6 font-poppins">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Agencias Inmobiliarias {adminMode && <span className="ml-2 px-2 py-1 bg-blue-200 text-blue-800 rounded text-xs">Admin</span>}</h1>
-        <div className="flex gap-2">
-          <Button
-            variant={view === 'grid' ? 'default' : 'outline'}
-            onClick={() => setView('grid')}
-          >
-            Grid
-          </Button>
-          <Button
-            variant={view === 'table' ? 'default' : 'outline'}
-            onClick={() => setView('table')}
-          >
-            Tabla
-          </Button>
-          <Link to={`${basePath}/new`}>
-            <Button>Nueva Agencia</Button>
-          </Link>
+    <div className="container mx-auto p-4 md:p-6 font-poppins">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+          Agencias
+          {adminMode && <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs align-middle">Admin</span>}
+        </h1>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <div className="flex gap-2">
+             <Button
+               variant={view === 'grid' ? 'default' : 'outline'}
+               size="sm"
+               onClick={() => setView('grid')}
+               aria-label="Vista de cuadrícula"
+             >
+               <LayoutGrid className="h-4 w-4 mr-2 sm:mr-0 md:mr-2" />
+               <span className="hidden sm:inline md:inline">Grid</span>
+             </Button>
+             <Button
+               variant={view === 'table' ? 'default' : 'outline'}
+               size="sm"
+               onClick={() => setView('table')}
+               aria-label="Vista de tabla"
+             >
+               <List className="h-4 w-4 mr-2 sm:mr-0 md:mr-2" />
+               <span className="hidden sm:inline md:inline">Tabla</span>
+             </Button>
+          </div>
+          { (adminMode || user?.role === 'admin') && (
+             <Link to={`${basePath}/new`} className="w-full sm:w-auto">
+               <Button className="w-full sm:w-auto">Nueva Agencia</Button>
+             </Link>
+          )}
         </div>
       </div>
 
       {loading ? (
-        <div className="text-center py-12">Cargando agencias...</div>
+        <div className="text-center py-12 text-gray-500">Cargando agencias...</div>
       ) : agencies.length === 0 ? (
-        <Card className="font-poppins">
+        <Card className="text-center shadow-sm">
           <CardHeader>
-            <h3 className="text-lg font-semibold">No hay agencias registradas</h3>
+            <CardTitle className="text-lg font-semibold text-gray-700 dark:text-gray-300">No hay agencias</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600">
-              Comienza agregando una nueva agencia inmobiliaria.
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Parece que aún no se ha registrado ninguna agencia.
             </p>
+            { (adminMode || user?.role === 'admin') && (
+              <Link to={`${basePath}/new`}>
+                <Button>Crear la Primera Agencia</Button>
+              </Link>
+            )}
           </CardContent>
         </Card>
       ) : view === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-poppins">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 font-poppins">
           {agencies.map((agency) => (
-            <Card key={agency.id} className="relative w-full max-w-[500px] h-[300px] bg-white rounded-xl outline outline-1 outline-gray-200 outline-offset-[-12px] shadow-lg overflow-hidden mx-auto group font-poppins flex flex-col items-center justify-start pt-6">
-              <div className="flex flex-col items-center">
-                {agency.logo_url ? (
-                  <img src={agency.logo_url} alt={agency.name} className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow-lg" />
-                ) : (
-                  <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-200 shadow-lg">
-                    <span className="text-gray-400 text-4xl">🏢</span>
-                  </div>
-                )}
-                <div className="flex gap-2 justify-center mt-2">
-                  <Link to={`${basePath}/${agency.id}/edit`}>
-                    <Button size="icon" variant="ghost" className="text-gray-500"><Pencil size={18} /></Button>
-                  </Link>
-                  {user?.role === 'admin' && (
-                    <Button size="icon" variant="ghost" className="text-gray-500" onClick={() => handleDelete(agency.id)}><Trash2 size={18} color="#e11d48" /></Button>
+            <Card key={agency.id} className="flex flex-col bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden group transition-shadow hover:shadow-md">
+              <CardHeader className="flex flex-row items-start justify-between p-4 space-y-0">
+                <div className="flex items-center gap-3">
+                  {agency.logo_url ? (
+                    <img src={agency.logo_url} alt={`Logo de ${agency.name}`} className="w-12 h-12 rounded-full object-cover border border-gray-200" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center border border-gray-200 dark:border-gray-600">
+                      <span className="text-gray-400 text-2xl">🏢</span>
+                    </div>
                   )}
+                  <div className="flex-1 min-w-0">
+                     <Link to={`${basePath}/${agency.id}`} className="hover:underline">
+                        <CardTitle className="text-base font-semibold text-gray-900 dark:text-white truncate">{agency.name}</CardTitle>
+                      </Link>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{agency.email}</p>
+                  </div>
                 </div>
-              </div>
-              <CardHeader className="pt-2 pb-1 text-center bg-white">
-                <Link to={`${basePath}/${agency.id}`} className="hover:underline">
-                  <h2 className="text-xl font-semibold text-gray-900 drop-shadow-none">{agency.name}</h2>
-                </Link>
-                <p className="text-gray-600 text-sm">{agency.email}</p>
-                <p className="text-gray-600 text-sm">{agency.phone}</p>
-                <p className="text-gray-500 text-xs mt-1">{agentsCount[agency.id] || 0} agentes vinculados</p>
+                 { (adminMode || user?.role === 'admin') && (
+                    <div className="flex flex-col sm:flex-row gap-1 items-end pt-1">
+                        <Link to={`${basePath}/${agency.id}/edit`}>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400" aria-label="Editar agencia">
+                                <Pencil size={16} />
+                            </Button>
+                        </Link>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-500 hover:text-red-600 dark:hover:text-red-500" onClick={() => handleDelete(agency.id)} aria-label="Eliminar agencia">
+                            <Trash2 size={16} />
+                        </Button>
+                    </div>
+                 )}
               </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 text-sm line-clamp-2 mb-2 max-h-[2.5em] overflow-hidden pt-4">{agency.description}</p>
+              <CardContent className="p-4 pt-2">
+                <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 mb-2">{agency.description || 'Sin descripción.'}</p>
+                <div className="text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
+                    <p className="truncate">Tel: {agency.phone || 'N/A'}</p>
+                    {agency.website && <a href={agency.website.startsWith('http') ? agency.website : `https://${agency.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate block">Web</a>}
+                    <p>Agentes: {agentsCount[agency.id] || 0}</p>
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border rounded font-poppins">
-            <thead>
+        <div className="overflow-x-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 font-poppins">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-4 py-2 border">Nombre</th>
-                <th className="px-4 py-2 border">Email</th>
-                <th className="px-4 py-2 border">Teléfono</th>
-                <th className="px-4 py-2 border">Acciones</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nombre</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Teléfono</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Agentes</th>
+                { (adminMode || user?.role === 'admin') && (
+                  <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Acciones</th>
+                )}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {agencies.map((agency) => (
-                <tr key={agency.id}>
-                  <td className="px-4 py-2 border">
-                    <Link to={`${basePath}/${agency.id}`} className="hover:underline">
+                <tr key={agency.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <Link to={`${basePath}/${agency.id}`} className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
                       {agency.name}
                     </Link>
                   </td>
-                  <td className="px-4 py-2 border">{agency.email}</td>
-                  <td className="px-4 py-2 border">{agency.phone}</td>
-                  <td className="px-4 py-2 border flex gap-2">
-                    <Link to={`${basePath}/${agency.id}/edit`}>
-                      <Button size="icon" variant="ghost"><Pencil /></Button>
-                    </Link>
-                    {user?.role === 'admin' && (
-                      <Button size="icon" variant="ghost" onClick={() => handleDelete(agency.id)}><Trash2 color="#e11d48" /></Button>
-                    )}
-                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{agency.email}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{agency.phone}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300 text-center">{agentsCount[agency.id] || 0}</td>
+                  { (adminMode || user?.role === 'admin') && (
+                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium flex justify-end gap-2">
+                      <Link to={`${basePath}/${agency.id}/edit`} aria-label="Editar agencia">
+                        <Button size="sm" variant="ghost" className="text-gray-500 hover:text-blue-600 dark:hover:text-blue-400">
+                          <Pencil size={16} />
+                        </Button>
+                      </Link>
+                      <Button size="sm" variant="ghost" className="text-gray-500 hover:text-red-600 dark:hover:text-red-500" onClick={() => handleDelete(agency.id)} aria-label="Eliminar agencia">
+                        <Trash2 size={16} />
+                      </Button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

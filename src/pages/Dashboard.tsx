@@ -27,6 +27,19 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
     weeksOccupied: 0,
     totalIncidents: 0,
   });
+  const [isOpen, setIsOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth < 768) setIsOpen(false);
+      else setIsOpen(true);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -38,7 +51,7 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
       // Comisiones pagadas
       const { count: paidCommissions } = await supabase.from('commissions').select('id', { count: 'exact', head: true }).eq('status', 'pagada');
       // Propietarios
-      const { count: totalOwners } = await supabase.from('property_owners').select('id', { count: 'exact', head: true });
+      const { count: totalOwners } = await supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'owner');
       // Semanas ocupadas
       const { count: weeksOccupied } = await supabase.from('reservations').select('id', { count: 'exact', head: true });
       // Incidencias
@@ -74,7 +87,7 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
     <div className="min-h-screen bg-gray-100">
       <Navbar />
       <div className="flex">
-        <Sidebar />
+        <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} isMobile={isMobile} />
         <main className="flex-1">
           {location.pathname === '/dashboard' ? (
             children || (

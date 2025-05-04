@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
 
 const ESTADOS = [
   { value: 'pendiente', label: 'Pendiente' },
@@ -15,6 +16,7 @@ const ComisionesPanel: React.FC = () => {
   const [detalle, setDetalle] = useState<any | null>(null);
   const [edit, setEdit] = useState(false);
   const [editData, setEditData] = useState({ percentage: 3, amount: 0, status: 'pendiente' });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     supabase.from('real_estate_agents').select('id, first_name, last_name').then(({ data }) => setAgents(data || []));
@@ -27,12 +29,14 @@ const ComisionesPanel: React.FC = () => {
   }, [filter]);
 
   const fetchComisiones = async () => {
+    setLoading(true);
     let query = supabase.from('commissions').select('*').order('created_at', { ascending: false });
     if (filter.estado) query = query.eq('status', filter.estado);
     if (filter.agente) query = query.eq('agent_id', filter.agente);
     if (filter.propiedad) query = query.eq('property_id', filter.propiedad);
     const { data } = await query;
     setComisiones(data || []);
+    setLoading(false);
   };
 
   const handleEstadoChange = async (id: string, nuevoEstado: string) => {
@@ -57,74 +61,88 @@ const ComisionesPanel: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto font-poppins">
-      <h1 className="text-2xl font-bold mb-4">Gestión de Comisiones</h1>
-      <div className="mb-6 flex flex-col md:flex-row gap-4">
-        <select className="border rounded px-2 py-1" value={filter.estado} onChange={e => setFilter(f => ({ ...f, estado: e.target.value }))}>
+    <div className="p-4 md:p-6 max-w-6xl mx-auto font-poppins">
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Comisiones</h1>
+      </div>
+      {/* Filtros */}
+      <div className="flex flex-wrap gap-3 mb-6">
+        <select className="border rounded px-3 py-2 text-sm" value={filter.estado} onChange={e => setFilter(f => ({ ...f, estado: e.target.value }))}>
           <option value="">Todos los estados</option>
           {ESTADOS.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}
         </select>
-        <select className="border rounded px-2 py-1" value={filter.agente} onChange={e => setFilter(f => ({ ...f, agente: e.target.value }))}>
+        <select className="border rounded px-3 py-2 text-sm" value={filter.agente} onChange={e => setFilter(f => ({ ...f, agente: e.target.value }))}>
           <option value="">Todos los agentes</option>
           {agents.map(a => <option key={a.id} value={a.id}>{a.first_name} {a.last_name}</option>)}
         </select>
-        <select className="border rounded px-2 py-1" value={filter.propiedad} onChange={e => setFilter(f => ({ ...f, propiedad: e.target.value }))}>
+        <select className="border rounded px-3 py-2 text-sm" value={filter.propiedad} onChange={e => setFilter(f => ({ ...f, propiedad: e.target.value }))}>
           <option value="">Todas las propiedades</option>
           {properties.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
         </select>
       </div>
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Columna 1: Histórico */}
-        <div className="flex-1 bg-white rounded shadow p-4 border">
-          <h2 className="text-xl font-semibold mb-4">Histórico de comisiones</h2>
-          <table className="w-full border text-sm">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="p-2">Propiedad</th>
-                <th className="p-2">Agente</th>
-                <th className="p-2">Porcentaje</th>
-                <th className="p-2">Importe</th>
-                <th className="p-2">Estado</th>
-                <th className="p-2">Creada</th>
-                <th className="p-2">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {comisiones.map(com => (
-                <tr key={com.id} className="border-t">
-                  <td className="p-2">{properties.find(p => p.id === com.property_id)?.title || '-'}</td>
-                  <td className="p-2">{agents.find(a => a.id === com.agent_id) ? `${agents.find(a => a.id === com.agent_id).first_name} ${agents.find(a => a.id === com.agent_id).last_name}` : '-'}</td>
-                  <td className="p-2">{com.percentage}%</td>
-                  <td className="p-2">{Number(com.amount).toFixed(2)} €</td>
-                  <td className="p-2">
-                    <select
-                      value={com.status}
-                      onChange={e => handleEstadoChange(com.id, e.target.value)}
-                      className="border rounded px-2 py-1"
-                    >
-                      {ESTADOS.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}
-                    </select>
-                  </td>
-                  <td className="p-2">{new Date(com.created_at).toLocaleDateString()}</td>
-                  <td className="p-2">
-                    <button
-                      className="text-blue-600 underline text-xs"
-                      onClick={() => { setDetalle(com); setEdit(false); }}
-                      title="Ver detalles"
-                    >
-                      Ver detalles
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Histórico */}
+        <div className="lg:col-span-2 bg-white rounded-lg shadow p-4 border min-h-[300px]">
+          <h2 className="text-lg md:text-xl font-semibold mb-4 text-gray-800">Histórico de comisiones</h2>
+          {loading ? (
+            <div className="flex items-center justify-center min-h-[120px]">
+              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <p className='ml-2'>Cargando comisiones...</p>
+            </div>
+          ) : comisiones.length === 0 ? (
+            <p className="text-center text-gray-500 py-8">No hay comisiones para mostrar.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border text-sm">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="p-2">Propiedad</th>
+                    <th className="p-2">Agente</th>
+                    <th className="p-2">Porcentaje</th>
+                    <th className="p-2">Importe</th>
+                    <th className="p-2">Estado</th>
+                    <th className="p-2">Creada</th>
+                    <th className="p-2">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comisiones.map(com => (
+                    <tr key={com.id} className="border-t hover:bg-gray-50 transition">
+                      <td className="p-2">{properties.find(p => p.id === com.property_id)?.title || '-'}</td>
+                      <td className="p-2">{agents.find(a => a.id === com.agent_id) ? `${agents.find(a => a.id === com.agent_id).first_name} ${agents.find(a => a.id === com.agent_id).last_name}` : '-'}</td>
+                      <td className="p-2">{com.percentage}%</td>
+                      <td className="p-2">{Number(com.amount).toFixed(2)} €</td>
+                      <td className="p-2">
+                        <select
+                          value={com.status}
+                          onChange={e => handleEstadoChange(com.id, e.target.value)}
+                          className="border rounded px-2 py-1 text-xs"
+                        >
+                          {ESTADOS.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}
+                        </select>
+                      </td>
+                      <td className="p-2">{new Date(com.created_at).toLocaleDateString()}</td>
+                      <td className="p-2">
+                        <button
+                          className="text-blue-600 underline text-xs"
+                          onClick={() => { setDetalle(com); setEdit(false); }}
+                          title="Ver detalles"
+                        >
+                          Ver detalles
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-        {/* Columna 2: Detalle/edición */}
-        <div className="flex-1 bg-white rounded shadow p-4 border min-h-[300px]">
+        {/* Detalle/edición */}
+        <div className="bg-white rounded-lg shadow p-4 border min-h-[300px] flex flex-col">
           {detalle ? (
             <>
-              <h2 className="text-xl font-semibold mb-4">Detalle de comisión</h2>
+              <h2 className="text-lg md:text-xl font-semibold mb-4 text-gray-800">Detalle de comisión</h2>
               {!edit ? (
                 <>
                   <div className="mb-2"><b>Propiedad:</b> {properties.find(p => p.id === detalle.property_id)?.title || '-'}</div>
@@ -133,8 +151,8 @@ const ComisionesPanel: React.FC = () => {
                   <div className="mb-2"><b>Importe:</b> {Number(detalle.amount).toFixed(2)} €</div>
                   <div className="mb-2"><b>Estado:</b> {ESTADOS.find(e => e.value === detalle.status)?.label || detalle.status}</div>
                   <div className="mb-2"><b>Fecha de creación:</b> {new Date(detalle.created_at).toLocaleString()}</div>
-                  <button className="bg-blue-600 text-white px-3 py-1 rounded mt-2 mr-2" onClick={() => handleEdit(detalle)}>Editar</button>
-                  <button className="bg-gray-300 px-3 py-1 rounded mt-2" onClick={() => setDetalle(null)}>Cerrar</button>
+                  <Button size="sm" className="bg-blue-600 text-white px-3 py-1 rounded mt-2 mr-2" onClick={() => handleEdit(detalle)}>Editar</Button>
+                  <Button size="sm" variant="outline" className="bg-gray-100 px-3 py-1 rounded mt-2" onClick={() => setDetalle(null)}>Cerrar</Button>
                 </>
               ) : (
                 <>
@@ -171,8 +189,8 @@ const ComisionesPanel: React.FC = () => {
                       {ESTADOS.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}
                     </select>
                   </div>
-                  <button className="bg-green-600 text-white px-3 py-1 rounded mt-2 mr-2" onClick={handleEditSave}>Guardar</button>
-                  <button className="bg-gray-300 px-3 py-1 rounded mt-2" onClick={() => setEdit(false)}>Cancelar</button>
+                  <Button size="sm" className="bg-green-600 text-white px-3 py-1 rounded mt-2 mr-2" onClick={handleEditSave}>Guardar</Button>
+                  <Button size="sm" variant="outline" className="bg-gray-100 px-3 py-1 rounded mt-2" onClick={() => setEdit(false)}>Cancelar</Button>
                 </>
               )}
             </>

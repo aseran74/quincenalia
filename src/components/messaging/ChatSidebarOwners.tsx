@@ -19,8 +19,9 @@ const ChatSidebarOwners: React.FC<ChatSidebarOwnersProps> = ({ onSelectOwner, se
     const fetchOwners = async () => {
       setLoading(true);
       const { data, error } = await supabase
-        .from('property_owners')
-        .select('id, user_id, first_name, last_name, photo_url, email');
+        .from('profiles')
+        .select('id, user_id, first_name, last_name, photo_url, email')
+        .eq('role', 'owner');
 
       if (error) {
         console.error('Error fetching owners:', error);

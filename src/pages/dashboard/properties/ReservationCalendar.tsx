@@ -143,9 +143,10 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId })
 
         if (ownerIds.length > 0) {
           const { data: ownersData, error: ownersError } = await supabase
-            .from('property_owners')
+            .from('profiles')
             .select('id, first_name, last_name')
-            .in('id', ownerIds);
+            .in('id', ownerIds)
+            .eq('role', 'owner');
 
           if (ownersError) throw ownersError;
 

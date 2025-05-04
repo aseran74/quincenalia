@@ -46,17 +46,19 @@ const PropertiesSearch = () => {
                 variant={viewMode === 'list' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setViewMode('list')}
+                className="text-[16px]"
               >
-                <ListBulletIcon className="h-5 w-5 mr-1" />
-                Lista
+                <ListBulletIcon className="h-4 w-4 mr-1" style={{ fontSize: 16, width: 16, height: 16 }} />
+                <span className="text-[16px]">Lista</span>
               </Button>
               <Button
                 variant={viewMode === 'map' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setViewMode('map')}
+                className="text-[16px]"
               >
-                <MapIcon className="h-5 w-5 mr-1" />
-                Mapa
+                <MapIcon className="h-4 w-4 mr-1" style={{ fontSize: 16, width: 16, height: 16 }} />
+                <span className="text-[16px]">Mapa</span>
               </Button>
             </div>
           </div>

@@ -34,8 +34,9 @@ const OwnersList = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('property_owners')
-        .select('*');
+        .from('profiles')
+        .select('*')
+        .eq('role', 'owner');
 
       if (error) throw error;
       setOwners(data || []);
@@ -80,7 +81,7 @@ const OwnersList = () => {
                 <Avatar className="h-20 w-20">
                   <AvatarImage src={owner.photo_url} alt={`${owner.first_name} ${owner.last_name}`} />
                   <AvatarFallback className="bg-blue-500 text-white text-xl">
-                    {owner.first_name[0]}{owner.last_name[0]}
+                    {(owner.first_name?.[0] || '?')}{(owner.last_name?.[0] || '')}
                   </AvatarFallback>
                 </Avatar>
 
@@ -124,7 +125,7 @@ const OwnersList = () => {
                       e.stopPropagation();
                       if (confirm('¿Estás seguro de que quieres eliminar este propietario?')) {
                         const { error } = await supabase
-                          .from('property_owners')
+                          .from('profiles')
                           .delete()
                           .eq('id', owner.id);
                         

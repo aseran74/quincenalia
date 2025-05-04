@@ -31,9 +31,10 @@ const OwnerForm: React.FC<OwnerFormProps> = ({ isEditing = false }) => {
   const fetchOwner = async () => {
     setLoading(true);
     const { data } = await supabase
-      .from('property_owners')
+      .from('profiles')
       .select('*')
       .eq('id', id)
+      .eq('role', 'owner')
       .single();
     if (data) setOwner(data);
     setLoading(false);
@@ -86,9 +87,10 @@ const OwnerForm: React.FC<OwnerFormProps> = ({ isEditing = false }) => {
       let result;
       if (id) {
         result = await supabase
-          .from('property_owners')
+          .from('profiles')
           .update(ownerData)
-          .eq('id', id);
+          .eq('id', id)
+          .eq('role', 'owner');
       } else {
         const password = Math.random().toString(36).slice(-8) + 'Aa1!';
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -102,8 +104,8 @@ const OwnerForm: React.FC<OwnerFormProps> = ({ isEditing = false }) => {
         }
         const user_id = signUpData.user.id;
         result = await supabase
-          .from('property_owners')
-          .insert([{ ...ownerData, user_id }]);
+          .from('profiles')
+          .insert([{ ...ownerData, id: user_id, role: 'owner' }]);
         toast({ title: 'Usuario creado', description: `Contraseña temporal: ${password}` });
       }
       if (!result.error) {

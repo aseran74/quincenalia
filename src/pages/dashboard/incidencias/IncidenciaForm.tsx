@@ -41,8 +41,9 @@ const IncidenciaForm = () => {
     const fetchData = async () => {
       if (user?.role === 'admin') {
         const { data: ownersData } = await supabase
-          .from('property_owners')
-          .select('id, first_name, last_name');
+          .from('profiles')
+          .select('id, first_name, last_name')
+          .eq('role', 'owner');
         setOwners(ownersData || []);
 
         const { data: propertiesData } = await supabase

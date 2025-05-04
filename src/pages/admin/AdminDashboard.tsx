@@ -79,25 +79,32 @@ const AdminDashboard = () => {
           isSidebarOpen ? 'w-64' : 'w-0 lg:w-20'
         )}
       >
-        {/* Sidebar Header */}
-        <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
-          <a href="/dashboard/admin" className="flex items-center">
-            <img
-              src="/logo-blanco.png"
-              alt="Quincenalia"
-              className={cn(
-                "h-8",
-                !isSidebarOpen && "lg:hidden"
-              )}
-            />
-            {!isSidebarOpen && <Home className="w-6 h-6 text-white hidden lg:block" />}
-          </a>
+        {/* Botón de menú solo en móvil para mostrar/ocultar sidebar */}
+        {isMobile && (
+          <div className="flex items-center justify-between gap-2 px-4 py-4 md:hidden">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebar}
+              className="text-white hover:text-gray-300 focus:outline-none"
+              aria-label="Abrir/cerrar menú"
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+          </div>
+        )}
 
+        {/* Sidebar Header */}
+        <div className="hidden lg:flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
+          <a href="/dashboard/admin" className="flex items-center">
+            {!isSidebarOpen && <Home className="w-6 h-6 text-white" />}
+          </a>
+          {/* Botón de toggle solo en escritorio */}
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleSidebar}
-            className="hidden lg:flex text-white hover:text-gray-300 focus:outline-none"
+            className="text-white hover:text-gray-300 focus:outline-none"
             aria-label="Toggle Sidebar"
           >
             <ChevronLeft className={cn(
@@ -123,9 +130,8 @@ const AdminDashboard = () => {
                 title={!isSidebarOpen ? item.label : ""}
               >
                 {item.icon}
-                <span className={cn("whitespace-nowrap text-white", !isSidebarOpen && "lg:hidden")}>
-                  {item.label}
-                </span>
+                {/* Mostrar texto solo si el sidebar está abierto */}
+                <span className={cn("whitespace-nowrap text-white transition-all duration-200", !isSidebarOpen && "lg:hidden")}>{item.label}</span>
               </Button>
             ))}
           </div>
