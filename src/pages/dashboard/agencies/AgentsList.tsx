@@ -13,20 +13,15 @@ import {
 } from "react-icons/hi2";
 import { cn } from '@/lib/utils'; // Asumiendo que tienes cn para clases condicionales
 
-// Interfaces (sin cambios)
-interface RealEstateAgent {
+// Reemplazar la interfaz RealEstateAgent por los campos de profiles
+interface AgentProfile {
   id: string;
-  agency_id: string;
   first_name: string;
   last_name: string;
   email: string;
   phone: string;
-  photo_url: string | null;
-  bio: string;
-  specialization: string;
-  license_number: string;
-  created_at: string;
-  updated_at: string;
+  photo_url?: string;
+  agency_id?: string;
 }
 
 interface RealEstateAgency {
@@ -37,7 +32,7 @@ interface RealEstateAgency {
 const AgentsList = () => {
   const { agencyId } = useParams<{ agencyId: string }>();
   const navigate = useNavigate();
-  const [agents, setAgents] = useState<RealEstateAgent[]>([]);
+  const [agents, setAgents] = useState<AgentProfile[]>([]);
   const [agency, setAgency] = useState<RealEstateAgency | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -57,50 +52,37 @@ const AgentsList = () => {
   const fetchAgencyAndAgents = async () => {
     setLoading(true);
     try {
-      // Obtener la agencia (paralelizar si es posible, pero secuencial es más simple)
       const { data: agencyData, error: agencyError } = await supabase
         .from('real_estate_agencies')
         .select('id, name')
         .eq('id', agencyId)
         .single();
-
-      // Manejo específico si la agencia no se encuentra
-      if (agencyError && agencyError.code === 'PGRST116') { // Código para "single row not found"
-          console.warn(`Agency with ID ${agencyId} not found.`);
-          setAgency(null); // Establecer agencia a null explícitamente
-          // No lanzar error aquí, se manejará en el render
+      if (agencyError && agencyError.code === 'PGRST116') {
+        setAgency(null);
       } else if (agencyError) {
-          throw agencyError; // Lanzar otros errores de Supabase
+        throw agencyError;
       } else {
-          setAgency(agencyData);
+        setAgency(agencyData);
       }
-
-
-      // Obtener los agentes solo si la agencia existe
-      if (agencyData) { // Solo buscar agentes si encontramos la agencia
+      if (agencyData) {
         const { data: agentsData, error: agentsError } = await supabase
-          .from('real_estate_agents')
-          .select('*')
+          .from('profiles')
+          .select('id, first_name, last_name, email, phone, photo_url, agency_id')
+          .eq('role', 'agent')
           .eq('agency_id', agencyId)
           .order('first_name');
-
         if (agentsError) throw agentsError;
         setAgents(agentsData || []);
       } else {
-        // Si la agencia no se encontró, no hay agentes que buscar para ella
         setAgents([]);
       }
-
-    } catch (error: any) { // Especificar tipo 'any' o 'Error'
+    } catch (error: any) {
       console.error('Error fetching data:', error);
       toast({
         title: 'Error',
         description: `No se pudieron cargar los datos: ${error.message || 'Error desconocido'}`,
         variant: 'destructive',
       });
-      // Podrías querer limpiar estados aquí si es necesario
-      // setAgency(null);
-      // setAgents([]);
     } finally {
       setLoading(false);
     }
@@ -110,21 +92,19 @@ const AgentsList = () => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar este agente? Esta acción no se puede deshacer.')) {
       return;
     }
-
     try {
       const { error } = await supabase
-        .from('real_estate_agents')
+        .from('profiles')
         .delete()
-        .eq('id', id);
-
+        .eq('id', id)
+        .eq('role', 'agent');
       if (error) throw error;
-
-      setAgents(prevAgents => prevAgents.filter(agent => agent.id !== id)); // Usar callback para estado previo
+      setAgents(prevAgents => prevAgents.filter(agent => agent.id !== id));
       toast({
         title: 'Éxito',
         description: 'Agente eliminado correctamente',
       });
-    } catch (error: any) { // Especificar tipo
+    } catch (error: any) {
       console.error('Error deleting agent:', error);
       toast({
         title: 'Error',
@@ -223,9 +203,6 @@ const AgentsList = () => {
                     <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate" title={`${agent.first_name} ${agent.last_name}`}>
                       {agent.first_name} {agent.last_name}
                     </h2>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate" title={agent.specialization || ''}>
-                      {agent.specialization || 'Especialización no indicada'}
-                    </p>
                   </div>
                   {/* Foto o Placeholder */}
                   <div className="flex-shrink-0">
@@ -245,17 +222,12 @@ const AgentsList = () => {
                 </div>
 
                 {/* Bio */}
-                {agent.bio && (
-                   <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mb-3 flex-grow"> {/* line-clamp-3, flex-grow para ocupar espacio */}
-                      {agent.bio}
-                   </p>
-                )}
+                {/* Si se quiere mostrar la bio, agregar la propiedad 'bio' a AgentProfile y descomentar aquí. */}
 
                 {/* Contacto y Licencia */}
                 <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1 mt-auto"> {/* mt-auto para empujar hacia abajo */}
                   {agent.phone && <p className="truncate">📞 {agent.phone}</p>}
                   {agent.email && <p className="truncate">✉️ {agent.email}</p>}
-                  {agent.license_number && <p className="truncate">🪪 Lic: {agent.license_number}</p>}
                 </div>
 
                 {/* Acciones */}

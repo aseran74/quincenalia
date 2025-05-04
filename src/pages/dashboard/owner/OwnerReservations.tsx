@@ -95,10 +95,10 @@ const OwnerReservations: React.FC = () => {
         [p.share1_owner_id, p.share2_owner_id, p.share3_owner_id, p.share4_owner_id].includes(user?.id)
       ).map((p: any) => ({ id: p.id, title: p.title }));
       setProperties(myProperties);
-      // Traer reservas del propietario
+      // Traer reservas del propietario con join a profiles
       const { data: reservationsData, error: reservationsError } = await supabase
         .from('property_reservations')
-        .select('*, properties (id, title)')
+        .select('*, properties (id, title), owner:profiles (id, first_name, last_name)')
         .eq('owner_id', user?.id)
         .order('created_at', { ascending: false });
       if (reservationsError) throw reservationsError;
@@ -117,17 +117,35 @@ const OwnerReservations: React.FC = () => {
   };
 
   const handleDelete = async () => {
-    if (!reservationToDelete) return;
-    setCreatingOrUpdating(true);
-    const { error } = await supabase.from('property_reservations').delete().eq('id', reservationToDelete.id);
-    if (!error) {
-      toast({ title: 'Eliminada', description: 'Reserva eliminada correctamente' });
-      setReservations(prev => prev.filter(r => r.id !== reservationToDelete.id));
-    } else {
-      toast({ title: 'Error', description: 'No se pudo eliminar la reserva', variant: 'destructive' });
+    if (!reservationToDelete) {
+      console.log('No hay reserva para eliminar');
+      return;
     }
-    setReservationToDelete(null);
-    setCreatingOrUpdating(false);
+    setCreatingOrUpdating(true);
+    let isMounted = true;
+    try {
+      console.log('Eliminando reserva', reservationToDelete.id);
+      const { error } = await supabase.from('property_reservations').delete().eq('id', reservationToDelete.id);
+      if (error) {
+        console.log('Error de supabase:', error);
+        toast({ title: 'Error', description: 'No se pudo eliminar la reserva', variant: 'destructive' });
+      } else {
+        console.log('Reserva eliminada correctamente');
+        toast({ title: 'Eliminada', description: 'Reserva eliminada correctamente' });
+        await fetchData();
+        console.log('fetchData ejecutado');
+      }
+    } catch (e) {
+      console.log('Error inesperado:', e);
+      toast({ title: 'Error', description: 'Error inesperado al eliminar', variant: 'destructive' });
+    } finally {
+      if (isMounted) {
+        setReservationToDelete(null);
+        setCreatingOrUpdating(false);
+        console.log('Finalizado el proceso de eliminación');
+      }
+    }
+    return () => { isMounted = false; };
   };
 
   const handleCreateSubmit = async (e: React.FormEvent) => {

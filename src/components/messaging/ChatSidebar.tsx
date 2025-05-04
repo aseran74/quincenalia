@@ -19,9 +19,9 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectAgent, selectedAgent,
     const fetchAgents = async () => {
       setLoading(true);
       const { data, error } = await supabase
-        .from('real_estate_agents')
-        .select('id, user_id, first_name, last_name, photo_url, email');
-
+        .from('profiles')
+        .select('id, first_name, last_name, photo_url, email')
+        .eq('role', 'agent');
       if (error) {
         console.error('Error fetching agents:', error);
         setAgents([]);

@@ -49,9 +49,10 @@ const AgentForm: React.FC<AgentFormProps> = ({ isEditing = false }) => {
 
   const fetchAgent = async () => {
     const { data, error } = await supabase
-      .from('real_estate_agents')
+      .from('profiles')
       .select('first_name, last_name, email, phone, agency_id, photo_url')
       .eq('id', id)
+      .eq('role', 'agent')
       .single();
     if (!error && data) {
       setAgent({
@@ -115,13 +116,14 @@ const AgentForm: React.FC<AgentFormProps> = ({ isEditing = false }) => {
       };
       if (isEditing && id) {
         const { error } = await supabase
-          .from('real_estate_agents')
-          .update(agentData)
-          .eq('id', id);
+          .from('profiles')
+          .update({ ...agentData, agency_id: selectedAgency || null, role: 'agent' })
+          .eq('id', id)
+          .eq('role', 'agent');
         if (error) throw error;
         toast({ title: 'Éxito', description: 'Agente actualizado correctamente' });
       } else {
-        // Registro público: crear usuario en Auth y luego en real_estate_agents
+        // Registro público: crear usuario en Auth y luego en profiles
         const password = Math.random().toString(36).slice(-8) + 'Aa1!';
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: agent.email,
@@ -134,8 +136,8 @@ const AgentForm: React.FC<AgentFormProps> = ({ isEditing = false }) => {
         }
         const user_id = signUpData.user.id;
         const { error } = await supabase
-          .from('real_estate_agents')
-          .insert([{ ...agentData, user_id }]);
+          .from('profiles')
+          .insert([{ ...agentData, agency_id: selectedAgency || null, id: user_id, role: 'agent' }]);
         if (error) throw error;
         toast({ title: 'Usuario creado', description: `Contraseña temporal: ${password}` });
       }

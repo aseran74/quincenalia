@@ -184,14 +184,13 @@ const PropertyDetail = () => {
   const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY });
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
 
-  useEffect(() => {
-    if (!id || !isUUID(id)) return;
-    fetchProperty();
-  }, [id]);
-
   if (!id || !isUUID(id)) {
     return <div className="p-8 text-center text-red-500">ID de propiedad no válido</div>;
   }
+
+  useEffect(() => {
+    fetchProperty();
+  }, [id]);
 
   const fetchProperty = async () => {
     try {
@@ -199,7 +198,7 @@ const PropertyDetail = () => {
         .from('properties')
         .select(`
           *,
-          agent:real_estate_agents(*)
+          agent:profiles(*)
         `)
         .eq('id', id)
         .single();

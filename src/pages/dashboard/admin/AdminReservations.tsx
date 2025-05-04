@@ -28,6 +28,7 @@ interface Reservation {
   created_at: string;
   properties?: Property | null;
   property_owners?: Owner | null;
+  owner?: { first_name: string; last_name: string } | null;
 }
 
 interface Property {
@@ -70,7 +71,7 @@ const AdminReservations: React.FC = () => {
       // Traer reservas solo con relación a properties
       const { data: reservationsData, error: reservationsError } = await supabase
         .from('property_reservations')
-        .select('*, properties (id, title)')
+        .select('*, properties (id, title), owner:profiles!property_reservations_owner_id_fkey (id, first_name, last_name)')
         .order('created_at', { ascending: false });
       if (reservationsError) throw reservationsError;
       const { data: propertiesData, error: propertiesError } = await supabase
@@ -115,17 +116,44 @@ const AdminReservations: React.FC = () => {
   };
 
   const handleDelete = async () => {
-    if (!reservationToDelete) return;
-    setCreatingOrUpdating(true);
-    const { error } = await supabase.from('property_reservations').delete().eq('id', reservationToDelete.id);
-    if (!error) {
-      toast({ title: 'Eliminada', description: 'Reserva eliminada correctamente' });
-      setReservations(prev => prev.filter(r => r.id !== reservationToDelete.id));
-    } else {
-      toast({ title: 'Error', description: 'No se pudo eliminar la reserva', variant: 'destructive' });
+    if (!reservationToDelete) {
+      console.log('No hay reserva para eliminar');
+      return;
     }
-    setReservationToDelete(null);
-    setCreatingOrUpdating(false);
+    setCreatingOrUpdating(true);
+    try {
+      console.log('Eliminando reserva', reservationToDelete.id);
+      const { error } = await supabase
+        .from('property_reservations')
+        .delete()
+        .eq('id', reservationToDelete.id);
+      if (error) {
+        console.error('Error de supabase al eliminar:', error);
+        toast({
+          title: 'Error',
+          description: `No se pudo eliminar la reserva: ${error.message}`,
+          variant: 'destructive'
+        });
+      } else {
+        console.log('Reserva eliminada correctamente de Supabase');
+        toast({ title: 'Eliminada', description: 'Reserva eliminada correctamente' });
+        setReservations(prevReservations =>
+          prevReservations.filter(r => r.id !== reservationToDelete.id)
+        );
+        console.log('Estado local actualizado');
+      }
+    } catch (e) {
+      console.error('Error inesperado durante la eliminación:', e);
+      toast({
+        title: 'Error Inesperado',
+        description: `Ocurrió un error inesperado al eliminar: ${e.message || e}`,
+        variant: 'destructive'
+      });
+    } finally {
+      setReservationToDelete(null);
+      setCreatingOrUpdating(false);
+      console.log('Finalizado el proceso de eliminación (finally block)');
+    }
   };
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
@@ -195,6 +223,41 @@ const AdminReservations: React.FC = () => {
       return dateString || '-';
     }
   };
+
+  console.log('reservations', reservations);
+  console.log('filteredReservations', filteredReservations);
+  console.log('filterProperty', filterProperty, 'filterOwner', filterOwner, 'filterStatus', filterStatus);
+
+  // Nueva función para eliminar directamente con confirmación nativa
+  const handleDeleteDirecto = async (reservation: Reservation) => {
+    setCreatingOrUpdating(true);
+    try {
+      console.log('Eliminando reserva', reservation.id);
+      const { error } = await supabase.from('property_reservations').delete().eq('id', reservation.id);
+      if (error) {
+        console.error('Error de supabase al eliminar:', error);
+        toast({
+          title: 'Error',
+          description: `No se pudo eliminar la reserva: ${error.message}`,
+          variant: 'destructive'
+        });
+      } else {
+        toast({ title: 'Eliminada', description: 'Reserva eliminada correctamente' });
+        setReservations(prev => prev.filter(res => res.id !== reservation.id));
+      }
+    } catch (e: any) {
+      console.error('Error inesperado durante la eliminación:', e);
+      toast({
+        title: 'Error Inesperado',
+        description: `Ocurrió un error inesperado al eliminar: ${e.message || e}`,
+        variant: 'destructive'
+      });
+    } finally {
+      setCreatingOrUpdating(false);
+    }
+  };
+
+  if (loading) return <div style={{padding: '2rem', textAlign: 'center'}}>Cargando reservas...</div>;
 
   return (
     <div className="p-2 md:p-6 max-w-7xl mx-auto font-sans">
@@ -281,7 +344,7 @@ const AdminReservations: React.FC = () => {
           filteredReservations.map(r => {
             const statusStyle = getStatusStyle(r.status);
             const property = r.properties;
-            const owner = owners.find(o => o.id === r.owner_id);
+            const owner = r.owner;
             return (
               <div key={r.id} className={`border rounded-lg p-4 shadow-sm relative ${statusStyle.borderColor} bg-white`}>
                 <div className="flex justify-between items-start mb-3">
@@ -313,7 +376,11 @@ const AdminReservations: React.FC = () => {
                     variant="ghost"
                     size="sm"
                     className="text-red-600 hover:bg-red-50 hover:text-red-700 px-2"
-                    onClick={() => handleDeleteConfirmation(r)}
+                    onClick={() => {
+                      if (window.confirm(`¿Seguro que quieres eliminar la reserva ${r.id}?`)) {
+                        handleDeleteDirecto(r);
+                      }
+                    }}
                     disabled={creatingOrUpdating}
                     aria-label="Eliminar reserva"
                   >
@@ -348,7 +415,7 @@ const AdminReservations: React.FC = () => {
               filteredReservations.map(r => {
                 const statusStyle = getStatusStyle(r.status);
                 const property = r.properties;
-                const owner = owners.find(o => o.id === r.owner_id);
+                const owner = r.owner;
                 return (
                   <tr key={r.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 font-medium" title={property?.title}>
@@ -372,7 +439,11 @@ const AdminReservations: React.FC = () => {
                         variant="ghost"
                         size="sm"
                         className="text-red-600 hover:bg-red-50 hover:text-red-700 p-1"
-                        onClick={() => handleDeleteConfirmation(r)}
+                        onClick={() => {
+                          if (window.confirm(`¿Seguro que quieres eliminar la reserva ${r.id}?`)) {
+                            handleDeleteDirecto(r);
+                          }
+                        }}
                         disabled={creatingOrUpdating}
                         aria-label="Eliminar reserva"
                       >
@@ -386,25 +457,6 @@ const AdminReservations: React.FC = () => {
           </tbody>
         </table>
       </div>
-
-      {/* Modal de confirmación para eliminar */}
-      {reservationToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 transition-opacity duration-300 ease-out">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm transform transition-all duration-300 ease-out scale-95 opacity-0 animate-fade-in-scale">
-            <h2 className="text-lg font-semibold mb-3 text-gray-800">Confirmar Eliminación</h2>
-            <p className="text-sm text-gray-600 mb-4">
-              ¿Estás seguro de que quieres eliminar la reserva de
-              <span className="font-medium"> {reservationToDelete.properties?.title || ''} </span>
-              ({formatDate(reservationToDelete.start_date)} - {formatDate(reservationToDelete.end_date)})?
-              <br />Esta acción no se puede deshacer.
-            </p>
-            <div className="flex gap-3 justify-end mt-6">
-              <Button variant="outline" onClick={() => setReservationToDelete(null)} disabled={creatingOrUpdating}>Cancelar</Button>
-              <Button variant="destructive" onClick={handleDelete} disabled={creatingOrUpdating}>{creatingOrUpdating ? 'Eliminando...' : 'Eliminar'}</Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modal para crear nueva reserva */}
       {showCreateModal && (

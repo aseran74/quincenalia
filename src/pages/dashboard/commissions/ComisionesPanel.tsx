@@ -19,7 +19,7 @@ const ComisionesPanel: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.from('real_estate_agents').select('id, first_name, last_name').then(({ data }) => setAgents(data || []));
+    supabase.from('profiles').select('id, first_name, last_name').eq('role', 'agent').then(({ data }) => setAgents(data || []));
     supabase.from('properties').select('id, title').then(({ data }) => setProperties(data || []));
   }, []);
 

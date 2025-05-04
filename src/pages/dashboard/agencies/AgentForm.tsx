@@ -47,11 +47,11 @@ const AgentForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) => 
   const fetchAgent = async () => {
     try {
       const { data, error } = await supabase
-        .from('real_estate_agents')
+        .from('profiles')
         .select('*')
         .eq('id', id)
+        .eq('role', 'agent')
         .single();
-
       if (error) throw error;
       if (data) {
         setAgent(data);
@@ -109,15 +109,16 @@ const AgentForm: React.FC<{ isEditing?: boolean }> = ({ isEditing = false }) => 
     try {
       if (isEditing) {
         const { error } = await supabase
-          .from('real_estate_agents')
+          .from('profiles')
           .update(agent)
-          .eq('id', id);
+          .eq('id', id)
+          .eq('role', 'agent');
 
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('real_estate_agents')
-          .insert([agent]);
+          .from('profiles')
+          .insert([{ ...agent, role: 'agent' }]);
 
         if (error) throw error;
       }

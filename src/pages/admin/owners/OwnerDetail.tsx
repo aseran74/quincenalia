@@ -78,7 +78,7 @@ const OwnerDetail: React.FC = () => {
             <div className="space-y-2 mb-4">
               {properties.map(prop => (
                 <div key={prop.id} className="flex items-center gap-2 text-sm">
-                  <span className="font-semibold">{prop.title}</span>
+                  <Link to={`/dashboard/admin/properties/${prop.id}`} className="font-semibold text-blue-600 hover:underline">{prop.title}</Link>
                   {prop.shares.map(share => (
                     <span key={share.num} className={`px-2 py-0.5 rounded text-white ${share.status === 'reservada' ? 'bg-blue-500' : 'bg-green-600'}`}>#{share.num} {share.status}</span>
                   ))}
