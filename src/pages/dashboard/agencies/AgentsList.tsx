@@ -62,7 +62,7 @@ const AgentsList = () => {
       } else if (agencyError) {
         throw agencyError;
       } else {
-        setAgency(agencyData);
+          setAgency(agencyData);
       }
       if (agencyData) {
         const { data: agentsData, error: agentsError } = await supabase

@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  LayoutGrid, MapPin, Home, Bed, Bath, Building, TreePalm, SquareArrowUp, Building2, Warehouse, UserCheck, Waves, Sparkles, ParkingCircle, Wind, SlidersHorizontal, ChevronDown, ChevronUp, Filter, X, Plus, Minus, Check, Search, Trash2, ArrowLeft
+  LayoutGrid, MapPin, Home, Bed, Bath, Building, TreePalm, SquareArrowUp, Building2, Warehouse, UserCheck, Waves, Sparkles, ParkingCircle, Wind, SlidersHorizontal, ChevronDown, ChevronUp, Filter, X, Plus, Minus, Check, Search, Trash2, ArrowLeft, Info
 } from 'lucide-react';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
@@ -104,6 +104,8 @@ export const PropertiesPage = () => {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showTypeChecklist, setShowTypeChecklist] = useState(false);
   const typeChecklistRef = useRef<HTMLDivElement>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedMapProperty, setSelectedMapProperty] = useState<Property | null>(null);
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -445,7 +447,23 @@ export const PropertiesPage = () => {
             </TabsList>
           </Tabs>
         </div>
-        <FilterSection />
+        <div className="block sm:hidden mb-4">
+          <Button
+            className="w-full flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary/90"
+            onClick={() => setShowFilters((v) => !v)}
+            aria-expanded={showFilters}
+            aria-controls="filtros-busqueda"
+          >
+            <Filter className="w-5 h-5" />
+            {showFilters ? 'Ocultar filtros' : 'Mostrar filtros'}
+            {numActiveFilters > 0 && (
+              <span className="ml-2 bg-white text-primary rounded-full px-2 py-0.5 text-xs">{numActiveFilters}</span>
+            )}
+          </Button>
+        </div>
+        <div id="filtros-busqueda" className={`transition-all duration-300 ${showFilters ? 'max-h-[2000px] opacity-100 mb-6' : 'max-h-0 opacity-0 mb-0'} overflow-hidden sm:max-h-none sm:opacity-100 sm:mb-6`}>
+          <FilterSection />
+        </div>
         <div className="mb-6 text-sm text-muted-foreground">
           {filteredProperties.length} {filteredProperties.length === 1 ? 'propiedad encontrada' : 'propiedades encontradas'}
           {numActiveFilters > 0 && <span className='ml-1'>(con {numActiveFilters} {numActiveFilters === 1 ? 'filtro aplicado' : 'filtros aplicados'})</span>}
@@ -466,13 +484,14 @@ export const PropertiesPage = () => {
             )}
           </div>
         ) : (
-          <div className="h-[65vh] w-full rounded-lg overflow-hidden border shadow-sm">
+          <div className="h-[65vh] w-full rounded-lg overflow-hidden border shadow-sm relative">
             <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
               <GoogleMap
                 mapContainerClassName="w-full h-full"
                 center={{ lat: 40.4637, lng: -3.7492 }}
                 zoom={5}
                 options={{}}
+                onClick={() => setSelectedMapProperty(null)}
               >
                 {filteredProperties
                   .filter(p => p.latitude && p.longitude)
@@ -481,9 +500,26 @@ export const PropertiesPage = () => {
                       key={property.id}
                       position={{ lat: Number(property.latitude), lng: Number(property.longitude) }}
                       title={`${property.title} (${formatPriceSimple(property.price)})`}
-                      onClick={() => window.location.href = `/properties/${property.id}`}
+                      onClick={() => setSelectedMapProperty(property)}
                     />
-                ))}
+                  ))}
+                {selectedMapProperty && selectedMapProperty.latitude && selectedMapProperty.longitude && (
+                  <InfoWindow
+                    position={{ lat: Number(selectedMapProperty.latitude), lng: Number(selectedMapProperty.longitude) }}
+                    onCloseClick={() => setSelectedMapProperty(null)}
+                  >
+                    <div className="min-w-[220px] max-w-[260px] bg-white rounded-lg shadow-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-primary font-bold text-lg">{formatPriceSimple(selectedMapProperty.price)}</span>
+                        <button onClick={() => setSelectedMapProperty(null)} className="text-gray-400 hover:text-primary"><X className="w-4 h-4" /></button>
+                      </div>
+                      <div className="font-semibold text-base mb-1 truncate">{selectedMapProperty.title}</div>
+                      <div className="text-xs text-muted-foreground mb-2">{selectedMapProperty.location}</div>
+                      <div className="text-sm text-gray-700 line-clamp-3 mb-1">{selectedMapProperty.description?.slice(0, 80)}{selectedMapProperty.description && selectedMapProperty.description.length > 80 ? '...' : ''}</div>
+                      <Link to={`/properties/${selectedMapProperty.id}`} className="block mt-2 text-primary font-semibold text-sm hover:underline">Ver detalles</Link>
+                    </div>
+                  </InfoWindow>
+                )}
               </GoogleMap>
             </LoadScript>
           </div>

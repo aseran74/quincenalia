@@ -13,6 +13,7 @@ import {
     PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import ContactForm from '@/components/ContactForm';
 
 const FAQS = [
   {
@@ -327,6 +328,18 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+
+      {/* Formulario de contacto al final de la landing */}
+      <section id="form-contacto" className="py-16 sm:py-20 bg-white border-t">
+        <div className="container mx-auto px-4">
+          <div className="max-w-lg mx-auto bg-white rounded-xl shadow-lg p-8 border">
+            <h2 className="text-3xl font-bold mb-4 text-center text-primary">¿Quieres que te contactemos?</h2>
+            <p className="text-gray-600 mb-6 text-center">Déjanos tus datos y te responderemos lo antes posible. ¡Sin compromiso!</p>
+            <ContactForm />
+          </div>
+        </div>
+      </section>
+
       <footer className="bg-slate-900 text-gray-300 py-12 sm:py-16">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">

@@ -136,7 +136,7 @@ const AdminReservations: React.FC = () => {
         });
       } else {
         console.log('Reserva eliminada correctamente de Supabase');
-        toast({ title: 'Eliminada', description: 'Reserva eliminada correctamente' });
+      toast({ title: 'Eliminada', description: 'Reserva eliminada correctamente' });
         setReservations(prevReservations =>
           prevReservations.filter(r => r.id !== reservationToDelete.id)
         );
@@ -150,8 +150,8 @@ const AdminReservations: React.FC = () => {
         variant: 'destructive'
       });
     } finally {
-      setReservationToDelete(null);
-      setCreatingOrUpdating(false);
+    setReservationToDelete(null);
+    setCreatingOrUpdating(false);
       console.log('Finalizado el proceso de eliminación (finally block)');
     }
   };
