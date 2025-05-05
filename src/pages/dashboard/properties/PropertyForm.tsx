@@ -27,6 +27,7 @@ import { FaSwimmingPool, FaHotTub, FaChild, FaGamepad, FaUmbrellaBeach, FaParkin
 import { GoogleMap, Marker, useLoadScript, Autocomplete } from '@react-google-maps/api';
 import { geocodeAddress } from '@/utils/geocoding';
 import { Checkbox } from '@/components/ui/checkbox';
+import { addDays, format } from 'date-fns';
 
 type ShareStatus = 'disponible' | 'reservada' | 'vendida';
 
@@ -119,6 +120,18 @@ const GOOGLE_MAPS_LIBRARIES: ["places"] = ["places"];
 interface PropertyFormProps {
   isEditing?: boolean;
 }
+
+// Función auxiliar para obtener las fechas fijas de cada quincena
+const QUINCENAS = [
+  // share1: 1ª quincena Julio
+  { share: 1, start: (year: number) => `${year}-07-01`, end: (year: number) => `${year}-07-15` },
+  // share2: 2ª quincena Julio
+  { share: 2, start: (year: number) => `${year}-07-16`, end: (year: number) => `${year}-07-31` },
+  // share3: 1ª quincena Agosto
+  { share: 3, start: (year: number) => `${year}-08-01`, end: (year: number) => `${year}-08-15` },
+  // share4: 2ª quincena Agosto
+  { share: 4, start: (year: number) => `${year}-08-16`, end: (year: number) => `${year}-08-31` },
+];
 
 const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
   const { id } = useParams<{ id: string }>();
@@ -475,6 +488,52 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
           .insert([propertyToSave]);
 
         if (error) throw error;
+      }
+
+      // Después de guardar la propiedad y asignar los owners:
+      const reservasFijas = [];
+      const currentYear = new Date().getFullYear();
+      for (let offset = 0; offset < 5; offset++) {
+        const year = currentYear + offset;
+        if (property.share1_owner_id) {
+          reservasFijas.push({
+            property_id: property.id,
+            owner_id: property.share1_owner_id,
+            start_date: QUINCENAS[0].start(year),
+            end_date: QUINCENAS[0].end(year),
+            status: 'fija',
+          });
+        }
+        if (property.share2_owner_id) {
+          reservasFijas.push({
+            property_id: property.id,
+            owner_id: property.share2_owner_id,
+            start_date: QUINCENAS[1].start(year),
+            end_date: QUINCENAS[1].end(year),
+            status: 'fija',
+          });
+        }
+        if (property.share3_owner_id) {
+          reservasFijas.push({
+            property_id: property.id,
+            owner_id: property.share3_owner_id,
+            start_date: QUINCENAS[2].start(year),
+            end_date: QUINCENAS[2].end(year),
+            status: 'fija',
+          });
+        }
+        if (property.share4_owner_id) {
+          reservasFijas.push({
+            property_id: property.id,
+            owner_id: property.share4_owner_id,
+            start_date: QUINCENAS[3].start(year),
+            end_date: QUINCENAS[3].end(year),
+            status: 'fija',
+          });
+        }
+      }
+      if (reservasFijas.length > 0) {
+        await supabase.from('property_reservations').upsert(reservasFijas, { onConflict: 'property_id,owner_id,start_date' });
       }
 
       toast({
