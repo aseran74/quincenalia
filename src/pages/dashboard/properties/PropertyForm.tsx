@@ -133,6 +133,11 @@ const QUINCENAS = [
   { share: 4, start: (year: number) => `${year}-08-16`, end: (year: number) => `${year}-08-31` },
 ];
 
+// Función para validar UUID
+function isValidUUID(uuid: string | null | undefined) {
+  return typeof uuid === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(uuid);
+}
+
 const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -456,8 +461,18 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
         }
       }
 
+      // LOGS de los propietarios
+      console.log('share1_owner_id:', property.share1_owner_id);
+      console.log('share2_owner_id:', property.share2_owner_id);
+      console.log('share3_owner_id:', property.share3_owner_id);
+      console.log('share4_owner_id:', property.share4_owner_id);
+      // Proteger los campos: si no es UUID válido, poner null
       const propertyData = {
         ...property,
+        share1_owner_id: isValidUUID(property.share1_owner_id) ? property.share1_owner_id : null,
+        share2_owner_id: isValidUUID(property.share2_owner_id) ? property.share2_owner_id : null,
+        share3_owner_id: isValidUUID(property.share3_owner_id) ? property.share3_owner_id : null,
+        share4_owner_id: isValidUUID(property.share4_owner_id) ? property.share4_owner_id : null,
         updated_at: new Date().toISOString(),
         destacada: !!property.destacada,
       };
@@ -1175,7 +1190,7 @@ const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
                       <Checkbox
                         id="destacada"
                         checked={!!property.destacada}
-                        onCheckedChange={(checked) => setProperty({ ...property, destacada: checked })}
+                        onCheckedChange={(checked) => setProperty({ ...property, destacada: !!checked })}
                       />
                       <span className="text-sm text-muted-foreground">Si está marcado, la propiedad aparecerá en la home</span>
                     </div>

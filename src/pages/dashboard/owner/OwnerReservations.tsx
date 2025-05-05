@@ -1,59 +1,54 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
+// Removido import innecesario de Calendar si no se usa directamente aquí
+// import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
+import 'react-big-calendar/lib/css/react-big-calendar.css'; // Mantén si ReservationCalendar lo necesita indirectamente
 import { supabase } from '@/lib/supabase';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card'; // Removido CardHeader si no se usa
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'; // Removido DialogHeader/Footer si no se usan
 import { Input } from '@/components/ui/input';
 import { Info, ChevronDown, Trash2, Plus, X, Home, Calendar as CalendarIcon } from 'lucide-react';
-import ReservationCalendar from '../properties/ReservationCalendar';
+import ReservationCalendar from '../properties/ReservationCalendar'; // Asegúrate que la ruta sea correcta
 
-// Configuración del Calendario
-const locales = { 'es': es };
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 1 }),
-  getDay,
-  locales,
-});
+// Configuración del Calendario (localizer solo es necesario si usas Rrule o algo avanzado aquí, ReservationCalendar ya lo tiene)
+// const locales = { 'es': es };
+// const localizer = dateFnsLocalizer({
+//   format,
+//   parse,
+//   startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 1 }),
+//   getDay,
+//   locales,
+// });
 
+// --- Interfaces ---
 interface Property {
   id: string;
   title: string;
-  share_number?: number; // Número de share del propietario (1-4)
 }
 
 interface Reservation {
   id: string;
   property_id: string;
   owner_id: string;
-  share_number: number;
   start_date: string;
   end_date: string;
-  status: 'pendiente' | 'aprobada' | 'rechazada';
+  status: 'pendiente' | 'aprobada' | 'rechazada' | 'fija' | 'cancelada';
   created_at: string;
-  properties?: Property | null;
+  // Estructura esperada después del SELECT con joins
+  properties?: { id: string; title: string; } | null;
+  owner?: { id: string; first_name: string | null; last_name: string | null; } | null;
 }
 
-interface CalendarEvent {
-  id: string;
-  title: string;
-  start: Date;
-  end: Date;
-  status: string;
-  isOwner: boolean;
-}
-
+// --- Constantes y Helpers ---
 const STATUS_OPTIONS = [
   { value: 'pendiente', label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800', borderColor: 'border-yellow-300' },
   { value: 'aprobada', label: 'Aprobada', color: 'bg-green-100 text-green-800', borderColor: 'border-green-300' },
   { value: 'rechazada', label: 'Rechazada', color: 'bg-red-100 text-red-800', borderColor: 'border-red-300' },
+  { value: 'fija', label: 'Fija', color: 'bg-blue-100 text-blue-800', borderColor: 'border-blue-300' }, // Ajustado label
   { value: 'cancelada', label: 'Cancelada', color: 'bg-gray-100 text-gray-800', borderColor: 'border-gray-300' },
 ];
 
@@ -61,6 +56,25 @@ const getStatusStyle = (statusValue: string) => {
   return STATUS_OPTIONS.find(s => s.value === statusValue) || STATUS_OPTIONS.find(s => s.value === 'cancelada')!;
 };
 
+const formatDate = (dateString: string | null | undefined): string => {
+  if (!dateString) return '-';
+  try {
+    // Intenta interpretar como fecha (puede venir como YYYY-MM-DD)
+    // new Date() puede tener problemas con solo YYYY-MM-DD dependiendo del navegador, añadir hora es más seguro
+    const date = new Date(dateString + 'T00:00:00Z'); // Interpretar como UTC
+    if (isNaN(date.getTime())) {
+        console.warn(`[formatDate] Could not parse date: ${dateString}`);
+        return dateString; // Devuelve el string original si no es fecha válida
+    }
+    // getUTCFullYear, etc. para evitar problemas de zona horaria
+    return `${String(date.getUTCDate()).padStart(2, '0')}/${String(date.getUTCMonth() + 1).padStart(2, '0')}/${date.getUTCFullYear()}`;
+  } catch (e) {
+      console.error(`[formatDate] Error formatting date: ${dateString}`, e);
+    return dateString || '-';
+  }
+};
+
+// --- Componente Principal ---
 const OwnerReservations: React.FC = () => {
   const { user } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
@@ -71,126 +85,244 @@ const OwnerReservations: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [reservationToDelete, setReservationToDelete] = useState<Reservation | null>(null);
   const [creatingOrUpdating, setCreatingOrUpdating] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false); // Controla si se muestra el calendario
 
-  // Refs para el formulario de creación
+  // Refs para el formulario
   const formPropertyRef = useRef<HTMLSelectElement>(null);
   const formStartDateRef = useRef<HTMLInputElement>(null);
   const formEndDateRef = useRef<HTMLInputElement>(null);
 
+  // Efecto para cargar datos iniciales
   useEffect(() => {
-    fetchData();
-  }, [user?.id]);
+    console.log("[Effect] Checking user state:", { userExists: !!user, userId: user?.id, userRole: user?.role });
+    if (user?.id && user?.role === 'owner') {
+      console.log("[Effect] User is owner, calling fetchData.");
+      fetchData();
+    } else if (!user) {
+      console.log("[Effect] User not yet loaded, setting loading true.");
+      setLoading(true); // Espera a que el usuario cargue
+    } else {
+      // Usuario cargado pero no es owner o falta id
+      console.log("[Effect] User loaded but not owner or missing ID, clearing data.");
+      setLoading(false);
+      setProperties([]);
+      setReservations([]);
+    }
+  }, [user?.id, user?.role]); // Dependencias clave
 
+  // --- Función para Cargar Datos ---
   const fetchData = async () => {
+    // Doble check por si acaso
+    if (!user?.id || user.role !== 'owner') {
+      console.warn("[fetchData] Skipped: User is not owner or missing ID.");
+      setLoading(false);
+      return;
+    }
+    console.log(`[fetchData] --- Iniciando para Owner: ${user.id} ---`);
     setLoading(true);
     try {
-      // Traer solo propiedades del propietario
-      const { data: propertiesData, error: propertiesError } = await supabase
+      // 1. Propiedades del owner
+      console.log("[fetchData] Paso 1: Buscando propiedades del owner...");
+      let propertiesQuery = supabase
         .from('properties')
-        .select('id, title, share1_owner_id, share2_owner_id, share3_owner_id, share4_owner_id')
-        .order('title');
-      if (propertiesError) throw propertiesError;
-      // Filtrar solo las propiedades donde el usuario es owner
-      const myProperties = (propertiesData || []).filter((p: any) =>
-        [p.share1_owner_id, p.share2_owner_id, p.share3_owner_id, p.share4_owner_id].includes(user?.id)
-      ).map((p: any) => ({ id: p.id, title: p.title }));
+        .select('id, title')
+        .or(`share1_owner_id.eq.${user.id},share2_owner_id.eq.${user.id},share3_owner_id.eq.${user.id},share4_owner_id.eq.${user.id}`);
+      const { data: propertiesData, error: propertiesError } = await propertiesQuery.order('title');
+      console.log("[fetchData] Resultado Properties Query:", { data: propertiesData, error: propertiesError });
+      if (propertiesError) {
+        console.error("[fetchData] Error al buscar propiedades:", propertiesError);
+        throw new Error(`Error al buscar propiedades: ${propertiesError.message}`);
+      }
+      const myProperties = propertiesData || [];
+      console.log("[fetchData] Propiedades encontradas:", myProperties.length);
       setProperties(myProperties);
-      // Traer reservas del propietario con join a profiles
+
+      // 2. Lógica de filtro y calendario
+      if (myProperties.length > 0 && filterProperty === 'all') {
+        console.log("[fetchData] Estableciendo filtro inicial a la primera propiedad:", myProperties[0].id);
+        setFilterProperty(myProperties[0].id);
+        setShowCalendar(true);
+      } else if (myProperties.length === 0) {
+        console.log("[fetchData] No se encontraron propiedades.");
+        setFilterProperty('all');
+        setShowCalendar(false);
+      } else {
+        const currentFilterExists = myProperties.some(p => p.id === filterProperty);
+        if (!currentFilterExists && filterProperty !== 'all') {
+          const newFilter = myProperties[0]?.id || 'all';
+          console.log(`[fetchData] Filtro actual (${filterProperty}) inválido. Cambiando a: ${newFilter}`);
+          setFilterProperty(newFilter);
+          setShowCalendar(newFilter !== 'all');
+        } else {
+            // Si el filtro actual existe, mantenemos el estado de showCalendar
+            setShowCalendar(filterProperty !== 'all');
+             console.log(`[fetchData] Filtro actual (${filterProperty}) válido. showCalendar: ${filterProperty !== 'all'}`);
+        }
+      }
+
+      // 3. Reservas del owner
+      console.log("[fetchData] Paso 3: Buscando reservas del owner...");
       const { data: reservationsData, error: reservationsError } = await supabase
         .from('property_reservations')
-        .select('*, properties (id, title), owner:profiles (id, first_name, last_name)')
-        .eq('owner_id', user?.id)
-        .order('created_at', { ascending: false });
-      if (reservationsError) throw reservationsError;
-      setReservations(reservationsData || []);
+        .select(`
+          id, property_id, owner_id, start_date, end_date, status, created_at,
+          properties ( id, title ),
+          owner:profiles ( id, first_name, last_name )
+        `) // Quitamos !inner para que no falle si falta el perfil del owner (aunque debería existir)
+        .eq('owner_id', user.id)
+        .order('start_date', { ascending: false });
+      console.log("[fetchData] Resultado Reservations Query:", { data: reservationsData, error: reservationsError });
+      if (reservationsError) {
+        console.error("[fetchData] Error al buscar reservas:", reservationsError);
+        toast({ title: 'Advertencia', description: `No se pudieron cargar las reservas: ${reservationsError.message}`, variant: 'default' });
+        setReservations([]);
+      } else {
+        // Transformación segura de datos anidados
+        const transformedReservations = (reservationsData || []).map((r: any) => ({
+          ...r,
+          properties: r.properties && typeof r.properties === 'object' && !Array.isArray(r.properties) ? r.properties : null,
+          owner: r.owner && typeof r.owner === 'object' && !Array.isArray(r.owner) ? r.owner : null,
+        }));
+         console.log("[fetchData] Reservas encontradas y transformadas:", transformedReservations.length);
+        setReservations(transformedReservations);
+      }
+
     } catch (error: any) {
-      toast({ title: 'Error', description: `No se pudieron cargar los datos: ${error.message}`, variant: 'destructive' });
-      setReservations([]);
+      console.error('[fetchData] Error general:', error);
+      toast({ title: 'Error Crítico', description: `No se pudieron cargar los datos: ${error.message}`, variant: 'destructive' });
       setProperties([]);
+      setReservations([]);
+      setFilterProperty('all');
+      setShowCalendar(false);
     } finally {
+      console.log("[fetchData] --- Finalizando ---");
       setLoading(false);
     }
   };
 
-  const handleDeleteConfirmation = (reservation: Reservation) => {
-    setReservationToDelete(reservation);
-  };
-
+  // --- Función para Eliminar Reserva ---
   const handleDelete = async () => {
     if (!reservationToDelete) {
-      console.log('No hay reserva para eliminar');
-      return;
-    }
+        console.warn("[Delete] No reservation selected to delete.");
+        return;
+    };
+    console.log(`[Delete] Iniciando eliminación de reserva ID: ${reservationToDelete.id}`);
     setCreatingOrUpdating(true);
-    let isMounted = true;
+    console.log("[Delete] Estado: creatingOrUpdating = true");
     try {
-      console.log('Eliminando reserva', reservationToDelete.id);
+      console.log("[Delete] Ejecutando Supabase delete...");
       const { error } = await supabase.from('property_reservations').delete().eq('id', reservationToDelete.id);
       if (error) {
-        console.log('Error de supabase:', error);
-        toast({ title: 'Error', description: 'No se pudo eliminar la reserva', variant: 'destructive' });
-      } else {
-        console.log('Reserva eliminada correctamente');
-        toast({ title: 'Eliminada', description: 'Reserva eliminada correctamente' });
-        await fetchData();
-        console.log('fetchData ejecutado');
+           console.error("[Delete] Error en Supabase delete:", error);
+           throw error;
       }
-    } catch (e) {
-      console.log('Error inesperado:', e);
-      toast({ title: 'Error', description: 'Error inesperado al eliminar', variant: 'destructive' });
+      console.log("[Delete] Eliminación exitosa.");
+      toast({ title: 'Eliminada', description: 'Reserva eliminada correctamente' });
+      setReservationToDelete(null); // Cierra modal ANTES de recargar
+      console.log("[Delete] Modal cerrado. Llamando a fetchData...");
+      await fetchData();
+       console.log("[Delete] fetchData completado después de eliminar.");
+    } catch (e: any) {
+      console.error('[Delete] Capturado error:', e);
+      toast({ title: 'Error', description: `No se pudo eliminar la reserva: ${e.message}`, variant: 'destructive' });
+      // No restablecer creatingOrUpdating aquí, finally lo hará
     } finally {
-      if (isMounted) {
-        setReservationToDelete(null);
-        setCreatingOrUpdating(false);
-        console.log('Finalizado el proceso de eliminación');
-      }
+      console.log("[Delete] Ejecutando bloque finally...");
+      setCreatingOrUpdating(false);
+      console.log("[Delete] Estado: creatingOrUpdating = false (desde finally)");
     }
-    return () => { isMounted = false; };
   };
 
+  // --- Función para Crear Reserva ---
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.id) {
+        console.warn("[CreateSubmit] Aborted: No user ID.");
+        return;
+    }
+
+    console.log("[CreateSubmit] Iniciando...");
     setCreatingOrUpdating(true);
+    console.log("[CreateSubmit] Estado: creatingOrUpdating = true");
+
     const property_id = formPropertyRef.current?.value;
     const start_date = formStartDateRef.current?.value;
     const end_date = formEndDateRef.current?.value;
+
+    // --- Validaciones ---
     if (!property_id || !start_date || !end_date) {
-      toast({ title: 'Campos incompletos', description: 'Por favor, rellena todos los campos obligatorios.', variant: 'destructive' });
+      toast({ title: 'Campos incompletos', variant: 'destructive' });
+      console.log("[CreateSubmit] Error: Campos incompletos.");
       setCreatingOrUpdating(false);
+      console.log("[CreateSubmit] Estado: creatingOrUpdating = false (por validación)");
       return;
     }
     if (new Date(end_date) < new Date(start_date)) {
-      toast({ title: 'Error de fechas', description: 'La fecha de fin no puede ser anterior a la fecha de inicio.', variant: 'destructive' });
-      setCreatingOrUpdating(false);
+      toast({ title: 'Error de fechas', description: 'La fecha de fin no puede ser anterior a la de inicio.', variant: 'destructive' });
+       console.log("[CreateSubmit] Error: Fechas inválidas.");
+       setCreatingOrUpdating(false);
+       console.log("[CreateSubmit] Estado: creatingOrUpdating = false (por validación)");
       return;
     }
+    const selectedProp = properties.find(p => p.id === property_id);
+    if (!selectedProp) {
+      toast({ title: 'Error', description: 'Propiedad no válida o no te pertenece.', variant: 'destructive' });
+      console.log("[CreateSubmit] Error: Propiedad inválida o no pertenece al owner.");
+      setCreatingOrUpdating(false);
+      console.log("[CreateSubmit] Estado: creatingOrUpdating = false (por validación)");
+      return;
+    }
+    // --- Fin Validaciones ---
+
     try {
+      console.log(`[CreateSubmit] Intentando insertar reserva:`, { property_id, owner_id: user.id, start_date, end_date });
       const { data, error } = await supabase
         .from('property_reservations')
-        .insert({ property_id, owner_id: user?.id, start_date, end_date, status: 'pendiente' })
-        .select('*, properties (id, title)').single();
-      if (error) throw error;
-      if (data) {
-        setReservations(prev => [data, ...prev]);
-        toast({ title: 'Reserva creada', description: 'La reserva se ha añadido correctamente.' });
-        setShowCreateModal(false);
-      } else {
-        throw new Error('No se recibieron datos de la reserva creada.');
+        .insert({ property_id, owner_id: user.id, start_date, end_date, status: 'pendiente' }) // Estado por defecto 'pendiente'
+        .select() // Selecciona para confirmar
+        .single(); // Espera un solo resultado
+
+      if (error) {
+        console.error("[CreateSubmit] Error en Supabase insert:", error);
+        throw error; // Lanza para que lo capture el catch
       }
+
+      // --- Éxito ---
+      console.log("[CreateSubmit] Inserción exitosa:", data);
+      toast({ title: 'Reserva solicitada', description: 'Tu solicitud de reserva se ha enviado.' });
+      setShowCreateModal(false); // Cierra modal ANTES de recargar
+      console.log("[CreateSubmit] Modal cerrado.");
+
+      console.log("[CreateSubmit] Llamando a fetchData...");
+      await fetchData();
+      console.log("[CreateSubmit] fetchData completado.");
+
     } catch (error: any) {
-      toast({ title: 'Error al crear', description: `No se pudo crear la reserva: ${error.message}`, variant: 'destructive' });
+      // --- Error ---
+      console.error("[CreateSubmit] Capturado error:", error);
+      // Revisa si es un error de constraint (el mensaje puede variar)
+      if (error.message.toLowerCase().includes('constraint') || error.message.toLowerCase().includes('duplicate key')) {
+        toast({ title: 'Conflicto de fechas', description: 'Ya existe una reserva en esas fechas para esta propiedad.', variant: 'destructive' });
+      } else {
+        toast({ title: 'Error al crear', description: `No se pudo crear la reserva: ${error.message}`, variant: 'destructive' });
+      }
+      // No restablecer creatingOrUpdating aquí, finally lo hará
+
     } finally {
+      // --- Limpieza ---
+      console.log("[CreateSubmit] Ejecutando bloque finally...");
       setCreatingOrUpdating(false);
+      console.log("[CreateSubmit] Estado: creatingOrUpdating = false (desde finally)");
     }
   };
 
-  // Filtros aplicados a las reservas ya cargadas
+  // Filtrado local (se aplica a las reservas ya cargadas)
   const filteredReservations = reservations.filter(r =>
     (filterProperty === 'all' || r.property_id === filterProperty) &&
     (filterStatus === 'all' || r.status === filterStatus)
   );
 
-  // Resumen de reservas
+  // Cálculo de resumen
   const resumen = [
     { label: 'Total', count: reservations.length, color: 'bg-blue-50 text-blue-800', borderColor: 'border-blue-200' },
     ...STATUS_OPTIONS.map(opt => ({
@@ -201,17 +333,28 @@ const OwnerReservations: React.FC = () => {
     }))
   ];
 
-  const formatDate = (dateString: string | null | undefined): string => {
-    if (!dateString) return '-';
-    try {
-      const date = new Date(dateString);
-      const adjustedDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
-      return adjustedDate.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
-    } catch (e) {
-      return dateString || '-';
-    }
-  };
+  // --- Renderizado Condicional Inicial ---
+  if (loading) {
+    return <div className="p-8 text-center text-gray-500">Cargando tus datos...</div>;
+  }
+  if (!loading && properties.length === 0 && user?.role === 'owner') {
+    return (
+      <div className="p-8 text-center bg-yellow-50 border border-yellow-200 rounded-lg">
+        <Info className="mx-auto h-10 w-10 text-yellow-500 mb-3" />
+        <h2 className="text-lg font-semibold text-yellow-800 mb-2">Sin propiedades asignadas</h2>
+        <p className="text-sm text-yellow-700">
+          Parece que no tienes ninguna propiedad asignada como propietario en este momento.<br />
+          Si crees que esto es un error, por favor, contacta con el administrador.
+        </p>
+      </div>
+    );
+  }
+  if (!loading && user?.role !== 'owner') {
+    // Asegúrate de que este caso se maneje (quizás redirigir o mostrar mensaje claro)
+    return <div className="p-8 text-center text-red-600">Acceso denegado. Esta sección es solo para propietarios.</div>;
+  }
 
+  // --- Renderizado Principal ---
   return (
     <div className="p-2 md:p-6 max-w-7xl mx-auto font-sans">
       <h1 className="text-xl md:text-2xl font-bold mb-4 text-gray-800">Mis Reservas</h1>
@@ -229,10 +372,14 @@ const OwnerReservations: React.FC = () => {
                 id="filterProperty"
                 className="w-full border border-gray-300 rounded-md px-3 py-2 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={filterProperty}
-                onChange={e => setFilterProperty(e.target.value)}
-                disabled={loading}
+                onChange={e => {
+                    const newFilter = e.target.value;
+                    setFilterProperty(newFilter);
+                    setShowCalendar(newFilter !== 'all'); // Muestra/oculta calendario al cambiar filtro
+                }}
+                disabled={loading || properties.length === 0} // Deshabilitar si no hay props
               >
-                <option value="all">Todas mis propiedades</option>
+                <option value="all">Todas mis propiedades ({properties.length})</option>
                 {properties.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
@@ -268,8 +415,8 @@ const OwnerReservations: React.FC = () => {
             <div className="text-lg font-bold text-gray-900">{r.count}</div>
           </div>
         ))}
-        </div>
-        
+      </div>
+
       {/* Cards en móvil */}
       <div className="space-y-4 md:hidden">
         {filteredReservations.length === 0 ? (
@@ -277,11 +424,11 @@ const OwnerReservations: React.FC = () => {
         ) : (
           filteredReservations.map(r => {
             const statusStyle = getStatusStyle(r.status);
-            const property = r.properties;
+            const property = r.properties; // Ya debería ser objeto o null
             return (
               <div key={r.id} className={`border rounded-lg p-4 shadow-sm relative ${statusStyle.borderColor} bg-white`}>
                 <div className="flex justify-between items-start mb-3">
-                  <span className="font-semibold text-gray-800 truncate pr-2" title={property?.title}>{property?.title || 'Propiedad no encontrada'}</span>
+                  <span className="font-semibold text-gray-800 truncate pr-2" title={property?.title}>{property?.title || 'Propiedad N/A'}</span>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyle.color} whitespace-nowrap`}>
                     {statusStyle.label}
                   </span>
@@ -290,19 +437,22 @@ const OwnerReservations: React.FC = () => {
                   <CalendarIcon className="inline-block mr-1.5 h-4 w-4 text-gray-400" />
                   {formatDate(r.start_date)} - {formatDate(r.end_date)}
                 </p>
-                <div className="flex items-center justify-between border-t border-gray-200 pt-3 mt-3 gap-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-600 hover:bg-red-50 hover:text-red-700 px-2"
-                    onClick={() => handleDeleteConfirmation(r)}
-                    disabled={creatingOrUpdating}
-                    aria-label="Eliminar reserva"
-                  >
-                    <Trash2 size={16} />
-                  </Button>
-                      </div>
-                    </div>
+                <div className="flex items-center justify-end border-t border-gray-200 pt-3 mt-3 gap-3">
+                  {/* Solo permitir eliminar si está pendiente? O siempre? Ajustar lógica si es necesario */}
+                  {r.status === 'pendiente' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:bg-red-50 hover:text-red-700 px-2"
+                      onClick={() => setReservationToDelete(r)}
+                      disabled={creatingOrUpdating} // Deshabilitar si CUALQUIER operación está en curso
+                      aria-label="Eliminar reserva"
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  )}
+                </div>
+              </div>
             );
           })
         )}
@@ -328,11 +478,11 @@ const OwnerReservations: React.FC = () => {
             ) : (
               filteredReservations.map(r => {
                 const statusStyle = getStatusStyle(r.status);
-                const property = r.properties;
+                const property = r.properties; // Ya debería ser objeto o null
                 return (
                   <tr key={r.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 font-medium" title={property?.title}>
-                      <span className="truncate block max-w-xs">{property?.title || '-'}</span>
+                      <span className="truncate block max-w-xs">{property?.title || 'N/A'}</span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{formatDate(r.start_date)}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{formatDate(r.end_date)}</td>
@@ -342,16 +492,19 @@ const OwnerReservations: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-600 hover:bg-red-50 hover:text-red-700 p-1"
-                        onClick={() => handleDeleteConfirmation(r)}
-                        disabled={creatingOrUpdating}
-                        aria-label="Eliminar reserva"
-                      >
-                        <Trash2 size={18} />
-                      </Button>
+                       {/* Solo permitir eliminar si está pendiente? O siempre? */}
+                       {r.status === 'pendiente' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:bg-red-50 hover:text-red-700 p-1"
+                            onClick={() => setReservationToDelete(r)}
+                            disabled={creatingOrUpdating} // Deshabilitar si CUALQUIER operación está en curso
+                            aria-label="Eliminar reserva"
+                          >
+                            <Trash2 size={18} />
+                          </Button>
+                       )}
                     </td>
                   </tr>
                 );
@@ -361,111 +514,133 @@ const OwnerReservations: React.FC = () => {
         </table>
       </div>
 
-      {/* Modal de confirmación para eliminar */}
-      {reservationToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 transition-opacity duration-300 ease-out animate-fade-in-scale">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm transform transition-all duration-300 ease-out scale-95 opacity-0 animate-fade-in-scale">
-            <h2 className="text-lg font-semibold mb-3 text-gray-800">Confirmar Eliminación</h2>
-            <p className="text-sm text-gray-600 mb-4">
-              ¿Estás seguro de que quieres eliminar la reserva de
-              <span className="font-medium"> {reservationToDelete.properties?.title || ''} </span>
-              ({formatDate(reservationToDelete.start_date)} - {formatDate(reservationToDelete.end_date)})?
-              <br />Esta acción no se puede deshacer.
-            </p>
-            <div className="flex gap-3 justify-end mt-6">
-              <Button variant="outline" onClick={() => setReservationToDelete(null)} disabled={creatingOrUpdating}>Cancelar</Button>
-              <Button variant="destructive" onClick={handleDelete} disabled={creatingOrUpdating}>{creatingOrUpdating ? 'Eliminando...' : 'Eliminar'}</Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal para crear nueva reserva */}
+      {/* Botón Flotante para Crear (solo si hay propiedades) */}
       {properties.length > 0 && (
         <Button
           onClick={() => setShowCreateModal(true)}
-          className="fixed bottom-6 right-6 z-40 md:hidden rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white p-4 animate-fade-in-scale"
-          style={{ display: showCreateModal ? 'none' : 'block' }}
+          className="fixed bottom-6 right-6 z-40 md:hidden rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white p-4 animate-fade-in-scale" // Re-añadida animación
+          // No se muestra si el modal ya está abierto O si se está creando/actualizando algo
+          style={{ display: showCreateModal || creatingOrUpdating ? 'none' : 'flex' }}
           aria-label="Nueva Reserva"
+          disabled={creatingOrUpdating} // Doble seguridad
         >
           <Plus className="h-6 w-6" />
         </Button>
       )}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto transition-opacity duration-300 ease-out animate-fade-in-scale">
-          <div className="bg-white p-5 md:p-6 rounded-lg shadow-xl w-full max-w-lg max-h-[95vh] overflow-y-auto transform transition-all duration-300 ease-out scale-95 opacity-0 animate-fade-in-scale relative">
-            <button
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
-              onClick={() => !creatingOrUpdating && setShowCreateModal(false)}
-              aria-label="Cerrar modal"
-              disabled={creatingOrUpdating}
+
+       {/* Botón Crear en escritorio (si se prefiere fijo en vez de flotante) */}
+       <div className="hidden md:flex justify-end mt-6">
+            <Button
+                onClick={() => setShowCreateModal(true)}
+                disabled={creatingOrUpdating || properties.length === 0}
             >
-              <X size={20} />
-            </button>
-            <h2 className="text-xl font-semibold mb-5 text-gray-800 border-b pb-3">Nueva Reserva</h2>
-            <form onSubmit={handleCreateSubmit} className="space-y-4">
-              {/* Selector Propiedad */}
-              <div>
-                <label htmlFor="createProperty" className="block text-sm font-medium text-gray-700 mb-1">Propiedad *</label>
-                <div className="relative">
-                  <select
-                    id="createProperty"
-                    ref={formPropertyRef}
-                    name="property_id"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
-                    required
-                    disabled={creatingOrUpdating}
-                    defaultValue=""
-                  >
-                    <option value="" disabled>Selecciona...</option>
-                    {properties.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                <Plus className="mr-2 h-4 w-4" /> Nueva Reserva
+            </Button>
+       </div>
+
+
+      {/* --- Modales --- */}
+
+      {/* Modal de confirmación para eliminar */}
+      {reservationToDelete && (
+        // Usando el componente Dialog de shadcn/ui
+        <Dialog open={!!reservationToDelete} onOpenChange={(open) => !open && !creatingOrUpdating && setReservationToDelete(null)}>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Confirmar Eliminación</DialogTitle>
+                </DialogHeader>
+                <div className="py-4">
+                    <p className="text-sm text-gray-600">
+                      ¿Estás seguro de que quieres eliminar la reserva de
+                      <span className="font-medium"> {reservationToDelete.properties?.title || 'esta propiedad'} </span>
+                      ({formatDate(reservationToDelete.start_date)} - {formatDate(reservationToDelete.end_date)})?
+                      <br />Esta acción no se puede deshacer.
+                    </p>
                 </div>
-              </div>
-              {/* Fechas */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="createStartDate" className="block text-sm font-medium text-gray-700 mb-1">Fecha inicio *</label>
-                  <Input
-                    id="createStartDate"
-                    ref={formStartDateRef}
-                    name="start_date"
-                    type="date"
-                    className="w-full text-sm disabled:bg-gray-100"
-                    required
-                    disabled={creatingOrUpdating}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="createEndDate" className="block text-sm font-medium text-gray-700 mb-1">Fecha fin *</label>
-                  <Input
-                    id="createEndDate"
-                    ref={formEndDateRef}
-                    name="end_date"
-                    type="date"
-                    className="w-full text-sm disabled:bg-gray-100"
-                    required
-                    disabled={creatingOrUpdating}
-                  />
-                </div>
-              </div>
-              {/* Botones */}
-              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 mt-5 border-t">
-                <Button variant="outline" type="button" onClick={() => setShowCreateModal(false)} disabled={creatingOrUpdating} className="w-full sm:w-auto">Cancelar</Button>
-                <Button type="submit" disabled={creatingOrUpdating} className="w-full sm:w-auto">{creatingOrUpdating ? 'Creando...' : 'Crear Reserva'}</Button>
-              </div>
-            </form>
-          </div>
-        </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setReservationToDelete(null)} disabled={creatingOrUpdating}>Cancelar</Button>
+                    <Button variant="destructive" onClick={handleDelete} disabled={creatingOrUpdating}>
+                        {creatingOrUpdating ? 'Eliminando...' : 'Eliminar'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
       )}
 
-      {/* Mostrar calendario y resumen si hay una propiedad seleccionada */}
-      {filterProperty !== 'all' && !loading && (
+      {/* Modal para crear nueva reserva */}
+      {showCreateModal && (
+         <Dialog open={showCreateModal} onOpenChange={(open) => !open && !creatingOrUpdating && setShowCreateModal(false)}>
+            <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto"> {/* Ajustado tamaño y scroll */}
+                 <DialogHeader>
+                     <DialogTitle>Nueva Reserva</DialogTitle>
+                      {/* Botón X ya incluido por DialogContent, no es necesario añadirlo manualmente */}
+                 </DialogHeader>
+                <form onSubmit={handleCreateSubmit} className="space-y-4 pt-4 pb-6 px-2"> {/* Añadido padding */}
+                  {/* Selector Propiedad */}
+                  <div>
+                    <label htmlFor="createProperty" className="block text-sm font-medium text-gray-700 mb-1">Propiedad *</label>
+                    <div className="relative">
+                      <select
+                        id="createProperty"
+                        ref={formPropertyRef}
+                        name="property_id"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                        required
+                        disabled={creatingOrUpdating || properties.length === 0} // Deshabilitar si no hay props
+                        defaultValue="" // Importante para el placeholder
+                      >
+                        <option value="" disabled>Selecciona...</option>
+                        {properties.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
+                  {/* Fechas */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="createStartDate" className="block text-sm font-medium text-gray-700 mb-1">Fecha inicio *</label>
+                      <Input
+                        id="createStartDate"
+                        ref={formStartDateRef}
+                        name="start_date"
+                        type="date"
+                        className="w-full text-sm disabled:bg-gray-100"
+                        required
+                        disabled={creatingOrUpdating}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="createEndDate" className="block text-sm font-medium text-gray-700 mb-1">Fecha fin *</label>
+                      <Input
+                        id="createEndDate"
+                        ref={formEndDateRef}
+                        name="end_date"
+                        type="date"
+                        className="w-full text-sm disabled:bg-gray-100"
+                        required
+                        disabled={creatingOrUpdating}
+                      />
+                    </div>
+                  </div>
+                  {/* Botones en Footer */}
+                   <DialogFooter className="pt-5"> {/* Separación */}
+                       <Button variant="outline" type="button" onClick={() => setShowCreateModal(false)} disabled={creatingOrUpdating}>Cancelar</Button>
+                       <Button type="submit" disabled={creatingOrUpdating}>
+                           {creatingOrUpdating ? 'Creando...' : 'Solicitar Reserva'}
+                       </Button>
+                   </DialogFooter>
+                </form>
+            </DialogContent>
+         </Dialog>
+      )}
+
+      {/* Calendario de Disponibilidad (Renderizado Condicional) */}
+      {filterProperty !== 'all' && showCalendar && !loading && (
         <div className="mt-8 pt-6 border-t">
           <h2 className="text-xl font-semibold mb-4 text-gray-700">
             Calendario de Disponibilidad: <span className='font-bold'>{properties.find(p => p.id === filterProperty)?.title}</span>
           </h2>
+          {/* Asegúrate de que ReservationCalendar maneje propertyId correctamente */}
           <ReservationCalendar key={filterProperty} propertyId={filterProperty} />
       </div>
       )}
@@ -473,4 +648,4 @@ const OwnerReservations: React.FC = () => {
   );
 };
 
-export default OwnerReservations; 
+export default OwnerReservations;
