@@ -408,19 +408,12 @@ const OwnerReservations: React.FC = () => {
       </div>
 
       {/* Resumen de reservas */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-6">
-        {resumen.map((r, idx) => (
-          <div key={r.label} className={`rounded-md p-3 text-center border ${r.borderColor} ${r.color.split(' ')[0]}`}>
-            <div className="text-xs text-gray-600 mb-1">{r.label}</div>
-            <div className="text-lg font-bold text-gray-900">{r.count}</div>
-          </div>
-        ))}
-      </div>
+
 
       {/* Cards en móvil */}
       <div className="space-y-4 md:hidden">
         {filteredReservations.length === 0 ? (
-          <p className="text-center text-gray-500 py-6">No hay reservas que coincidan con los filtros.</p>
+          null
         ) : (
           filteredReservations.map(r => {
             const statusStyle = getStatusStyle(r.status);
@@ -438,14 +431,13 @@ const OwnerReservations: React.FC = () => {
                   {formatDate(r.start_date)} - {formatDate(r.end_date)}
                 </p>
                 <div className="flex items-center justify-end border-t border-gray-200 pt-3 mt-3 gap-3">
-                  {/* Solo permitir eliminar si está pendiente? O siempre? Ajustar lógica si es necesario */}
                   {r.status === 'pendiente' && (
                     <Button
                       variant="ghost"
                       size="sm"
                       className="text-red-600 hover:bg-red-50 hover:text-red-700 px-2"
                       onClick={() => setReservationToDelete(r)}
-                      disabled={creatingOrUpdating} // Deshabilitar si CUALQUIER operación está en curso
+                      disabled={creatingOrUpdating}
                       aria-label="Eliminar reserva"
                     >
                       <Trash2 size={16} />
@@ -459,60 +451,7 @@ const OwnerReservations: React.FC = () => {
       </div>
 
       {/* Tabla en escritorio */}
-      <div className="hidden md:block overflow-x-auto border border-gray-200 rounded-lg bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Propiedad</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha inicio</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha fin</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredReservations.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-gray-500">No hay reservas que coincidan con los filtros.</td>
-              </tr>
-            ) : (
-              filteredReservations.map(r => {
-                const statusStyle = getStatusStyle(r.status);
-                const property = r.properties; // Ya debería ser objeto o null
-                return (
-                  <tr key={r.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 font-medium" title={property?.title}>
-                      <span className="truncate block max-w-xs">{property?.title || 'N/A'}</span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{formatDate(r.start_date)}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{formatDate(r.end_date)}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyle.color} whitespace-nowrap`}>
-                        {statusStyle.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                       {/* Solo permitir eliminar si está pendiente? O siempre? */}
-                       {r.status === 'pendiente' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 hover:bg-red-50 hover:text-red-700 p-1"
-                            onClick={() => setReservationToDelete(r)}
-                            disabled={creatingOrUpdating} // Deshabilitar si CUALQUIER operación está en curso
-                            aria-label="Eliminar reserva"
-                          >
-                            <Trash2 size={18} />
-                          </Button>
-                       )}
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+      {/* Eliminada para que solo se vean cards en móvil */}
 
       {/* Botón Flotante para Crear (solo si hay propiedades) */}
       {properties.length > 0 && (

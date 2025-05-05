@@ -1,9 +1,33 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 const OwnerHome = () => {
   const { user } = useAuth();
+  const [property, setProperty] = useState<{ id: string; title: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProperty = async () => {
+      if (!user?.id) return;
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('properties')
+        .select('id, title')
+        .or(`share1_owner_id.eq.${user.id},share2_owner_id.eq.${user.id},share3_owner_id.eq.${user.id},share4_owner_id.eq.${user.id}`)
+        .order('title')
+        .limit(1)
+        .single();
+      if (!error && data) {
+        setProperty(data);
+      } else {
+        setProperty(null);
+      }
+      setLoading(false);
+    };
+    if (user?.id) fetchProperty();
+  }, [user?.id]);
 
   return (
     <div className="p-6">
@@ -12,7 +36,7 @@ const OwnerHome = () => {
       <Card className="p-4 mb-6">
         <h2 className="text-lg font-semibold mb-2">Tu Propiedad</h2>
         <p className="text-gray-600">
-          Casa en la playa 20 (Share #2)
+          {loading ? 'Cargando...' : property ? property.title : 'No tienes ninguna propiedad asignada'}
         </p>
       </Card>
 
