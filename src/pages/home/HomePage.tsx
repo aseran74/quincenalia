@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import { FeaturedProperties } from '@/components/FeaturedProperties';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -244,17 +244,25 @@ function ComoFunciona() {
   );
 }
 
+// Hero con efecto zoom animado (sin parallax)
+const HeroParallax = () => {
+  return (
+    <img
+      src="/hero.jpg"
+      alt="Villa vacacional de lujo con piscina y vistas al mar"
+      className="w-full h-full object-cover animate-zoom-in-out will-change-transform"
+      style={{ transition: 'transform 0.2s cubic-bezier(.4,0,.2,1)' }}
+    />
+  );
+};
+
 const HomePage = () => {
   return (
     <div className="min-h-screen bg-background font-poppins">
       <Navbar />
       <section className="relative h-[85vh] sm:h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img
-            src="/hero.jpg"
-            alt="Villa vacacional de lujo con piscina y vistas al mar"
-            className="w-full h-full object-cover animate-zoom-in-out"
-          />
+          <HeroParallax />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
         </div>
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">

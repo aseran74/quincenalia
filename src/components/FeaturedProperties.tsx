@@ -118,7 +118,7 @@ export const FeaturedProperties = () => {
 
   if (loading) {
     return (
-      <div className="grid md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
         {[1, 2, 3].map((item) => (
           <Card key={item} className="overflow-hidden animate-pulse">
             <div className="w-full h-48 bg-gray-200" />
@@ -134,7 +134,7 @@ export const FeaturedProperties = () => {
   }
 
   return (
-    <div className="grid md:grid-cols-3 lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
       {properties.map((property) => (
         <PropertyCard key={property.id} property={property} />
       ))}

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  LayoutGrid, MapPin, Home, Bed, Bath, Building, TreePalm, SquareArrowUp, Building2, Warehouse, UserCheck, Waves, Sparkles, ParkingCircle, Wind, SlidersHorizontal, ChevronDown, ChevronUp, Filter, X, Plus, Minus, Check, Search, Trash2, ArrowLeft, Info, ChevronLeft, ChevronRight
+  LayoutGrid, MapPin, Home, Bed, Bath, Building, TreePalm, SquareArrowUp, Building2, Warehouse, UserCheck, Waves, Sparkles, ParkingCircle, Wind, SlidersHorizontal, ChevronDown, ChevronUp, Filter, X, Plus, Minus, Check, Search, Trash2, ArrowLeft, Info, ChevronLeft, ChevronRight, X as XIcon
 } from 'lucide-react';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import {
@@ -96,6 +96,17 @@ const calcularCuotaHipoteca = (precio: number) => {
   return principal * (monthlyRate * Math.pow(1 + monthlyRate, n)) / (Math.pow(1 + monthlyRate, n) - 1);
 };
 
+// Helper para obtener el icono del marcador solo si Google Maps está cargado
+const getMarkerIcon = () => {
+  if (window.google && window.google.maps) {
+    return {
+      url: '/custom-marker.svg',
+      scaledSize: new window.google.maps.Size(40, 40),
+    };
+  }
+  return undefined;
+};
+
 export const PropertiesPage = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,6 +118,7 @@ export const PropertiesPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedMapProperty, setSelectedMapProperty] = useState<Property | null>(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [mapsLoaded, setMapsLoaded] = useState(false);
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -500,7 +512,7 @@ export const PropertiesPage = () => {
           </div>
         ) : (
           <div className="h-[65vh] w-full rounded-lg overflow-hidden border shadow-sm relative">
-            <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
+            <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''} onLoad={() => setMapsLoaded(true)}>
               <GoogleMap
                 mapContainerClassName="w-full h-full"
                 center={{ lat: 40.4637, lng: -3.7492 }}
@@ -508,7 +520,7 @@ export const PropertiesPage = () => {
                 options={{}}
                 onClick={() => setSelectedMapProperty(null)}
               >
-                {filteredProperties
+                {mapsLoaded && filteredProperties
                   .filter(p => p.latitude && p.longitude)
                   .map((property) => (
                     <Marker
@@ -516,71 +528,81 @@ export const PropertiesPage = () => {
                       position={{ lat: Number(property.latitude), lng: Number(property.longitude) }}
                       title={property.title}
                       onClick={() => setSelectedMapProperty(property)}
+                      icon={getMarkerIcon()}
                     />
                   ))}
                 {selectedMapProperty && selectedMapProperty.latitude && selectedMapProperty.longitude && (
                   <InfoWindow
                     position={{ lat: Number(selectedMapProperty.latitude), lng: Number(selectedMapProperty.longitude) }}
                     onCloseClick={() => setSelectedMapProperty(null)}
-                    options={{ pixelOffset: new window.google.maps.Size(0, -10) }}
+                    options={{ pixelOffset: new window.google.maps.Size(0, -15) }}
                   >
-                    <div className="min-w-[220px] max-w-[260px] bg-white rounded-lg shadow-lg p-0 overflow-hidden">
-                      <div className="relative" style={{ minHeight: '160px' }}>
-                        <a
-                          href={`/properties/${selectedMapProperty.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block"
-                        >
-                          {selectedMapProperty.images && selectedMapProperty.images.length > 0 ? (
-                            <>
-                              <img
-                                src={selectedMapProperty.images[carouselIndex]}
-                                alt={selectedMapProperty.title}
-                                className="w-full h-40 object-cover m-0"
-                                style={{ display: 'block', margin: 0, padding: 0 }}
-                              />
-                              {selectedMapProperty.images.length > 1 && (
-                                <>
-                                  <button
-                                    type="button"
-                                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 shadow hover:bg-white z-10"
-                                    onClick={e => { e.preventDefault(); e.stopPropagation(); setCarouselIndex((carouselIndex - 1 + selectedMapProperty.images.length) % selectedMapProperty.images.length); }}
-                                  >
-                                    <ChevronLeft className="w-5 h-5 text-primary" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 shadow hover:bg-white z-10"
-                                    onClick={e => { e.preventDefault(); e.stopPropagation(); setCarouselIndex((carouselIndex + 1) % selectedMapProperty.images.length); }}
-                                  >
-                                    <ChevronRight className="w-5 h-5 text-primary" />
-                                  </button>
-                                </>
-                              )}
-                            </>
-                          ) : (
-                            <img
-                              src="/placeholder-property.jpg"
-                              alt={selectedMapProperty.title}
-                              className="w-full h-40 object-cover m-0"
-                              style={{ display: 'block', margin: 0, padding: 0 }}
-                            />
-                          )}
-                        </a>
-                      </div>
-                      <div className="p-3">
+                    <div className="relative min-w-[230px] max-w-[270px] h-[200px] bg-card rounded-lg shadow-xl overflow-hidden font-poppins">
+                      <Link
+                        to={`/properties/${selectedMapProperty.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full h-full"
+                        aria-label={`Ver detalles de ${selectedMapProperty.title}`}
+                      >
+                        {selectedMapProperty.images && selectedMapProperty.images.length > 0 ? (
+                          <img
+                            src={selectedMapProperty.images[carouselIndex]}
+                            alt={`Imagen de ${selectedMapProperty.title}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
+                          />
+                        ) : (
+                          <img
+                            src="/placeholder-property.jpg"
+                            alt="Propiedad sin imagen"
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                      </Link>
+                      {/* Botones del carrusel, superpuestos si hay múltiples imágenes */}
+                      {selectedMapProperty.images && selectedMapProperty.images.length > 1 && (
+                        <>
+                          <button
+                            type="button"
+                            aria-label="Imagen anterior"
+                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 shadow-md z-20 transition-colors"
+                            onClick={e => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setCarouselIndex((prevIndex) => (prevIndex - 1 + selectedMapProperty.images!.length) % selectedMapProperty.images!.length);
+                            }}
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Siguiente imagen"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 shadow-md z-20 transition-colors"
+                            onClick={e => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setCarouselIndex((prevIndex) => (prevIndex + 1) % selectedMapProperty.images!.length);
+                            }}
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+                      {/* Información de la propiedad, superpuesta en la parte inferior de la card */}
+                      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 via-black/60 to-transparent text-white z-10">
                         <Link
                           to={`/properties/${selectedMapProperty.id}`}
-                          className="font-semibold text-base mb-1 truncate text-primary hover:underline block"
+                          className="font-semibold text-sm block hover:underline truncate"
                           target="_blank"
                           rel="noopener noreferrer"
+                          onClick={(e) => { e.stopPropagation(); }}
                         >
                           {selectedMapProperty.title}
                         </Link>
-                        <div className="text-primary font-bold text-lg mb-1">
-                          {getMinSharePrice(selectedMapProperty)?.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) ?? 'N/A'}
-                          <span className="text-xs text-gray-500 ml-1">/copropiedad</span>
+                        <div className="text-base font-bold mt-0.5">
+                          {getMinSharePrice(selectedMapProperty) ? formatPriceSimple(getMinSharePrice(selectedMapProperty)!) : 'N/A'}
+                          <span className="text-xs font-normal opacity-90 ml-1">/copropiedad</span>
                         </div>
                       </div>
                     </div>

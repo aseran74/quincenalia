@@ -4,9 +4,9 @@ import { supabase } from '@/lib/supabase';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ChevronLeft, ChevronRight, Bed, Bath, Square, MapPin, Phone, Mail } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bed, Bath, Square, MapPin, Phone, Mail, Building, SquareArrowUp, Building2, Home, TreePalm } from 'lucide-react';
 import { FaSwimmingPool, FaHotTub, FaChild, FaGamepad, FaUmbrellaBeach, FaParking, FaStore, FaHospital, 
-  FaBus, FaSchool, FaUtensils, FaShoppingCart, FaMapMarkerAlt, FaHome, FaImages, FaInfoCircle, 
+  FaBus, FaSchool, FaUtensils, FaShoppingCart, FaMapMarkerAlt, FaImages, FaInfoCircle, 
   FaUserTie, FaSearch, FaArrowLeft, FaGlassCheers, FaTree, FaWater, FaShip, FaPrescriptionBottleAlt, FaUsers } from 'react-icons/fa';
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import type { Property } from '@/types/property';
@@ -264,22 +264,23 @@ export const PropertyDetail = () => {
         } else if (propertyData) {
         const formattedProperty: Property = {
           ...propertyData,
-                agent: isValidAgent(propertyData.agent) ? propertyData.agent : null,
-                latitude: typeof propertyData.latitude === 'number' ? propertyData.latitude : null,
-                longitude: typeof propertyData.longitude === 'number' ? propertyData.longitude : null,
-                images: Array.isArray(propertyData.images) ? propertyData.images : [],
-                features: Array.isArray(propertyData.features) ? propertyData.features : [],
-                nearby_services: Array.isArray(propertyData.nearby_services) ? propertyData.nearby_services : [],
-                location: propertyData.location || 'Ubicación no especificada',
-                share1_price: propertyData.share1_price ?? null,
-                share1_status: propertyData.share1_status ?? null,
-                share2_price: propertyData.share2_price ?? null,
-                share2_status: propertyData.share2_status ?? null,
-                share3_price: propertyData.share3_price ?? null,
-                share3_status: propertyData.share3_status ?? null,
-                share4_price: propertyData.share4_price ?? null,
-                share4_status: propertyData.share4_status ?? null,
-            };
+          type: propertyData.tipo_vivienda || propertyData.type || '',
+          agent: isValidAgent(propertyData.agent) ? propertyData.agent : null,
+          latitude: typeof propertyData.latitude === 'number' ? propertyData.latitude : null,
+          longitude: typeof propertyData.longitude === 'number' ? propertyData.longitude : null,
+          images: Array.isArray(propertyData.images) ? propertyData.images : [],
+          features: Array.isArray(propertyData.features) ? propertyData.features : [],
+          nearby_services: Array.isArray(propertyData.nearby_services) ? propertyData.nearby_services : [],
+          location: propertyData.location || 'Ubicación no especificada',
+          share1_price: propertyData.share1_price ?? null,
+          share1_status: propertyData.share1_status ?? null,
+          share2_price: propertyData.share2_price ?? null,
+          share2_status: propertyData.share2_status ?? null,
+          share3_price: propertyData.share3_price ?? null,
+          share3_status: propertyData.share3_status ?? null,
+          share4_price: propertyData.share4_price ?? null,
+          share4_status: propertyData.share4_status ?? null,
+        };
         setProperty(formattedProperty);
         } else {
             setProperty(null);
@@ -451,6 +452,23 @@ export const PropertyDetail = () => {
                         <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Detalles Principales</h2>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                             <div className="text-center p-3 bg-white rounded-lg border flex flex-col items-center justify-center">
+                                {(() => {
+                                  // Iconos para tipos de vivienda
+                                  const typeIcons: { [key: string]: React.ReactNode } = {
+                                    'Piso': <Building className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 mb-1" />,
+                                    'Ático': <SquareArrowUp className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 mb-1" />,
+                                    'Dúplex': <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 mb-1" />,
+                                    'Casa independiente': <Home className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 mb-1" />,
+                                    'Casa pareada': <Home className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 mb-1" />,
+                                    'Casa adosada': <Home className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 mb-1" />,
+                                    'Casa rústica': <TreePalm className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 mb-1" />,
+                                  };
+                                  return typeIcons[property.type || ''] || <Home className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 mb-1" />;
+                                })()}
+                                <p className="text-xs sm:text-sm text-gray-600">Tipo</p>
+                                <p className="text-base sm:text-lg font-semibold capitalize">{property.type || 'N/A'}</p>
+                            </div>
+                            <div className="text-center p-3 bg-white rounded-lg border flex flex-col items-center justify-center">
                                 <Bed className="w-6 h-6 sm:w-7 sm:h-7 text-blue-500 mb-1" />
                                 <p className="text-xs sm:text-sm text-gray-600">Hab.</p>
                                 <p className="text-base sm:text-lg font-semibold">{property.bedrooms}</p>
@@ -514,7 +532,12 @@ export const PropertyDetail = () => {
                         fullscreenControl: true,
                       }}
                     >
-                                    <Marker position={coordinates} />
+                                    <Marker position={coordinates} 
+                                      icon={{
+                                        url: '/custom-marker.svg',
+                                        scaledSize: new window.google.maps.Size(40, 40),
+                                      }}
+                                    />
                     </GoogleMap>
                                 ) : (
                                 <div className="h-full w-full flex items-center justify-center bg-gray-100">
