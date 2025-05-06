@@ -114,7 +114,7 @@ const PropertiesMapViewPage = () => {
         <PropertyFilters onFiltersChange={handleFiltersChange} />
       </div>
       <div className="flex-1 h-1/2 md:h-full bg-gray-200 relative">
-        <PropertyMap properties={filteredProperties} onPropertyClick={setSelectedProperty} selectedPropertyId={selectedProperty?.id ?? null} />
+        <PropertyMap properties={filteredProperties} selectedPropertyId={selectedProperty?.id ?? null} />
       </div>
     </div>
   );
