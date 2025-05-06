@@ -416,7 +416,7 @@ const HomePage = () => {
       <style>{`
         @keyframes zoom-in-out {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            50% { transform: scale(1.025); }
         }
         .animate-zoom-in-out {
             animation: zoom-in-out 15s ease-in-out infinite;
