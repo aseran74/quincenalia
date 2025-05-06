@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { PropertiesList } from '../components/properties/PropertiesList'
 import { PropertyFilter, PropertyFilters } from '../components/properties/PropertyFilter'
-import { PropertyMap } from '../components/properties/PropertyMap'
+import PropertyMap from '@/components/properties/PropertyMap'
 import { Property, getProperties } from '../../lib/supabase'
 
 export default function PropertiesPage() {

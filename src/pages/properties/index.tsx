@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  LayoutGrid, MapPin, Home, Bed, Bath, Building, TreePalm, SquareArrowUp, Building2, Warehouse, UserCheck, Waves, Sparkles, ParkingCircle, Wind, SlidersHorizontal, ChevronDown, ChevronUp, Filter, X, Plus, Minus, Check, Search, Trash2, ArrowLeft, Info
+  LayoutGrid, MapPin, Home, Bed, Bath, Building, TreePalm, SquareArrowUp, Building2, Warehouse, UserCheck, Waves, Sparkles, ParkingCircle, Wind, SlidersHorizontal, ChevronDown, ChevronUp, Filter, X, Plus, Minus, Check, Search, Trash2, ArrowLeft, Info, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import {
@@ -106,6 +106,7 @@ export const PropertiesPage = () => {
   const typeChecklistRef = useRef<HTMLDivElement>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedMapProperty, setSelectedMapProperty] = useState<Property | null>(null);
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -418,6 +419,20 @@ export const PropertiesPage = () => {
     </Card>
   );
 
+  // Carrusel automático
+  useEffect(() => {
+    if (!selectedMapProperty || !selectedMapProperty.images || selectedMapProperty.images.length <= 1) return;
+    const interval = setInterval(() => {
+      setCarouselIndex((prev) => (prev + 1) % selectedMapProperty.images.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [selectedMapProperty]);
+
+  // Reset índice al cambiar de propiedad
+  useEffect(() => {
+    setCarouselIndex(0);
+  }, [selectedMapProperty]);
+
  if (loading) {
     return (
       <div className="container mx-auto p-4 animate-pulse">
@@ -499,7 +514,7 @@ export const PropertiesPage = () => {
                     <Marker
                       key={property.id}
                       position={{ lat: Number(property.latitude), lng: Number(property.longitude) }}
-                      title={`${property.title} (${formatPriceSimple(property.price)})`}
+                      title={property.title}
                       onClick={() => setSelectedMapProperty(property)}
                     />
                   ))}
@@ -507,16 +522,67 @@ export const PropertiesPage = () => {
                   <InfoWindow
                     position={{ lat: Number(selectedMapProperty.latitude), lng: Number(selectedMapProperty.longitude) }}
                     onCloseClick={() => setSelectedMapProperty(null)}
+                    options={{ pixelOffset: new window.google.maps.Size(0, -10) }}
                   >
-                    <div className="min-w-[220px] max-w-[260px] bg-white rounded-lg shadow-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-primary font-bold text-lg">{formatPriceSimple(selectedMapProperty.price)}</span>
-                        <button onClick={() => setSelectedMapProperty(null)} className="text-gray-400 hover:text-primary"><X className="w-4 h-4" /></button>
+                    <div className="min-w-[220px] max-w-[260px] bg-white rounded-lg shadow-lg p-0 overflow-hidden">
+                      <div className="relative" style={{ minHeight: '160px' }}>
+                        <a
+                          href={`/properties/${selectedMapProperty.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block"
+                        >
+                          {selectedMapProperty.images && selectedMapProperty.images.length > 0 ? (
+                            <>
+                              <img
+                                src={selectedMapProperty.images[carouselIndex]}
+                                alt={selectedMapProperty.title}
+                                className="w-full h-40 object-cover m-0"
+                                style={{ display: 'block', margin: 0, padding: 0 }}
+                              />
+                              {selectedMapProperty.images.length > 1 && (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 shadow hover:bg-white z-10"
+                                    onClick={e => { e.preventDefault(); e.stopPropagation(); setCarouselIndex((carouselIndex - 1 + selectedMapProperty.images.length) % selectedMapProperty.images.length); }}
+                                  >
+                                    <ChevronLeft className="w-5 h-5 text-primary" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 shadow hover:bg-white z-10"
+                                    onClick={e => { e.preventDefault(); e.stopPropagation(); setCarouselIndex((carouselIndex + 1) % selectedMapProperty.images.length); }}
+                                  >
+                                    <ChevronRight className="w-5 h-5 text-primary" />
+                                  </button>
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            <img
+                              src="/placeholder-property.jpg"
+                              alt={selectedMapProperty.title}
+                              className="w-full h-40 object-cover m-0"
+                              style={{ display: 'block', margin: 0, padding: 0 }}
+                            />
+                          )}
+                        </a>
                       </div>
-                      <div className="font-semibold text-base mb-1 truncate">{selectedMapProperty.title}</div>
-                      <div className="text-xs text-muted-foreground mb-2">{selectedMapProperty.location}</div>
-                      <div className="text-sm text-gray-700 line-clamp-3 mb-1">{selectedMapProperty.description?.slice(0, 80)}{selectedMapProperty.description && selectedMapProperty.description.length > 80 ? '...' : ''}</div>
-                      <Link to={`/properties/${selectedMapProperty.id}`} className="block mt-2 text-primary font-semibold text-sm hover:underline">Ver detalles</Link>
+                      <div className="p-3">
+                        <Link
+                          to={`/properties/${selectedMapProperty.id}`}
+                          className="font-semibold text-base mb-1 truncate text-primary hover:underline block"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {selectedMapProperty.title}
+                        </Link>
+                        <div className="text-primary font-bold text-lg mb-1">
+                          {getMinSharePrice(selectedMapProperty)?.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) ?? 'N/A'}
+                          <span className="text-xs text-gray-500 ml-1">/copropiedad</span>
+                        </div>
+                      </div>
                     </div>
                   </InfoWindow>
                 )}

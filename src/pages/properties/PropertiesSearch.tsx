@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import PropertyFilters from '@/components/properties/PropertyFilters';
-import PropertyMap from '@/components/properties/PropertyMap';
+import PropertyMapXYZ from '@/components/properties/PropertyMap';
 import { Card } from '@/components/ui/card';
 import { MapIcon, ListBulletIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
@@ -54,7 +54,10 @@ const PropertiesSearch = () => {
               <Button
                 variant={viewMode === 'map' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setViewMode('map')}
+                onClick={() => {
+                  setViewMode('map');
+                  setSelectedProperty(null);
+                }}
                 className="text-[16px]"
               >
                 <MapIcon className="h-4 w-4 mr-1" style={{ fontSize: 16, width: 16, height: 16 }} />
@@ -80,7 +83,7 @@ const PropertiesSearch = () => {
               // Vista de mapa
               <div className="bg-white rounded-lg shadow-lg h-[calc(100vh-200px)]">
                 <div className="h-full rounded-lg overflow-hidden">
-                  <PropertyMap 
+                  <PropertyMapXYZ 
                     properties={properties.map(p => ({
                       ...p,
                       images: Array.isArray(p.images)
@@ -91,7 +94,6 @@ const PropertiesSearch = () => {
                             ? [p.image]
                             : [],
                     }))}
-                    onPropertyClick={handlePropertyClick}
                   />
                 </div>
               </div>
