@@ -227,17 +227,19 @@ export const PropertyDetail = () => {
 
   useEffect(() => {
     if (mapsLoaded && property?.location && !coordinates) {
-      const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode({ address: property.location }, (results, status) => {
-        if (status === 'OK' && results && results[0]) {
-          setCoordinates({
-            lat: results[0].geometry.location.lat(),
-            lng: results[0].geometry.location.lng(),
-          });
-        } else {
+      if (window.google && window.google.maps) {
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ address: property.location }, (results, status) => {
+          if (status === 'OK' && results && results[0]) {
+            setCoordinates({
+              lat: results[0].geometry.location.lat(),
+              lng: results[0].geometry.location.lng(),
+            });
+          } else {
             console.warn(`Geocode no tuvo éxito para la dirección "${property.location}" por la siguiente razón: ${status}`);
-        }
-      });
+          }
+        });
+      }
     }
   }, [mapsLoaded, property?.location, coordinates]);
 
@@ -354,7 +356,7 @@ export const PropertyDetail = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.location.href = 'http://localhost:8080/propiedades'}
+              onClick={() => window.location.href = '/propiedades'}
               className="flex items-center gap-2 text-sm"
             >
               <FaArrowLeft className="w-3 h-3" />

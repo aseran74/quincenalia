@@ -18,9 +18,23 @@ function getMinSharePrice(property: any): number | null {
   return Math.min(...shares);
 }
 
+const calculateMonthlyPayment = (sharePrice: number): number => {
+  if (!sharePrice || sharePrice <= 0) return 0;
+  const downPayment = sharePrice * 0.3;
+  const loanAmount = sharePrice - downPayment;
+  if (loanAmount <= 0) return 0;
+  const interestRate = 2.1 / 100 / 12;
+  const numberOfPayments = 20 * 12;
+  if (interestRate === 0) return loanAmount / numberOfPayments;
+  const monthlyPayment = loanAmount * interestRate * Math.pow(1 + interestRate, numberOfPayments) /
+    (Math.pow(1 + interestRate, numberOfPayments) - 1);
+  return isFinite(monthlyPayment) ? Math.round(monthlyPayment) : 0;
+};
+
 const PropertyCard = ({ property }: { property: any }) => {
   const imageUrl = property.images && property.images.length > 0 ? property.images[0] : '/placeholder-property.jpg';
   const minShare = getMinSharePrice(property);
+  const monthly = minShare ? calculateMonthlyPayment(minShare) : null;
   return (
     <Link to={`/properties/${property.id}`} className="group block h-full">
       <Card className="overflow-hidden h-full flex flex-col border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 bg-card">
@@ -40,7 +54,7 @@ const PropertyCard = ({ property }: { property: any }) => {
             Precio total: {formatPriceSimple(property.price)}
           </span>
         </div>
-        <CardContent className="p-3 sm:p-4 flex-grow flex flex-col">
+        <CardContent className="flex-1 flex flex-col">
           <h3 className="text-base font-semibold mb-1 text-card-foreground truncate" title={property.title}>
             {property.title}
           </h3>
@@ -62,6 +76,11 @@ const PropertyCard = ({ property }: { property: any }) => {
             </p>
           )}
         </CardContent>
+        {monthly && (
+          <CardFooter className="bg-blue-50 border-t px-4 py-2 flex items-center justify-between">
+            <span className="text-primary font-semibold text-base">{monthly.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span className="text-xs text-gray-500 font-normal">/mes*</span></span>
+          </CardFooter>
+        )}
       </Card>
     </Link>
   );

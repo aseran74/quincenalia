@@ -8,6 +8,7 @@ interface Property {
   price: number;
   location: string;
   coordinates: [number, number]; // [latitude, longitude]
+  images: string[]; // Añadido para la foto
 }
 
 interface PropertyMapProps {
@@ -25,14 +26,19 @@ const PropertyMap = ({ properties, onPropertyClick }: PropertyMapProps) => {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
+    // Guardar los marcadores para poder eliminarlos después
+    const markers: L.Marker[] = [];
+
     // Añadir marcadores para cada propiedad
     properties.forEach(property => {
       const marker = L.marker(property.coordinates)
         .bindPopup(`
-          <div class="p-2">
+          <div class="p-2" style="min-width:180px;max-width:220px;">
+            <img src="https://via.placeholder.com/200x90?text=Foto" alt="test" style="width:100%;height:90px;object-fit:cover;border-radius:8px;margin-bottom:8px;" />
             <h3 class="font-semibold">${property.title}</h3>
             <p class="text-primary font-bold">${property.price.toLocaleString()}€</p>
             <p class="text-sm text-gray-600">${property.location}</p>
+            <a href="/properties/${property.id}" style="display:block;margin-top:8px;color:#2563eb;font-weight:600;text-align:center;">Ver detalles</a>
           </div>
         `)
         .addTo(map);
@@ -40,10 +46,12 @@ const PropertyMap = ({ properties, onPropertyClick }: PropertyMapProps) => {
       if (onPropertyClick) {
         marker.on('click', () => onPropertyClick(property));
       }
+      markers.push(marker);
     });
 
-    // Limpiar al desmontar
+    // Limpiar marcadores y el mapa al desmontar
     return () => {
+      markers.forEach(marker => marker.remove());
       map.remove();
     };
   }, [properties, onPropertyClick]);

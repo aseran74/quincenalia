@@ -81,7 +81,16 @@ const PropertiesSearch = () => {
               <div className="bg-white rounded-lg shadow-lg h-[calc(100vh-200px)]">
                 <div className="h-full rounded-lg overflow-hidden">
                   <PropertyMap 
-                    properties={properties}
+                    properties={properties.map(p => ({
+                      ...p,
+                      images: Array.isArray(p.images)
+                        ? p.images
+                        : p.image_url
+                          ? [p.image_url]
+                          : p.image
+                            ? [p.image]
+                            : [],
+                    }))}
                     onPropertyClick={handlePropertyClick}
                   />
                 </div>
