@@ -1,7 +1,3 @@
-Gracias por el dato. Aquí tienes el `README.md` actualizado con **Vite** y **Supabase** en lugar de Next.js y Firebase:
-
----
-
 # Quincenalia
 
 **Quincenalia** es una plataforma para gestionar la copropiedad de **segundas residencias compartidas**, ofreciendo una experiencia ordenada, legal y accesible.
