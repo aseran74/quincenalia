@@ -1,73 +1,77 @@
-# Welcome to your Lovable project
 
-## Project info
+# Quincenalia
 
-**URL**: https://lovable.dev/projects/6c3eea68-be06-4a9e-bf18-720c4e7f5e2f
+**Quincenalia** es una plataforma para gestionar la copropiedad de **segundas residencias compartidas**, ofreciendo una experiencia ordenada, legal y accesible.
 
-## How can I edit this code?
+Permite que varias personas compartan una misma vivienda —como una casa en la playa, el campo o un entorno rural— dividiendo su uso, gastos y decisiones de forma equitativa y transparente.
 
-There are several ways of editing your application.
+## 🏡 ¿Qué ofrece Quincenalia?
 
-**Use Lovable**
+* **Calendario de uso compartido**: Planificación equitativa y automatizada del uso de la vivienda.
+* **Reservas online**: Cada copropietario gestiona sus semanas disponibles y hace reservas fácilmente.
+* **Seguimiento de gastos comunes**: Control de mantenimiento, limpieza, suministros y otros costes.
+* **Documentación legal compartida**: Acceso a estatutos, acuerdos, escrituras y normas internas.
+* **Sistema de votaciones**: Para reformas, reglas internas o decisiones comunitarias.
+* **Resolución y seguimiento de incidencias**: Reporte de problemas (averías, limpieza, accesos...) y trazabilidad de su resolución.
+* **Intercambio de estancias**: Posibilidad de intercambiar turnos entre copropietarios si hay acuerdo entre las partes.
+* **Sistema de mensajería privada**: Comunicación directa entre copropietarios para coordinar estancias, resolver dudas o proponer cambios.
+* **Canales de comunicación general**: Anuncios o debates accesibles a todos los miembros del grupo.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6c3eea68-be06-4a9e-bf18-720c4e7f5e2f) and start prompting.
+## 🌍 ¿Para quién es útil?
 
-Changes made via Lovable will be committed automatically to this repo.
+* Familias que comparten una segunda casa.
+* Amigos que co-invierten en una residencia vacacional.
+* Grupos que buscan repartir gastos y simplificar la gestión.
+* Personas que quieren revivir una vivienda familiar de forma compartida.
+* Cooperativas que fomentan el acceso a la vivienda rural o temporal.
 
-**Use your preferred IDE**
+## ⚙️ Tecnologías utilizadas
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+* **Next.js** – Framework moderno basado en React.
+* **Firebase** – Autenticación y base de datos en tiempo real.
+* **Vercel** – Plataforma de despliegue rápida.
+* **Tailwind CSS** – Estilo limpio, flexible y responsivo.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🌐 Demo en línea
 
-Follow these steps:
+[https://quincenalia.vercel.app](https://quincenalia.vercel.app)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 🚀 Instalación local
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+```bash
+git clone https://github.com/tu-usuario/quincenalia.git
+cd quincenalia
+npm install
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+Configura las variables en `.env.local`:
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+```
+
+Ejecuta en modo desarrollo:
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 🤝 Contribuciones
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Tu ayuda es bienvenida. Puedes:
 
-**Use GitHub Codespaces**
+1. Hacer fork del repositorio.
+2. Crear una rama (`feature/nombre`).
+3. Aplicar cambios.
+4. Enviar un Pull Request.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📄 Licencia
 
-## What technologies are used for this project?
+Publicado bajo licencia MIT.
 
-This project is built with:
+---
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+¿Quieres que lo guarde directamente como archivo `.md` o que te lo envíe como texto descargable?
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/6c3eea68-be06-4a9e-bf18-720c4e7f5e2f) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
