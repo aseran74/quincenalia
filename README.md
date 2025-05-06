@@ -1,3 +1,6 @@
+Gracias por el dato. Aquí tienes el `README.md` actualizado con **Vite** y **Supabase** en lugar de Next.js y Firebase:
+
+---
 
 # Quincenalia
 
@@ -14,8 +17,8 @@ Permite que varias personas compartan una misma vivienda —como una casa en la 
 * **Sistema de votaciones**: Para reformas, reglas internas o decisiones comunitarias.
 * **Resolución y seguimiento de incidencias**: Reporte de problemas (averías, limpieza, accesos...) y trazabilidad de su resolución.
 * **Intercambio de estancias**: Posibilidad de intercambiar turnos entre copropietarios si hay acuerdo entre las partes.
-* **Sistema de mensajería privada**: Comunicación directa entre copropietarios para coordinar estancias, resolver dudas o proponer cambios.
-* **Canales de comunicación general**: Anuncios o debates accesibles a todos los miembros del grupo.
+* **Sistema de mensajería privada**: Comunicación directa entre copropietarios.
+* **Canales de comunicación general**: Anuncios o debates comunes para todos los miembros del grupo.
 
 ## 🌍 ¿Para quién es útil?
 
@@ -27,10 +30,10 @@ Permite que varias personas compartan una misma vivienda —como una casa en la 
 
 ## ⚙️ Tecnologías utilizadas
 
-* **Next.js** – Framework moderno basado en React.
-* **Firebase** – Autenticación y base de datos en tiempo real.
-* **Vercel** – Plataforma de despliegue rápida.
+* **Vite** – Bundler rápido para aplicaciones modernas con React.
+* **Supabase** – Base de datos, autenticación y almacenamiento en tiempo real.
 * **Tailwind CSS** – Estilo limpio, flexible y responsivo.
+* **Vercel** – Plataforma de despliegue continua.
 
 ## 🌐 Demo en línea
 
@@ -44,15 +47,14 @@ cd quincenalia
 npm install
 ```
 
-Configura las variables en `.env.local`:
+Crea un archivo `.env` con tus credenciales de Supabase:
 
 ```env
-NEXT_PUBLIC_FIREBASE_API_KEY=...
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
 ```
 
-Ejecuta en modo desarrollo:
+Inicia el proyecto:
 
 ```bash
 npm run dev
@@ -73,5 +75,5 @@ Publicado bajo licencia MIT.
 
 ---
 
-¿Quieres que lo guarde directamente como archivo `.md` o que te lo envíe como texto descargable?
+¿Quieres que te genere ahora el archivo listo para subir a tu repositorio?
 
