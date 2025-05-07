@@ -102,7 +102,7 @@ const calcularCuotaHipoteca = (precio: number) => {
 const getMarkerIcon = () => {
   if (window.google && window.google.maps) {
     return {
-      url: '/custom-marker.svg',
+      url: '/map-marker-svgrepo-com.svg',
       scaledSize: new window.google.maps.Size(40, 40),
     };
   }
