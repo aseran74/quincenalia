@@ -59,18 +59,18 @@ const Navbar = () => {
           </div>
           
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/propiedades" className={`${
-              isScrolled ? 'text-gray-700' : 'text-white'
-            } hover:text-primary transition-colors`}>
+            <Link to="/propiedades" className={`px-3 py-1 rounded font-semibold transition-colors duration-200 shadow-sm ${
+              isScrolled ? 'text-gray-800' : 'text-white drop-shadow-lg'
+            } hover:bg-white/20 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary`} style={{textShadow: isScrolled ? '0 1px 6px rgba(255,255,255,0.2)' : '0 2px 10px rgba(0,0,0,0.5)'}}>
               Buscar Propiedades
             </Link>
-            <a href="#reinventada" onClick={handleAnchorClick('reinventada')} className={`${isScrolled ? 'text-gray-700' : 'text-white'} hover:text-primary transition-colors`}>
+            <a href="#reinventada" onClick={handleAnchorClick('reinventada')} className={`px-3 py-1 rounded font-semibold transition-colors duration-200 shadow-sm ${isScrolled ? 'text-gray-800' : 'text-white drop-shadow-lg'} hover:bg-white/20 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary`} style={{textShadow: isScrolled ? '0 1px 6px rgba(255,255,255,0.2)' : '0 2px 10px rgba(0,0,0,0.5)'}}>
               Cómo funciona
             </a>
-            <a href="#faq" onClick={handleAnchorClick('faq')} className={`${isScrolled ? 'text-gray-700' : 'text-white'} hover:text-primary transition-colors`}>
+            <a href="#faq" onClick={handleAnchorClick('faq')} className={`px-3 py-1 rounded font-semibold transition-colors duration-200 shadow-sm ${isScrolled ? 'text-gray-800' : 'text-white drop-shadow-lg'} hover:bg-white/20 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary`} style={{textShadow: isScrolled ? '0 1px 6px rgba(255,255,255,0.2)' : '0 2px 10px rgba(0,0,0,0.5)'}}>
               FAQ
             </a>
-            <a href="#contacto" onClick={handleAnchorClick('contacto')} className={`${isScrolled ? 'text-gray-700' : 'text-white'} hover:text-primary transition-colors`}>
+            <a href="#contacto" onClick={handleAnchorClick('contacto')} className={`px-3 py-1 rounded font-semibold transition-colors duration-200 shadow-sm ${isScrolled ? 'text-gray-800' : 'text-white drop-shadow-lg'} hover:bg-white/20 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary`} style={{textShadow: isScrolled ? '0 1px 6px rgba(255,255,255,0.2)' : '0 2px 10px rgba(0,0,0,0.5)'}}>
               Contacto
             </a>
           </div>

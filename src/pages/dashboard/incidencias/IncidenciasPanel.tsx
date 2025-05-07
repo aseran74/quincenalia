@@ -223,6 +223,17 @@ const IncidenciasPanel = () => {
                                     {incident.status.charAt(0).toUpperCase() + incident.status.slice(1)}
                                 </span>
                              </div>
+                             <Button
+                               size="sm"
+                               variant="outline"
+                               onClick={e => {
+                                 e.stopPropagation();
+                                 navigate(`/dashboard/admin/incidents/${incident.id}`);
+                               }}
+                               className="mt-2"
+                             >
+                               Ver detalle
+                             </Button>
                         </CardContent>
                     </Card>
                  );

@@ -16,7 +16,7 @@ app.use(cors());
 app.use(express.json());
 
 // Ruta principal para obtener propiedades
-app.get('/propiedades', async (req, res) => {
+app.get('/properties', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('properties')
@@ -43,7 +43,7 @@ app.get('/propiedades', async (req, res) => {
 });
 
 // Ruta para obtener propiedades con filtros
-app.get('/propiedades/filtrar', async (req, res) => {
+app.get('/properties/filtrar', async (req, res) => {
   try {
     const {
       bedrooms,

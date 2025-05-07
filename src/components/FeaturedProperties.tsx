@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import type { Database } from '@/types/supabase';
-import { Bed, Bath, SquareArrowUp, MapPin, ChevronDown } from 'lucide-react';
+import { Bed, Bath, SquareArrowUp, MapPin, ChevronDown, Home } from 'lucide-react';
 
 type Property = Database['public']['Tables']['properties']['Row'];
 
@@ -36,7 +36,7 @@ const PropertyCard = ({ property }: { property: any }) => {
   const minShare = getMinSharePrice(property);
   const monthly = minShare ? calculateMonthlyPayment(minShare) : null;
   return (
-    <Link to={`/propiedades/${property.id}`} className="group block h-full">
+    <Link to={`/properties/${property.id}`} className="group block h-full">
       <Card className="overflow-hidden h-80 flex flex-col border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 bg-card p-0">
         <div className="relative w-full h-full flex-1">
           <img
@@ -60,19 +60,36 @@ const PropertyCard = ({ property }: { property: any }) => {
             </div>
             {/* Contenido principal sobre la imagen */}
             <div className="flex-1 flex flex-col justify-center items-start px-6 pb-6 pt-2 z-20">
-              <div className="bg-gray-900/70 rounded-lg px-4 py-3 backdrop-blur-sm w-fit max-w-full">
+              {/* Bloque de info abajo a la derecha en escritorio, centrado abajo en móvil */}
+              <div
+                className="bg-gray-900/70 rounded-lg px-4 py-2 drop-shadow flex flex-col gap-1 max-w-[90%] absolute right-4 bottom-4 sm:right-4 sm:bottom-4 z-20"
+                style={{ minWidth: '180px' }}
+              >
                 <h3 className="text-lg font-bold mb-2 text-white drop-shadow truncate w-full" title={property.title}>
                   {property.title}
                 </h3>
-                <div className="flex items-center text-xs text-gray-200 space-x-3 mb-2">
-                  <span className="flex items-center" title={`${property.bedrooms} habitaciones`}>
-                    <Bed className="w-3.5 h-3.5 mr-1"/> {property.bedrooms}
+                <div className="flex flex-wrap sm:flex-nowrap items-center text-xs text-primary space-x-0 sm:space-x-6 mb-2 gap-y-2">
+                  {/* Tipo de vivienda */}
+                  {property.type && (
+                    <span className="flex items-center gap-1 border-r border-primary/30 pr-3 sm:pr-6 last:border-none" title={property.type}>
+                      <Home className="w-4 h-4 text-white" />
+                      <span className="font-medium text-white">{property.type}</span>
+                    </span>
+                  )}
+                  {/* Habitaciones */}
+                  <span className="flex items-center gap-1 border-r border-primary/30 pr-3 sm:pr-6 last:border-none" title={`${property.bedrooms} habitaciones`}>
+                    <Bed className="w-4 h-4 text-white" />
+                    <span className="font-medium text-white">{property.bedrooms}</span>
                   </span>
-                  <span className="flex items-center" title={`${property.bathrooms} baños`}>
-                    <Bath className="w-3.5 h-3.5 mr-1"/> {property.bathrooms}
+                  {/* Baños */}
+                  <span className="flex items-center gap-1 border-r border-primary/30 pr-3 sm:pr-6 last:border-none" title={`${property.bathrooms} baños`}>
+                    <Bath className="w-4 h-4 text-white" />
+                    <span className="font-medium text-white">{property.bathrooms}</span>
                   </span>
-                  <span className="flex items-center" title={`${property.area} m²`}>
-                    <SquareArrowUp className="w-3.5 h-3.5 mr-1"/> {property.area}m²
+                  {/* Metros cuadrados */}
+                  <span className="flex items-center gap-1" title={`${property.area} m²`}>
+                    <SquareArrowUp className="w-4 h-4 text-white" />
+                    <span className="font-medium text-white">{property.area}m²</span>
                   </span>
                 </div>
                 {property.location && (

@@ -185,7 +185,7 @@ function ComoFunciona() {
         <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4 text-gray-800">Tu Segunda Residencia, Reinventada</h2>
         <p className="text-lg text-center text-gray-600 mb-10 sm:mb-12 max-w-3xl mx-auto">Descubre cómo Quincenalia combina propiedad, disfrute y rentabilidad de forma única.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-          {steps.slice(0, 3).map((step, index) => (
+          {steps.map((step, index) => (
             <Card key={index} className="bg-white/80 backdrop-blur-sm border border-gray-100 shadow-sm hover:shadow-lg transition-shadow duration-300">
               <CardHeader className="flex flex-row items-center gap-4 pb-2">
                   <div className="bg-primary/10 p-2 rounded-full">
@@ -200,22 +200,7 @@ function ComoFunciona() {
           ))}
         </div>
         <div className={`transition-all duration-500 ease-in-out overflow-hidden ${expandido ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-             {steps.slice(3).map((step, index) => (
-                <Card key={index} className="bg-white/80 backdrop-blur-sm border border-gray-100 shadow-sm hover:shadow-lg transition-shadow duration-300">
-                  <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                      <div className="bg-primary/10 p-2 rounded-full">
-                          <step.icon className="w-6 h-6 text-primary" />
-                      </div>
-                      <CardTitle className="text-lg font-semibold">{step.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                      <p className="text-sm text-gray-600">{step.text}</p>
-                  </CardContent>
-                </Card>
-              ))}
-           </div>
-            <div className="text-center text-sm sm:text-base text-gray-700 max-w-3xl mx-auto space-y-4">
+           <div className="text-center text-sm sm:text-base text-gray-700 max-w-3xl mx-auto space-y-4">
                  <p><strong>¿Por qué conformarte con alquilar cuando puedes ser propietario?</strong> Inspirados en soluciones inteligentes, hemos creado un modelo que te da lo mejor de todos los mundos.</p>
                  <div className="text-left inline-block bg-white p-4 rounded-lg border shadow-sm">
                     <p className="font-semibold text-primary mb-2">Beneficios Clave:</p>

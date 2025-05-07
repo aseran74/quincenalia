@@ -450,41 +450,44 @@ export const PropertyDetail = () => {
                 <div className="lg:col-span-2 space-y-6 sm:space-y-8">
                     <div id="caracteristicas" className="bg-gray-50 rounded-lg p-4 sm:p-6">
                         <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Detalles Principales</h2>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-                            <div className="text-center p-3 bg-white rounded-lg border flex flex-col items-center justify-center">
-                                {(() => {
-                                  // Iconos para tipos de vivienda
-                                  const typeIcons: { [key: string]: React.ReactNode } = {
-                                    'Piso': <Building className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 mb-1" />,
-                                    'Ático': <SquareArrowUp className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 mb-1" />,
-                                    'Dúplex': <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 mb-1" />,
-                                    'Casa independiente': <Home className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 mb-1" />,
-                                    'Casa pareada': <Home className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 mb-1" />,
-                                    'Casa adosada': <Home className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 mb-1" />,
-                                    'Casa rústica': <TreePalm className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 mb-1" />,
-                                  };
-                                  return typeIcons[property.type || ''] || <Home className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600 mb-1" />;
-                                })()}
-                                <p className="text-xs sm:text-sm text-gray-600">Tipo</p>
-                                <p className="text-base sm:text-lg font-semibold capitalize">{property.type || 'N/A'}</p>
-                            </div>
-                            <div className="text-center p-3 bg-white rounded-lg border flex flex-col items-center justify-center">
-                                <Bed className="w-6 h-6 sm:w-7 sm:h-7 text-blue-500 mb-1" />
-                                <p className="text-xs sm:text-sm text-gray-600">Hab.</p>
-                                <p className="text-base sm:text-lg font-semibold">{property.bedrooms}</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                          {/* Tipo de vivienda */}
+                          <div className="text-center p-3 bg-white rounded-lg border flex flex-col items-center justify-center">
+                            {(() => {
+                              const typeIcons: { [key: string]: React.ReactNode } = {
+                                'Piso': <Building className="w-6 h-6 sm:w-7 sm:h-7 text-primary mb-1" />,
+                                'Ático': <SquareArrowUp className="w-6 h-6 sm:w-7 sm:h-7 text-primary mb-1" />,
+                                'Dúplex': <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-primary mb-1" />,
+                                'Casa independiente': <Home className="w-6 h-6 sm:w-7 sm:h-7 text-primary mb-1" />,
+                                'Casa pareada': <Home className="w-6 h-6 sm:w-7 sm:h-7 text-primary mb-1" />,
+                                'Casa adosada': <Home className="w-6 h-6 sm:w-7 sm:h-7 text-primary mb-1" />,
+                                'Casa rústica': <TreePalm className="w-6 h-6 sm:w-7 sm:h-7 text-primary mb-1" />,
+                              };
+                              return typeIcons[property.type || ''] || <Home className="w-6 h-6 sm:w-7 sm:h-7 text-primary mb-1" />;
+                            })()}
+                            <p className="text-xs sm:text-sm text-gray-600">Tipo</p>
+                            <p className="text-base sm:text-lg font-semibold capitalize">{property.type || 'N/A'}</p>
+                          </div>
+                          {/* Habitaciones */}
+                          <div className="text-center p-3 bg-white rounded-lg border flex flex-col items-center justify-center">
+                            <Bed className="w-6 h-6 sm:w-7 sm:h-7 text-primary mb-1" />
+                            <p className="text-xs sm:text-sm text-gray-600">Hab.</p>
+                            <p className="text-base sm:text-lg font-semibold">{property.bedrooms}</p>
+                          </div>
+                          {/* Baños */}
+                          <div className="text-center p-3 bg-white rounded-lg border flex flex-col items-center justify-center">
+                            <Bath className="w-6 h-6 sm:w-7 sm:h-7 text-primary mb-1" />
+                            <p className="text-xs sm:text-sm text-gray-600">Baños</p>
+                            <p className="text-base sm:text-lg font-semibold">{property.bathrooms}</p>
+                          </div>
+                          {/* Metros cuadrados */}
+                          <div className="text-center p-3 bg-white rounded-lg border flex flex-col items-center justify-center">
+                            <SquareArrowUp className="w-6 h-6 sm:w-7 sm:h-7 text-primary mb-1" />
+                            <p className="text-xs sm:text-sm text-gray-600">Área</p>
+                            <p className="text-base sm:text-lg font-semibold">{property.area} m²</p>
+                          </div>
                         </div>
-                            <div className="text-center p-3 bg-white rounded-lg border flex flex-col items-center justify-center">
-                                <Bath className="w-6 h-6 sm:w-7 sm:h-7 text-blue-500 mb-1" />
-                                <p className="text-xs sm:text-sm text-gray-600">Baños</p>
-                                <p className="text-base sm:text-lg font-semibold">{property.bathrooms}</p>
-                      </div>
-                            <div className="text-center p-3 bg-white rounded-lg border flex flex-col items-center justify-center">
-                                <Square className="w-6 h-6 sm:w-7 sm:h-7 text-blue-500 mb-1" />
-                                <p className="text-xs sm:text-sm text-gray-600">Área</p>
-                                <p className="text-base sm:text-lg font-semibold">{property.area} m²</p>
-                  </div>
-                </div>
-              </div>
+                    </div>
                     <div id="descripcion" className="bg-gray-50 rounded-lg p-4 sm:p-6">
                         <h2 className="text-lg sm:text-xl font-semibold mb-3 text-gray-700">Descripción</h2>
                         <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{property.description || "No hay descripción disponible."}</p>

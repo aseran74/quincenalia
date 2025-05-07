@@ -43,7 +43,7 @@ const IncidentDetail: React.FC = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('incidents')
-        .select('*, properties(title), profiles!incidents_owner_id_fkey(first_name, last_name)')
+        .select('*, properties(title), profiles!fk_incidents_owner(first_name, last_name)')
         .eq('id', id)
         .single();
       if (error) {

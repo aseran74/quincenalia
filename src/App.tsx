@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
@@ -48,6 +48,11 @@ const Profile = () => (
   </div>
 );
 
+function RedirectToProperties() {
+  const { id } = useParams();
+  return <Navigate to={`/properties/${id}`} replace />;
+}
+
 function App() {
   return (
     <Router>
@@ -57,8 +62,12 @@ function App() {
           {/* Rutas públicas */}
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/propiedades" element={<PropertiesPage />} />
+          <Route path="/properties" element={<PropertiesPage />} />
           <Route path="/properties/:id" element={<PublicPropertyDetail />} />
+          {/* Redirección de /propiedades a /properties */}
+          <Route path="/propiedades" element={<Navigate to="/properties" replace />} />
+          {/* Redirección de /propiedades/:id a /properties/:id */}
+          <Route path="/propiedades/:id" element={<RedirectToProperties />} />
           
           {/* Ruta por defecto del dashboard que redirige según el rol */}
           <Route 

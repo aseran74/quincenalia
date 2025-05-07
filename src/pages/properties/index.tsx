@@ -78,7 +78,12 @@ const FEATURES_LIST = [
 ];
 
 const formatPriceSimple = (price: number) => {
-  return price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  return price.toLocaleString('es-ES', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
 };
 
 // Helper para obtener el precio de copropiedad más bajo
@@ -188,13 +193,6 @@ export const PropertiesPage = () => {
   const PropertyCard = ({ property }: { property: Property }) => {
     const [imgIdx, setImgIdx] = useState(0);
     const totalImgs = property.images && property.images.length > 0 ? property.images.length : 0;
-    useEffect(() => {
-      if (totalImgs <= 1) return;
-      const interval = setInterval(() => {
-        setImgIdx(idx => (idx + 1) % totalImgs);
-      }, 2500);
-      return () => clearInterval(interval);
-    }, [totalImgs]);
     const imageUrl = property.images && property.images.length > 0 ? property.images[imgIdx] : '/placeholder-property.jpg';
     const minShare = getMinSharePrice(property);
     const monthly = minShare ? calcularCuotaHipoteca(minShare) : null;
@@ -220,46 +218,99 @@ export const PropertiesPage = () => {
                   Precio total: {formatPriceSimple(property.price)}
                 </span>
               </div>
-              {/* Contenido principal sobre la imagen */}
-              <div className="flex-1 flex flex-col justify-center items-start px-6 pb-6 pt-2 z-20">
-                <div className="bg-gray-900/70 rounded-lg px-4 py-3 backdrop-blur-sm w-fit max-w-full">
-                  <h3 className="text-lg font-bold mb-2 text-white drop-shadow truncate w-full" title={property.title}>
-                    {property.title}
-                  </h3>
-                  <div className="flex items-center text-xs text-gray-200 space-x-3 mb-2">
-                    <span className="flex items-center" title={`${property.bedrooms} habitaciones`}>
-                      <Bed className="w-3.5 h-3.5 mr-1"/> {property.bedrooms}
+              {/* Bloque de info más abajo, separado de la barra de navegación */}
+              <div
+                className="bg-gray-900/70 rounded-lg px-4 py-2 drop-shadow flex flex-col gap-1 max-w-[90%] absolute right-4 bottom-2 sm:right-4 sm:bottom-2 z-20 text-right items-end"
+                style={{ minWidth: '180px' }}
+              >
+                <h3 className="text-base font-bold mb-2 text-white drop-shadow truncate w-full text-right" title={property.title}>
+                  {property.title}
+                </h3>
+                <div className="flex flex-wrap sm:flex-nowrap items-center text-[10px] text-white space-x-0 sm:space-x-6 mb-2 gap-y-2 justify-end w-full">
+                  {/* Tipo de vivienda */}
+                  {property.type && (
+                    <span className="flex items-center gap-1 border-r border-white/30 pr-3 sm:pr-6 last:border-none" title={property.type}>
+                      <Home className="w-3 h-3 text-white" />
+                      <span className="font-medium">{property.type}</span>
                     </span>
-                    <span className="flex items-center" title={`${property.bathrooms} baños`}>
-                      <Bath className="w-3.5 h-3.5 mr-1"/> {property.bathrooms}
-                    </span>
-                    <span className="flex items-center" title={`${property.area} m²`}>
-                      <SquareArrowUp className="w-3.5 h-3.5 mr-1"/> {property.area}m²
-                    </span>
-                  </div>
-                  {property.location && (
-                    <p className="text-xs text-gray-200 mb-1 flex items-center">
-                      <MapPin className="w-3 h-3 mr-1 flex-shrink-0"/>
-                      <span className="truncate">{property.location}</span>
-                    </p>
                   )}
+                  {/* Habitaciones */}
+                  <span className="flex items-center gap-1 border-r border-white/30 pr-3 sm:pr-6 last:border-none" title={`${property.bedrooms} habitaciones`}>
+                    <Bed className="w-3 h-3 text-white" />
+                    <span className="font-medium">{property.bedrooms}</span>
+                  </span>
+                  {/* Baños */}
+                  <span className="flex items-center gap-1 border-r border-white/30 pr-3 sm:pr-6 last:border-none" title={`${property.bathrooms} baños`}>
+                    <Bath className="w-3 h-3 text-white" />
+                    <span className="font-medium">{property.bathrooms}</span>
+                  </span>
+                  {/* Metros cuadrados */}
+                  <span className="flex items-center gap-1" title={`${property.area} m²`}>
+                    <SquareArrowUp className="w-3 h-3 text-white" />
+                    <span className="font-medium">{property.area}m²</span>
+                  </span>
                 </div>
+                {property.location && (
+                  <p className="text-xs text-gray-200 mb-1 flex items-center justify-end w-full text-right">
+                    <MapPin className="w-3 h-3 mr-1 flex-shrink-0"/>
+                    <span className="truncate">{property.location}</span>
+                  </p>
+                )}
               </div>
               {/* Footer sobre la imagen */}
               {monthly && (
                 <div className="px-6 pb-4 pt-2">
                   <span className="inline-block bg-primary/90 text-white font-semibold text-base px-4 py-2 rounded-lg shadow">
-                    {formatPriceSimple(Math.round(monthly))} <span className="text-xs text-gray-200 font-normal">/mes*</span>
+                    {formatPriceSimple(Math.round(monthly || 0))} <span className="text-xs text-gray-200 font-normal">/mes*</span>
                   </span>
                 </div>
               )}
-              {/* Puntos del carrusel si hay varias imágenes */}
+              {/* Barra de navegación de fotos: flechas en extremos, puntos en el centro */}
               {totalImgs > 1 && (
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1 z-20">
-                  {property.images.map((_, i) => (
-                    <span key={i} className={`w-2 h-2 rounded-full ${i === imgIdx ? 'bg-white' : 'bg-white/40'}`}></span>
-                  ))}
-                </div>
+                <>
+                  {/* Flecha izquierda */}
+                  <button
+                    type="button"
+                    aria-label="Anterior"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/70 text-white rounded-full p-1 shadow transition-colors z-20"
+                    onClick={e => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setImgIdx(idx => (idx - 1 + totalImgs) % totalImgs);
+                    }}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  {/* Puntos en el centro */}
+                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 z-20">
+                    {property.images.map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        aria-label={`Imagen ${i + 1}`}
+                        className={`w-2.5 h-2.5 rounded-full border border-white mx-0.5 ${i === imgIdx ? 'bg-white' : 'bg-white/40'}`}
+                        onClick={e => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setImgIdx(i);
+                        }}
+                      />
+                    ))}
+                  </div>
+                  {/* Flecha derecha */}
+                  <button
+                    type="button"
+                    aria-label="Siguiente"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/70 text-white rounded-full p-1 shadow transition-colors z-20"
+                    onClick={e => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setImgIdx(idx => (idx + 1) % totalImgs);
+                    }}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -577,7 +628,7 @@ export const PropertiesPage = () => {
                   >
                     <div className="relative min-w-[230px] max-w-[270px] h-[200px] bg-card rounded-lg shadow-xl overflow-hidden font-poppins">
                       <a
-                        href={`${window.location.origin}/propiedades/${selectedMapProperty.id}`}
+                        href={`${window.location.origin}/properties/${selectedMapProperty.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="block w-full h-full"
@@ -598,39 +649,10 @@ export const PropertiesPage = () => {
                           />
                         )}
                       </a>
-                      {/* Botones del carrusel, superpuestos si hay múltiples imágenes */}
-                      {selectedMapProperty.images && selectedMapProperty.images.length > 1 && (
-                        <>
-                          <button
-                            type="button"
-                            aria-label="Imagen anterior"
-                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 shadow-md z-20 transition-colors"
-                            onClick={e => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setCarouselIndex((prevIndex) => (prevIndex - 1 + selectedMapProperty.images!.length) % selectedMapProperty.images!.length);
-                            }}
-                          >
-                            <ChevronLeft className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            aria-label="Siguiente imagen"
-                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 shadow-md z-20 transition-colors"
-                            onClick={e => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setCarouselIndex((prevIndex) => (prevIndex + 1) % selectedMapProperty.images!.length);
-                            }}
-                          >
-                            <ChevronRight className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
                       {/* Información de la propiedad, superpuesta en la parte inferior de la card */}
                       <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 via-black/60 to-transparent text-white z-10">
                         <a
-                          href={`${window.location.origin}/propiedades/${selectedMapProperty.id}`}
+                          href={`${window.location.origin}/properties/${selectedMapProperty.id}`}
                           className="font-semibold text-sm block hover:underline truncate"
                           target="_blank"
                           rel="noopener noreferrer"
