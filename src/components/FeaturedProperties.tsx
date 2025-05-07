@@ -36,7 +36,7 @@ const PropertyCard = ({ property }: { property: any }) => {
   const minShare = getMinSharePrice(property);
   const monthly = minShare ? calculateMonthlyPayment(minShare) : null;
   return (
-    <Link to={`/properties/${property.id}`} className="group block h-full">
+    <Link to={`/propiedades/${property.id}`} className="group block h-full">
       <Card className="overflow-hidden h-80 flex flex-col border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 bg-card p-0">
         <div className="relative w-full h-full flex-1">
           <img
