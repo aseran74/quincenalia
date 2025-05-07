@@ -218,45 +218,6 @@ export const PropertiesPage = () => {
                   Precio total: {formatPriceSimple(property.price)}
                 </span>
               </div>
-              {/* Bloque de info más abajo, separado de la barra de navegación */}
-              <div
-                className="bg-gray-900/70 rounded-lg px-4 py-2 drop-shadow flex flex-col gap-1 max-w-[90%] absolute right-4 bottom-2 sm:right-4 sm:bottom-2 z-20 text-right items-end"
-                style={{ minWidth: '180px' }}
-              >
-                <h3 className="text-base font-bold mb-2 text-white drop-shadow truncate w-full text-right" title={property.title}>
-                  {property.title}
-                </h3>
-                <div className="flex flex-wrap sm:flex-nowrap items-center text-[10px] text-white space-x-0 sm:space-x-6 mb-2 gap-y-2 justify-end w-full">
-                  {/* Tipo de vivienda */}
-                  {property.type && (
-                    <span className="flex items-center gap-1 border-r border-white/30 pr-3 sm:pr-6 last:border-none" title={property.type}>
-                      <Home className="w-3 h-3 text-white" />
-                      <span className="font-medium">{property.type}</span>
-                    </span>
-                  )}
-                  {/* Habitaciones */}
-                  <span className="flex items-center gap-1 border-r border-white/30 pr-3 sm:pr-6 last:border-none" title={`${property.bedrooms} habitaciones`}>
-                    <Bed className="w-3 h-3 text-white" />
-                    <span className="font-medium">{property.bedrooms}</span>
-                  </span>
-                  {/* Baños */}
-                  <span className="flex items-center gap-1 border-r border-white/30 pr-3 sm:pr-6 last:border-none" title={`${property.bathrooms} baños`}>
-                    <Bath className="w-3 h-3 text-white" />
-                    <span className="font-medium">{property.bathrooms}</span>
-                  </span>
-                  {/* Metros cuadrados */}
-                  <span className="flex items-center gap-1" title={`${property.area} m²`}>
-                    <SquareArrowUp className="w-3 h-3 text-white" />
-                    <span className="font-medium">{property.area}m²</span>
-                  </span>
-                </div>
-                {property.location && (
-                  <p className="text-xs text-gray-200 mb-1 flex items-center justify-end w-full text-right">
-                    <MapPin className="w-3 h-3 mr-1 flex-shrink-0"/>
-                    <span className="truncate">{property.location}</span>
-                  </p>
-                )}
-              </div>
               {/* Footer sobre la imagen */}
               {monthly && (
                 <div className="px-6 pb-4 pt-2">
@@ -314,6 +275,20 @@ export const PropertiesPage = () => {
               )}
             </div>
           </div>
+          <CardFooter className="bg-white/90 px-4 py-3 border-t flex flex-col gap-1 items-center text-center">
+            <h3 className="text-base font-bold text-gray-900 truncate w-full text-center" title={property.title}>{property.title}</h3>
+            {property.location && (
+              <p className="text-xs text-gray-500 truncate flex items-center justify-center w-full text-center" title={property.location}>
+                <MapPin className="w-3 h-3 mr-1 flex-shrink-0 text-gray-400" />
+                {property.location}
+              </p>
+            )}
+            <div className="flex items-center gap-4 mt-1 justify-center">
+              <span className="flex items-center gap-1 text-gray-600 text-xs"><Bed className="w-4 h-4" />{property.bedrooms}</span>
+              <span className="flex items-center gap-1 text-gray-600 text-xs"><Bath className="w-4 h-4" />{property.bathrooms}</span>
+              <span className="flex items-center gap-1 text-gray-600 text-xs"><SquareArrowUp className="w-4 h-4" />{property.area}m²</span>
+            </div>
+          </CardFooter>
         </Card>
       </Link>
     );
