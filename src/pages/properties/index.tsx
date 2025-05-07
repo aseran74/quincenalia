@@ -577,7 +577,7 @@ export const PropertiesPage = () => {
                   >
                     <div className="relative min-w-[230px] max-w-[270px] h-[200px] bg-card rounded-lg shadow-xl overflow-hidden font-poppins">
                       <Link
-                        to={`/properties/${selectedMapProperty.id}`}
+                        to={`/propiedades/${selectedMapProperty.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="block w-full h-full"
@@ -630,7 +630,7 @@ export const PropertiesPage = () => {
                       {/* Información de la propiedad, superpuesta en la parte inferior de la card */}
                       <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 via-black/60 to-transparent text-white z-10">
                         <Link
-                          to={`/properties/${selectedMapProperty.id}`}
+                          to={`/propiedades/${selectedMapProperty.id}`}
                           className="font-semibold text-sm block hover:underline truncate"
                           target="_blank"
                           rel="noopener noreferrer"
