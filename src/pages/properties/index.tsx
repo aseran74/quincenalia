@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   LayoutGrid, MapPin, Home, Bed, Bath, Building, TreePalm, SquareArrowUp, Building2, Warehouse, UserCheck, Waves, Sparkles, ParkingCircle, Wind, SlidersHorizontal, ChevronDown, ChevronUp, Filter, X, Plus, Minus, Check, Search, Trash2, ArrowLeft, Info, ChevronLeft, ChevronRight, X as XIcon
 } from 'lucide-react';
-import { GoogleMap, LoadScript, Marker, InfoWindow, Autocomplete } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
@@ -121,8 +121,6 @@ export const PropertiesPage = () => {
   const [selectedMapProperty, setSelectedMapProperty] = useState<Property | null>(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [mapsLoaded, setMapsLoaded] = useState(false);
-  const locationInputRef = useRef<HTMLInputElement>(null);
-  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -277,25 +275,14 @@ export const PropertiesPage = () => {
           {/* ¿Dónde buscas? */}
           <div>
             <label htmlFor="filterLocation" className="block text-xs font-medium text-muted-foreground mb-1">¿Dónde buscas?</label>
-            <Autocomplete
-              onLoad={ac => setAutocomplete(ac)}
-              onPlaceChanged={() => {
-                if (autocomplete && locationInputRef.current) {
-                  const place = autocomplete.getPlace();
-                  setFilters({ ...filters, location: place.formatted_address || place.name || '' });
-                }
-              }}
-            >
-              <input
-                ref={locationInputRef}
-                id="filterLocation"
-                type="text"
-                value={filters.location}
-                onChange={e => setFilters({ ...filters, location: e.target.value })}
-                placeholder="Ciudad, zona, playa..."
-                className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </Autocomplete>
+            <input
+              id="filterLocation"
+              type="text"
+              value={filters.location}
+              onChange={e => setFilters({ ...filters, location: e.target.value })}
+              placeholder="Ciudad, zona, playa..."
+              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
           </div>
           {/* Tipo de Vivienda */}
           <div className="relative w-full sm:w-auto sm:min-w-[200px]" ref={typeChecklistRef}>
