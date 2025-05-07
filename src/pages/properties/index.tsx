@@ -576,8 +576,8 @@ export const PropertiesPage = () => {
                     options={{ pixelOffset: new window.google.maps.Size(0, -15) }}
                   >
                     <div className="relative min-w-[230px] max-w-[270px] h-[200px] bg-card rounded-lg shadow-xl overflow-hidden font-poppins">
-                      <Link
-                        to={`/propiedades/${selectedMapProperty.id}`}
+                      <a
+                        href={`${window.location.origin}/propiedades/${selectedMapProperty.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="block w-full h-full"
@@ -597,7 +597,7 @@ export const PropertiesPage = () => {
                             className="w-full h-full object-cover"
                           />
                         )}
-                      </Link>
+                      </a>
                       {/* Botones del carrusel, superpuestos si hay múltiples imágenes */}
                       {selectedMapProperty.images && selectedMapProperty.images.length > 1 && (
                         <>
@@ -629,15 +629,15 @@ export const PropertiesPage = () => {
                       )}
                       {/* Información de la propiedad, superpuesta en la parte inferior de la card */}
                       <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 via-black/60 to-transparent text-white z-10">
-                        <Link
-                          to={`/propiedades/${selectedMapProperty.id}`}
+                        <a
+                          href={`${window.location.origin}/propiedades/${selectedMapProperty.id}`}
                           className="font-semibold text-sm block hover:underline truncate"
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => { e.stopPropagation(); }}
                         >
                           {selectedMapProperty.title}
-                        </Link>
+                        </a>
                         <div className="text-base font-bold mt-0.5">
                           {getMinSharePrice(selectedMapProperty) ? formatPriceSimple(getMinSharePrice(selectedMapProperty)!) : 'N/A'}
                           <span className="text-xs font-normal opacity-90 ml-1">/copropiedad</span>
