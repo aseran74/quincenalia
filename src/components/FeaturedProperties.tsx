@@ -37,50 +37,62 @@ const PropertyCard = ({ property }: { property: any }) => {
   const monthly = minShare ? calculateMonthlyPayment(minShare) : null;
   return (
     <Link to={`/properties/${property.id}`} className="group block h-full">
-      <Card className="overflow-hidden h-full flex flex-col border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 bg-card">
-        <div className="relative overflow-hidden h-48 flex-shrink-0">
-          {minShare && (
-            <span className="absolute top-2 left-2 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow z-10">
-              Desde {formatPriceSimple(minShare)}
-            </span>
-          )}
+      <Card className="overflow-hidden h-80 flex flex-col border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 bg-card p-0">
+        <div className="relative w-full h-full flex-1">
           <img
             src={imageUrl}
             alt={`Imagen de ${property.title}`}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 z-0"
             onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
           />
-          <span className="absolute bottom-2 left-2 bg-white/80 text-xs text-muted-foreground px-2 py-1 rounded shadow">
-            Precio total: {formatPriceSimple(property.price)}
-          </span>
-        </div>
-        <CardContent className="flex-1 flex flex-col">
-          <h3 className="text-base font-semibold mb-1 text-card-foreground truncate" title={property.title}>
-            {property.title}
-          </h3>
-          <div className="flex items-center text-xs text-muted-foreground space-x-3 mb-2">
-            <span className="flex items-center" title={`${property.bedrooms} habitaciones`}>
-              <Bed className="w-3.5 h-3.5 mr-1"/> {property.bedrooms}
-            </span>
-            <span className="flex items-center" title={`${property.bathrooms} baños`}>
-              <Bath className="w-3.5 h-3.5 mr-1"/> {property.bathrooms}
-            </span>
-            <span className="flex items-center" title={`${property.area} m²`}>
-              <SquareArrowUp className="w-3.5 h-3.5 mr-1"/> {property.area}m²
-            </span>
+          {/* Overlay translúcido gris */}
+          <div className="absolute inset-0 z-10 flex flex-col justify-between">
+            {/* Badge minShare y precio total */}
+            <div className="flex justify-between items-start p-4">
+              {minShare && (
+                <span className="bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow z-20">
+                  Desde {formatPriceSimple(minShare)}
+                </span>
+              )}
+              <span className="bg-white/80 text-xs text-muted-foreground px-2 py-1 rounded shadow z-20 ml-auto">
+                Precio total: {formatPriceSimple(property.price)}
+              </span>
+            </div>
+            {/* Contenido principal sobre la imagen */}
+            <div className="flex-1 flex flex-col justify-center items-start px-6 pb-6 pt-2 z-20">
+              <div className="bg-gray-900/70 rounded-lg px-4 py-3 backdrop-blur-sm w-fit max-w-full">
+                <h3 className="text-lg font-bold mb-2 text-white drop-shadow truncate w-full" title={property.title}>
+                  {property.title}
+                </h3>
+                <div className="flex items-center text-xs text-gray-200 space-x-3 mb-2">
+                  <span className="flex items-center" title={`${property.bedrooms} habitaciones`}>
+                    <Bed className="w-3.5 h-3.5 mr-1"/> {property.bedrooms}
+                  </span>
+                  <span className="flex items-center" title={`${property.bathrooms} baños`}>
+                    <Bath className="w-3.5 h-3.5 mr-1"/> {property.bathrooms}
+                  </span>
+                  <span className="flex items-center" title={`${property.area} m²`}>
+                    <SquareArrowUp className="w-3.5 h-3.5 mr-1"/> {property.area}m²
+                  </span>
+                </div>
+                {property.location && (
+                  <p className="text-xs text-gray-200 mb-1 flex items-center">
+                    <MapPin className="w-3 h-3 mr-1 flex-shrink-0"/>
+                    <span className="truncate">{property.location}</span>
+                  </p>
+                )}
+              </div>
+            </div>
+            {/* Footer sobre la imagen */}
+            {monthly && (
+              <div className="px-6 pb-4 pt-2">
+                <span className="inline-block bg-primary/90 text-white font-semibold text-base px-4 py-2 rounded-lg shadow">
+                  {monthly.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span className="text-xs text-gray-200 font-normal">/mes*</span>
+                </span>
+              </div>
+            )}
           </div>
-          {property.location && (
-            <p className="text-xs text-muted-foreground mb-3 flex items-center mt-auto pt-2">
-              <MapPin className="w-3 h-3 mr-1 flex-shrink-0"/>
-              <span className="truncate">{property.location}</span>
-            </p>
-          )}
-        </CardContent>
-        {monthly && (
-          <CardFooter className="bg-blue-50 border-t px-4 py-2 flex items-center justify-between">
-            <span className="text-primary font-semibold text-base">{monthly.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 })} <span className="text-xs text-gray-500 font-normal">/mes*</span></span>
-          </CardFooter>
-        )}
+        </div>
       </Card>
     </Link>
   );
@@ -98,7 +110,7 @@ export const FeaturedProperties = () => {
           .from('properties')
           .select('*')
           .eq('destacada', true)
-          .limit(6);
+          .limit(4);
         
         if (error) {
           console.error('Supabase error:', error);

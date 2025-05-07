@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import PropertyFilters from '@/components/properties/PropertyFilters';
 import PropertyMapXYZ from '@/components/properties/PropertyMap';
@@ -6,6 +6,10 @@ import { Card } from '@/components/ui/card';
 import { MapIcon, ListBulletIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useLoadScript, Autocomplete } from '@react-google-maps/api';
+
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+const GOOGLE_MAPS_LIBRARIES = ['places'];
 
 const PropertiesSearch = () => {
   const [viewMode, setViewMode] = useState<'map' | 'list'>('list');
@@ -13,6 +17,10 @@ const PropertiesSearch = () => {
   const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [zone, setZone] = useState('');
+  const [zoneInput, setZoneInput] = useState('');
+  const autocompleteRef = useRef<any>(null);
+  const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY, libraries: GOOGLE_MAPS_LIBRARIES });
 
   useEffect(() => {
     setLoading(true);
@@ -31,6 +39,12 @@ const PropertiesSearch = () => {
       setViewMode('list');
     }
   };
+
+  const filteredProperties = zone
+    ? properties.filter((p) =>
+        p.location && p.location.toLowerCase().includes(zone.toLowerCase())
+      )
+    : properties;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -72,6 +86,44 @@ const PropertiesSearch = () => {
         <div className="flex gap-8">
           {/* Filtros */}
           <div className="w-80 flex-shrink-0">
+            <div className="mb-6">
+              <label className="block font-medium mb-2 text-[16px]">Buscar por zona</label>
+              {isLoaded ? (
+                <Autocomplete
+                  onLoad={ref => (autocompleteRef.current = ref)}
+                  onPlaceChanged={() => {
+                    const place = autocompleteRef.current?.getPlace();
+                    if (place && place.formatted_address) {
+                      setZone(place.formatted_address);
+                      setZoneInput(place.formatted_address);
+                    }
+                  }}
+                >
+                  <input
+                    type="text"
+                    className="w-full border rounded px-3 py-2 text-[16px]"
+                    placeholder="Introduce una ciudad, zona o dirección..."
+                    value={zoneInput}
+                    onChange={e => {
+                      setZoneInput(e.target.value);
+                      if (!e.target.value) setZone('');
+                    }}
+                  />
+                </Autocomplete>
+              ) : (
+                <input
+                  type="text"
+                  className="w-full border rounded px-3 py-2 text-[16px]"
+                  placeholder="Introduce una ciudad, zona o dirección..."
+                  value={zoneInput}
+                  onChange={e => {
+                    setZoneInput(e.target.value);
+                    if (!e.target.value) setZone('');
+                  }}
+                  disabled
+                />
+              )}
+            </div>
             <PropertyFilters onFiltersChange={setFilters} />
           </div>
 
@@ -84,7 +136,7 @@ const PropertiesSearch = () => {
               <div className="bg-white rounded-lg shadow-lg h-[calc(100vh-200px)]">
                 <div className="h-full rounded-lg overflow-hidden">
                   <PropertyMapXYZ 
-                    properties={properties.map(p => ({
+                    properties={filteredProperties.map(p => ({
                       ...p,
                       images: Array.isArray(p.images)
                         ? p.images
@@ -100,7 +152,7 @@ const PropertiesSearch = () => {
             ) : (
               // Vista de lista
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {properties.map((property) => (
+                {filteredProperties.map((property) => (
                   <Card 
                     key={property.id} 
                     className={`overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] ${

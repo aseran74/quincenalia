@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ContactForm from '@/components/ContactForm';
+import './HomePage.css';
 
 const FAQS = [
   {
@@ -250,8 +251,7 @@ const HeroParallax = () => {
     <img
       src="/hero.jpg"
       alt="Villa vacacional de lujo con piscina y vistas al mar"
-      className="w-full h-full object-cover animate-zoom-in-out will-change-transform"
-      style={{ transition: 'transform 0.2s cubic-bezier(.4,0,.2,1)' }}
+      className="w-full h-full object-cover hero-image"
     />
   );
 };
@@ -355,9 +355,7 @@ const HomePage = () => {
                 <li className="flex items-center gap-3 text-lg text-gray-700"><Mail className="w-6 h-6 text-primary"/> <a href="mailto:info@quincenalia.com" className="hover:underline">info@quincenalia.com</a></li>
                 <li className="flex items-center gap-3 text-lg text-gray-700"><Phone className="w-6 h-6 text-primary"/> <a href="tel:+914156882" className="hover:underline">+34 914156882 </a></li>
                 <li className="flex items-center gap-3 text-lg text-gray-700"><MapPin className="w-6 h-6 text-primary"/> Avenida de Burgos 155 , Madrid , 28036, España </li>
-                
-                <img src="/logo.png" alt="Quincenalia logo" className="w-20 mx-auto mt-4 mb-6" />
-                </ul>
+              </ul>
             </div>
           </div>
         </div>
@@ -413,15 +411,6 @@ const HomePage = () => {
           </div>
         </div>
       </footer>
-      <style>{`
-        @keyframes zoom-in-out {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.025); }
-        }
-        .animate-zoom-in-out {
-            animation: zoom-in-out 15s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 };

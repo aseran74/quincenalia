@@ -357,7 +357,7 @@ export const PropertyDetail = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.location.href = '/propiedades'}
+              onClick={() => navigate('/propiedades')}
               className="flex items-center gap-2 text-sm"
             >
               <FaArrowLeft className="w-3 h-3" />
