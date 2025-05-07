@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   LayoutGrid, MapPin, Home, Bed, Bath, Building, TreePalm, SquareArrowUp, Building2, Warehouse, UserCheck, Waves, Sparkles, ParkingCircle, Wind, SlidersHorizontal, ChevronDown, ChevronUp, Filter, X, Plus, Minus, Check, Search, Trash2, ArrowLeft, Info, ChevronLeft, ChevronRight, X as XIcon
 } from 'lucide-react';
-import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker, InfoWindow, Autocomplete } from '@react-google-maps/api';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
@@ -22,6 +22,7 @@ type Filters = {
   bathrooms: number | string;
   propertyTypes: string[];
   features: string[];
+  location: string;
 };
 
 const initialFilters: Filters = {
@@ -31,6 +32,7 @@ const initialFilters: Filters = {
   bathrooms: 'any',
   propertyTypes: [],
   features: [],
+  location: '',
 };
 
 const priceOptions = [
@@ -119,6 +121,8 @@ export const PropertiesPage = () => {
   const [selectedMapProperty, setSelectedMapProperty] = useState<Property | null>(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [mapsLoaded, setMapsLoaded] = useState(false);
+  const locationInputRef = useRef<HTMLInputElement>(null);
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -148,7 +152,8 @@ export const PropertiesPage = () => {
       const matchesBathrooms = filters.bathrooms === 'any' || property.bathrooms >= Number(filters.bathrooms);
       const matchesType = filters.propertyTypes.length === 0 || (property.type && filters.propertyTypes.includes(property.type));
       const matchesFeatures = filters.features.length === 0 || (property.features && filters.features.every(f => property.features!.includes(f)));
-      return matchesBedrooms && matchesBathrooms && matchesType && matchesFeatures;
+      const matchesLocation = !filters.location || (property.location && property.location.toLowerCase().includes(filters.location.toLowerCase()));
+      return matchesBedrooms && matchesBathrooms && matchesType && matchesFeatures && matchesLocation;
     });
   };
 
@@ -183,60 +188,83 @@ export const PropertiesPage = () => {
   const numActiveFilters = activeFilterCount();
 
   const PropertyCard = ({ property }: { property: Property }) => {
-    const imageUrl = property.images && property.images.length > 0 ? property.images[0] : '/placeholder-property.jpg';
+    const [imgIdx, setImgIdx] = useState(0);
+    const totalImgs = property.images && property.images.length > 0 ? property.images.length : 0;
+    useEffect(() => {
+      if (totalImgs <= 1) return;
+      const interval = setInterval(() => {
+        setImgIdx(idx => (idx + 1) % totalImgs);
+      }, 2500);
+      return () => clearInterval(interval);
+    }, [totalImgs]);
+    const imageUrl = property.images && property.images.length > 0 ? property.images[imgIdx] : '/placeholder-property.jpg';
     const minShare = getMinSharePrice(property);
+    const monthly = minShare ? calcularCuotaHipoteca(minShare) : null;
     return (
       <Link to={`/properties/${property.id}`} className="group block h-full">
-        <Card className="overflow-hidden h-full flex flex-col border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 bg-card">
-          <div className="relative overflow-hidden h-36 flex-shrink-0">
-            {minShare && (
-              <span className="absolute top-2 left-2 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow z-10">
-                Desde {formatPriceSimple(minShare)}
-              </span>
-            )}
+        <Card className="overflow-hidden h-80 flex flex-col border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 bg-card p-0">
+          <div className="relative w-full h-full flex-1">
             <img
               src={imageUrl}
               alt={`Imagen de ${property.title}`}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 z-0"
               onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
             />
-            <span className="absolute bottom-2 left-2 bg-white/80 text-xs text-muted-foreground px-2 py-1 rounded shadow">
-              Precio total: {formatPriceSimple(property.price)}
-            </span>
-            <span className="absolute bottom-2 right-2 flex items-center gap-1 bg-primary/90 text-white text-xs font-medium px-2 py-1 rounded-full shadow group-hover:bg-primary">
-              <ChevronDown className="h-4 w-4" />
-              Más detalles
-            </span>
-          </div>
-          <CardContent className="p-2 sm:p-3 flex-grow flex flex-col">
-            <h3 className="text-sm font-semibold mb-1 text-card-foreground truncate" title={property.title}>
-                {property.title}
-            </h3>
-            <div className="flex items-center text-xs text-muted-foreground space-x-2 mb-1">
-                <span className="flex items-center" title={`${property.bedrooms} habitaciones`}>
-                    <Bed className="w-3 h-3 mr-1"/> {property.bedrooms}
+            <div className="absolute inset-0 z-10 flex flex-col justify-between">
+              {/* Badge minShare y precio total */}
+              <div className="flex justify-between items-start p-4">
+                {minShare && (
+                  <span className="bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow z-20">
+                    Desde {formatPriceSimple(minShare)}
+                  </span>
+                )}
+                <span className="bg-white/80 text-xs text-muted-foreground px-2 py-1 rounded shadow z-20 ml-auto">
+                  Precio total: {formatPriceSimple(property.price)}
                 </span>
-                <span className="flex items-center" title={`${property.bathrooms} baños`}>
-                    <Bath className="w-3 h-3 mr-1"/> {property.bathrooms}
-                </span>
-                <span className="flex items-center" title={`${property.area} m²`}>
-                    <SquareArrowUp className="w-3 h-3 mr-1"/> {property.area}m²
-                </span>
+              </div>
+              {/* Contenido principal sobre la imagen */}
+              <div className="flex-1 flex flex-col justify-center items-start px-6 pb-6 pt-2 z-20">
+                <div className="bg-gray-900/70 rounded-lg px-4 py-3 backdrop-blur-sm w-fit max-w-full">
+                  <h3 className="text-lg font-bold mb-2 text-white drop-shadow truncate w-full" title={property.title}>
+                    {property.title}
+                  </h3>
+                  <div className="flex items-center text-xs text-gray-200 space-x-3 mb-2">
+                    <span className="flex items-center" title={`${property.bedrooms} habitaciones`}>
+                      <Bed className="w-3.5 h-3.5 mr-1"/> {property.bedrooms}
+                    </span>
+                    <span className="flex items-center" title={`${property.bathrooms} baños`}>
+                      <Bath className="w-3.5 h-3.5 mr-1"/> {property.bathrooms}
+                    </span>
+                    <span className="flex items-center" title={`${property.area} m²`}>
+                      <SquareArrowUp className="w-3.5 h-3.5 mr-1"/> {property.area}m²
+                    </span>
+                  </div>
+                  {property.location && (
+                    <p className="text-xs text-gray-200 mb-1 flex items-center">
+                      <MapPin className="w-3 h-3 mr-1 flex-shrink-0"/>
+                      <span className="truncate">{property.location}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+              {/* Footer sobre la imagen */}
+              {monthly && (
+                <div className="px-6 pb-4 pt-2">
+                  <span className="inline-block bg-primary/90 text-white font-semibold text-base px-4 py-2 rounded-lg shadow">
+                    {formatPriceSimple(Math.round(monthly))} <span className="text-xs text-gray-200 font-normal">/mes*</span>
+                  </span>
+                </div>
+              )}
+              {/* Puntos del carrusel si hay varias imágenes */}
+              {totalImgs > 1 && (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1 z-20">
+                  {property.images.map((_, i) => (
+                    <span key={i} className={`w-2 h-2 rounded-full ${i === imgIdx ? 'bg-white' : 'bg-white/40'}`}></span>
+                  ))}
+                </div>
+              )}
             </div>
-            {property.location && (
-                <p className="text-xs text-muted-foreground mb-1 flex items-center">
-                    <MapPin className="w-3 h-3 mr-1 flex-shrink-0"/>
-                    <span className="truncate">{property.location}</span>
-                </p>
-            )}
-          </CardContent>
-          <CardFooter className="p-2 sm:p-3 pt-0 flex items-center border-t border-border">
-            {minShare && (
-              <span className="text-base font-bold text-primary">
-                {formatPriceSimple(Math.round(calcularCuotaHipoteca(minShare)))} <span className="text-xs text-muted-foreground font-normal">/mes*</span>
-              </span>
-            )}
-          </CardFooter>
+          </div>
         </Card>
       </Link>
     );
@@ -246,6 +274,80 @@ export const PropertiesPage = () => {
     <Card className="mb-6 bg-card border shadow-sm rounded-lg">
       <CardContent className="p-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+          {/* ¿Dónde buscas? */}
+          <div>
+            <label htmlFor="filterLocation" className="block text-xs font-medium text-muted-foreground mb-1">¿Dónde buscas?</label>
+            <Autocomplete
+              onLoad={ac => setAutocomplete(ac)}
+              onPlaceChanged={() => {
+                if (autocomplete && locationInputRef.current) {
+                  const place = autocomplete.getPlace();
+                  setFilters({ ...filters, location: place.formatted_address || place.name || '' });
+                }
+              }}
+            >
+              <input
+                ref={locationInputRef}
+                id="filterLocation"
+                type="text"
+                value={filters.location}
+                onChange={e => setFilters({ ...filters, location: e.target.value })}
+                placeholder="Ciudad, zona, playa..."
+                className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </Autocomplete>
+          </div>
+          {/* Tipo de Vivienda */}
+          <div className="relative w-full sm:w-auto sm:min-w-[200px]" ref={typeChecklistRef}>
+            <label htmlFor="filterTypeButton" className="block text-xs font-medium text-muted-foreground mb-1">Tipo de Vivienda</label>
+            <Button
+                id="filterTypeButton"
+                type="button"
+                variant="outline"
+                className="w-full justify-between text-sm h-9 font-normal"
+                onClick={() => setShowTypeChecklist(v => !v)}
+                aria-expanded={showTypeChecklist}
+            >
+                <span className="truncate pr-2">
+                    {filters.propertyTypes.length === 0
+                    ? 'Cualquiera'
+                    : filters.propertyTypes.length === 1
+                    ? propertyTypesWithIcons.find(t => t.value === filters.propertyTypes[0])?.label || 'Seleccionado'
+                    : `${filters.propertyTypes.length} tipos seleccionados`
+                    }
+                </span>
+                <ChevronDown className={`ml-2 h-4 w-4 transition-transform flex-shrink-0 ${showTypeChecklist ? 'rotate-180' : ''}`} />
+            </Button>
+            {showTypeChecklist && (
+                <div className="absolute z-20 mt-1 w-full max-h-60 overflow-y-auto bg-popover border border-border rounded-md shadow-lg p-2 space-y-1">
+                {propertyTypesWithIcons
+                    .map(type => (
+                    <div key={type.value} className="flex items-center space-x-2 hover:bg-accent rounded p-1.5">
+                         <Checkbox
+                            id={`type-${type.value}`}
+                            checked={filters.propertyTypes.includes(type.value)}
+                            onCheckedChange={(checked) => {
+                            setFilters(f => ({
+                                ...f,
+                                propertyTypes: checked
+                                ? [...f.propertyTypes, type.value]
+                                : f.propertyTypes.filter(v => v !== type.value)
+                            }));
+                            }}
+                            className="h-4 w-4"
+                         />
+                         <label
+                            htmlFor={`type-${type.value}`}
+                            className="text-sm font-medium leading-none flex items-center gap-2 cursor-pointer w-full"
+                         >
+                            {type.icon}
+                            {type.label}
+                         </label>
+                    </div>
+                ))}
+                </div>
+            )}
+          </div>
           {/* Precio Min */}
           <div>
              <label htmlFor="filterMinPrice" className="block text-xs font-medium text-muted-foreground mb-1">Precio Mín.</label>
@@ -326,57 +428,6 @@ export const PropertiesPage = () => {
         </div>
         {/* Fila para Tipo y Botón Avanzados */}
         <div className="mt-4 pt-4 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-           {/* Tipo de Vivienda (Checklist desplegable) */}
-           <div className="relative w-full sm:w-auto sm:min-w-[200px]" ref={typeChecklistRef}>
-                <label htmlFor="filterTypeButton" className="block text-xs font-medium text-muted-foreground mb-1">Tipo de Vivienda</label>
-                <Button
-                    id="filterTypeButton"
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-between text-sm h-9 font-normal"
-                    onClick={() => setShowTypeChecklist(v => !v)}
-                    aria-expanded={showTypeChecklist}
-                >
-                    <span className="truncate pr-2">
-                        {filters.propertyTypes.length === 0
-                        ? 'Cualquiera'
-                        : filters.propertyTypes.length === 1
-                        ? propertyTypesWithIcons.find(t => t.value === filters.propertyTypes[0])?.label || 'Seleccionado'
-                        : `${filters.propertyTypes.length} tipos seleccionados`
-                        }
-                    </span>
-                    <ChevronDown className={`ml-2 h-4 w-4 transition-transform flex-shrink-0 ${showTypeChecklist ? 'rotate-180' : ''}`} />
-                </Button>
-                {showTypeChecklist && (
-                    <div className="absolute z-20 mt-1 w-full max-h-60 overflow-y-auto bg-popover border border-border rounded-md shadow-lg p-2 space-y-1">
-                    {propertyTypesWithIcons
-                        .map(type => (
-                        <div key={type.value} className="flex items-center space-x-2 hover:bg-accent rounded p-1.5">
-                             <Checkbox
-                                id={`type-${type.value}`}
-                                checked={filters.propertyTypes.includes(type.value)}
-                                onCheckedChange={(checked) => {
-                                setFilters(f => ({
-                                    ...f,
-                                    propertyTypes: checked
-                                    ? [...f.propertyTypes, type.value]
-                                    : f.propertyTypes.filter(v => v !== type.value)
-                                }));
-                                }}
-                                className="h-4 w-4"
-                             />
-                             <label
-                                htmlFor={`type-${type.value}`}
-                                className="text-sm font-medium leading-none flex items-center gap-2 cursor-pointer w-full"
-                             >
-                                {type.icon}
-                                {type.label}
-                             </label>
-                        </div>
-                    ))}
-                    </div>
-                )}
-           </div>
            {/* Botón Avanzados y Reset */}
            <div className="flex flex-col sm:flex-row gap-2 items-center pt-2 sm:pt-0">
                <Button
