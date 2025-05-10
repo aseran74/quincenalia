@@ -5,11 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { format, isWeekend, addDays } from 'date-fns';
 import ReservationCalendar from '@/pages/dashboard/properties/ReservationCalendar';
-
-interface Property {
-  id: string;
-  title: string;
-}
+import type { Property } from '@/types/property';
 
 interface ExchangeProperty {
   id: string;
@@ -64,27 +60,78 @@ const OwnerExchangePanel: React.FC = () => {
       // Obtener propiedades 100% vendidas (sin filtrar por owner)
       const { data: propertiesData } = await supabase
         .from('properties')
-        .select('id, title, share1_status, share2_status, share3_status, share4_status');
+        .select('*');
       // Filtrar en frontend para asegurarnos que todos los shares cumplen
-      const filtered = (propertiesData || []).filter((p: any) =>
-        ['vendido', 'vendida'].includes(p.share1_status) &&
-        ['vendido', 'vendida'].includes(p.share2_status) &&
-        ['vendido', 'vendida'].includes(p.share3_status) &&
-        ['vendido', 'vendida'].includes(p.share4_status)
+      const fullySold = (propertiesData || []).filter((p: any) =>
+        ['vendido', 'vendida'].includes((p.share1_status || '').toLowerCase()) &&
+        ['vendido', 'vendida'].includes((p.share2_status || '').toLowerCase()) &&
+        ['vendido', 'vendida'].includes((p.share3_status || '').toLowerCase()) &&
+        ['vendido', 'vendida'].includes((p.share4_status || '').toLowerCase())
       );
-      setProperties(filtered);
-      if (filtered && filtered.length > 0) {
-        setSelectedProperty(filtered[0].id);
+      // Filtrar para que NO sea propietario de ningún share
+      const notMine = fullySold.filter((p: any) =>
+        [p.share1_owner_id, p.share2_owner_id, p.share3_owner_id, p.share4_owner_id].every((id: string) => id !== user?.id)
+      );
+      setProperties(notMine);
+      if (notMine && notMine.length > 0) {
+        setSelectedProperty(notMine[0].id);
+      }
+      // Obtener los propietarios de la primera propiedad (si existe)
+      if (notMine && notMine.length > 0) {
+        const prop = notMine[0];
+        const ownerIds = [
+          prop.share1_owner_id,
+          prop.share2_owner_id,
+          prop.share3_owner_id,
+          prop.share4_owner_id
+        ].filter(Boolean);
+        if (ownerIds.length > 0) {
+          const { data: ownerProfiles } = await supabase
+            .from('profiles')
+            .select('id, first_name, last_name')
+            .in('id', ownerIds);
+          setOwners(ownerProfiles || []);
+        } else {
+          setOwners([]);
+        }
+      } else {
+        setOwners([]);
       }
       setLoading(false);
     };
     if (user?.id) fetchData();
   }, [user?.id]);
 
+  // Cuando cambia la propiedad seleccionada, actualiza los propietarios
+  useEffect(() => {
+    const fetchOwners = async () => {
+      if (!selectedProperty) { setOwners([]); return; }
+      const prop = properties.find(p => p.id === selectedProperty);
+      if (!prop) { setOwners([]); return; }
+      const ownerIds = [
+        prop.share1_owner_id,
+        prop.share2_owner_id,
+        prop.share3_owner_id,
+        prop.share4_owner_id
+      ].filter(Boolean);
+      if (ownerIds.length > 0) {
+        const { data: ownerProfiles } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name')
+          .in('id', ownerIds);
+        setOwners(ownerProfiles || []);
+      } else {
+        setOwners([]);
+      }
+    };
+    fetchOwners();
+  }, [selectedProperty, properties]);
+
   // Cargar configuración de puntos y reservas pendientes al cambiar de propiedad
   useEffect(() => {
     const fetchConfigAndReservations = async () => {
       if (!selectedProperty) return;
+      console.log('selectedProperty:', selectedProperty);
       // Configuración de puntos
       const { data: configData } = await supabase
         .from('exchange_properties')
@@ -172,6 +219,10 @@ const OwnerExchangePanel: React.FC = () => {
     setPoints(newPoints);
   };
 
+  // Antes de renderizar el calendario, logs de depuración
+  console.log('selectedProperty:', selectedProperty);
+  console.log('properties:', properties);
+
   // Renderizado
   return (
     <div className="w-full max-w-full p-2 sm:p-4 flex flex-col gap-4">
@@ -180,6 +231,18 @@ const OwnerExchangePanel: React.FC = () => {
           <CardTitle>Intercambio de Estancias</CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Mostrar propietarios */}
+          {owners.length > 0 && (
+            <div className="mb-2 text-sm text-gray-700">
+              <div className="font-medium">Propietario{owners.length > 1 ? 's' : ''}:</div>
+              <div>
+                {owners.map(o => (
+                  <span key={o.id} className="inline-block mr-2">{o.first_name} {o.last_name}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* Mostrar puntos del usuario */}
           <div className="mb-2 font-semibold">Tus puntos: <span className="text-blue-600">{points}</span></div>
           <div className="mb-2">
             <label className="font-medium">Propiedad:</label>
@@ -210,6 +273,8 @@ const OwnerExchangePanel: React.FC = () => {
               } : undefined}
               ownerPoints={points}
               onPointsChange={handlePointsChange}
+              selectedDates={selectedDates}
+              onSelectedDatesChange={setSelectedDates}
             />
           </div>
         </CardContent>
@@ -243,7 +308,6 @@ const OwnerExchangePanel: React.FC = () => {
                   <p className="text-sm text-gray-600 mb-3">
                     {r.points} puntos
                   </p>
-                  {/* Aquí puedes añadir acciones si lo deseas */}
                 </div>
               ))
             )}
@@ -288,10 +352,18 @@ const OwnerExchangePanel: React.FC = () => {
               </tbody>
             </table>
           </div>
+          <Button
+            onClick={handleReserve}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold mt-4"
+            disabled={selectedDates.length === 0 || reservationCost > points}
+            title={selectedDates.length === 0 ? 'Selecciona fechas' : reservationCost > points ? 'No tienes suficientes puntos' : 'Reservar'}
+          >
+            Reservar
+          </Button>
         </CardContent>
       </Card>
     </div>
   );
 };
 
-export default OwnerExchangePanel; 
+export default OwnerExchangePanel;

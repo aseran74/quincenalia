@@ -60,6 +60,15 @@ const ComisionesPanel: React.FC = () => {
     setDetalle({ ...detalle, ...editData });
   };
 
+  const handleDelete = async () => {
+    if (!detalle) return;
+    if (!window.confirm('¿Seguro que deseas eliminar esta comisión? Esta acción no se puede deshacer.')) return;
+    await supabase.from('commissions').delete().eq('id', detalle.id);
+    toast({ title: 'Comisión eliminada', variant: 'destructive' });
+    setDetalle(null);
+    fetchComisiones();
+  };
+
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto font-poppins">
       <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
@@ -152,7 +161,8 @@ const ComisionesPanel: React.FC = () => {
                   <div className="mb-2"><b>Estado:</b> {ESTADOS.find(e => e.value === detalle.status)?.label || detalle.status}</div>
                   <div className="mb-2"><b>Fecha de creación:</b> {new Date(detalle.created_at).toLocaleString()}</div>
                   <Button size="sm" className="bg-blue-600 text-white px-3 py-1 rounded mt-2 mr-2" onClick={() => handleEdit(detalle)}>Editar</Button>
-                  <Button size="sm" variant="outline" className="bg-gray-100 px-3 py-1 rounded mt-2" onClick={() => setDetalle(null)}>Cerrar</Button>
+                  <Button size="sm" variant="outline" className="bg-gray-100 px-3 py-1 rounded mt-2 mr-2" onClick={() => setDetalle(null)}>Cerrar</Button>
+                  <Button size="sm" variant="destructive" className="bg-red-600 text-white px-3 py-1 rounded mt-2" onClick={handleDelete}>Eliminar</Button>
                 </>
               ) : (
                 <>

@@ -206,6 +206,24 @@ const AdminExchangePanel: React.FC = () => {
 
   const handleStatusChange = async (id: string, status: string) => {
     setLoading(true);
+    // Si se aprueba, primero obtenemos la reserva para saber owner, puntos y propiedad
+    let reservation = null;
+    if (status === 'aprobada') {
+      const { data, error } = await supabase
+        .from('exchange_reservations')
+        .select('owner_id, points_used, property_id')
+        .eq('id', id)
+        .single();
+      if (!error && data) {
+        reservation = data;
+        // Restar puntos al owner y repartir a copropietarios
+        await supabase.rpc('restar_y_repartir_puntos_owner', {
+          ownerid: data.owner_id,
+          puntos: data.points_used,
+          propertyid: data.property_id
+        });
+      }
+    }
     const { error } = await supabase
       .from('exchange_reservations')
       .update({ status })

@@ -59,7 +59,19 @@ const OwnerSoldProperties: React.FC = () => {
         // Propiedades con comisión
         const withCommission = allProperties.filter((p: any) => commissionPropertyIds.has(p.id));
         // Unir ambos arrays sin duplicados
-        const merged = [...fullySold, ...withCommission.filter(p => !fullySold.some(fs => fs.id === p.id))];
+        let merged = [...fullySold, ...withCommission.filter(p => !fullySold.some(fs => fs.id === p.id))];
+        // Excluir propiedades donde el usuario NO es propietario de ningún share
+        if (user && user.id) {
+          merged = merged.filter((p: any) => {
+            const owners = [
+              p.share1_owner_id ?? '',
+              p.share2_owner_id ?? '',
+              p.share3_owner_id ?? '',
+              p.share4_owner_id ?? ''
+            ];
+            return owners.includes(user.id);
+          });
+        }
         setProperties(merged);
         setFilteredProperties(merged);
       } else {

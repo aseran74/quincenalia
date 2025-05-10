@@ -54,6 +54,8 @@ interface ReservationCalendarProps {
   };
   ownerPoints?: number;
   onPointsChange?: (newPoints: number) => void;
+  selectedDates?: Date[];
+  onSelectedDatesChange?: (dates: Date[]) => void;
 }
 
 // --- Configuración del Calendario ---
@@ -76,7 +78,7 @@ const exchangeStatusColors: Record<string, string> = {
   'cancelada': '#cccccc', // gris
 };
 
-const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, exchangeMode = false, pointsConfig, ownerPoints, onPointsChange }) => {
+const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, exchangeMode = false, pointsConfig, ownerPoints, onPointsChange, selectedDates, onSelectedDatesChange }) => {
   const { user } = useAuth();
   const params = useParams();
   const navigate = useNavigate();
@@ -99,11 +101,6 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
         let query = supabase
           .from('properties')
           .select('id, title, share1_owner_id, share2_owner_id, share3_owner_id, share4_owner_id');
-
-        // Si es propietario, solo mostrar sus propiedades
-        if (user?.role === 'owner') {
-          query = query.or(`share1_owner_id.eq.${user.id},share2_owner_id.eq.${user.id},share3_owner_id.eq.${user.id},share4_owner_id.eq.${user.id}`);
-        }
 
         const { data, error: dbError } = await query;
 
@@ -179,6 +176,13 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
             const userOwner = propietariosConShare.find(o => o.id === user.id);
             if (userOwner) {
               setOwnerSeleccionado(userOwner);
+            } else if (exchangeMode) {
+              setOwnerSeleccionado({
+                id: user.id,
+                first_name: (user as any).first_name || '',
+                last_name: (user as any).last_name || '',
+                shareLabel: 'Intercambio'
+              });
             }
           }
           // Si el usuario es admin, seleccionar automáticamente el primer propietario
@@ -201,7 +205,7 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
           .eq('property_id', propiedadSeleccionada.id);
         if (exchangeError) throw exchangeError;
 
-        // Unir ambas reservas
+        // Unir ambas reservas (todas las de intercambio y normales, sin filtrar por estado ni owner)
         const allReservations = [
           ...(reservationsData || []),
           ...((exchangeData || []).map(r => ({
@@ -212,6 +216,18 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
         ];
         setReservas(allReservations);
 
+        // --- Añadir owners de reservas que no estén en propietarios ---
+        const allOwnerIds = Array.from(new Set(allReservations.map(r => r.owner_id)));
+        const missingOwnerIds = allOwnerIds.filter(id => !propietarios.some(o => o.id === id));
+        let extraOwners: any[] = [];
+        if (missingOwnerIds.length > 0) {
+          const { data: extraOwnersData } = await supabase
+            .from('profiles')
+            .select('id, first_name, last_name')
+            .in('id', missingOwnerIds);
+          extraOwners = extraOwnersData || [];
+        }
+        setPropietarios([...propietarios, ...extraOwners]);
       } catch (error) {
         console.error('Error al cargar datos:', error);
         setError('Error al cargar los datos de la propiedad');
@@ -391,6 +407,7 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
   };
 
   // --- Mapeo de Reservas a Eventos del Calendario ---
+  console.log('Reservas para el calendario:', reservas);
   const events: CalendarEvent[] = reservas.map((r) => {
     const owner = propietarios.find((p) => p.id === r.owner_id);
     const startDate = new Date(r.start_date + 'T00:00:00Z');
@@ -400,7 +417,8 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
       start: startDate,
       end: endDate,
       owner_id: r.owner_id,
-      ...(r.isExchange ? { isExchange: true, status: (r as any).status } : {})
+      status: (r as any).status || '',
+      isExchange: !!(r as any).isExchange
     };
   });
 
@@ -410,7 +428,17 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
       alert('Por favor, selecciona un propietario antes de reservar una semana.');
       return;
     }
-    reservarSemana({ start: slotInfo.start, end: slotInfo.end });
+    // Actualizar fechas seleccionadas en el padre
+    if (typeof slotInfo.start === 'object' && typeof slotInfo.end === 'object' && onSelectedDatesChange) {
+      const dates: Date[] = [];
+      let d = new Date(slotInfo.start);
+      const end = new Date(slotInfo.end);
+      while (d <= end) {
+        dates.push(new Date(d));
+        d.setDate(d.getDate() + 1);
+      }
+      onSelectedDatesChange(dates);
+    }
   };
 
   // --- Cálculo de resumen de reservas ---
@@ -575,6 +603,7 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
                   "h-[700px] transition-opacity duration-200",
                   loadingReservations && "opacity-50"
                 )}
+                selected={selectedDates && selectedDates.length > 0 ? selectedDates[0] : undefined}
                 messages={{
                   month: 'Mes',
                   week: 'Semana',
