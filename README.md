@@ -35,6 +35,7 @@ Permite que varias personas compartan una misma vivienda —como una casa en la 
 
 [https://quincenalia.vercel.app](https://quincenalia.vercel.app)
 
+
 ## 🚀 Instalación local
 
 ```bash
