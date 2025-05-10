@@ -71,7 +71,12 @@ Tu ayuda es bienvenida. Puedes:
 
 Publicado bajo licencia MIT.
 
----
 
-¿Quieres que te genere ahora el archivo listo para subir a tu repositorio?
+![quin 5](https://github.com/user-attachments/assets/4158caa2-a098-4964-9e86-9e4b7f4418ff)
+![Owner 2](https://github.com/user-attachments/assets/db43c4d7-1737-4ea2-876b-9ec964123f61)
+![Quin 4](https://github.com/user-attachments/assets/f8b22101-132d-4d78-ba96-f7f5d9b533ab)
+![owner 3](https://github.com/user-attachments/assets/ba0a4159-2fb9-46d5-9d7c-e8b14a2b168f)
+![Quin 2](https://github.com/user-attachments/assets/1bd788e1-5bec-4511-ab33-d89cfa046e54)
+![Quincenalia](https://github.com/user-attachments/assets/7ce8c24e-68c6-4d46-85d1-65422157a58b)
+
 
