@@ -9,6 +9,7 @@ Permite que varias personas compartan una misma vivienda —como una casa en la 
 * **Calendario de uso compartido**: Planificación equitativa y automatizada del uso de la vivienda.
 * **Reservas online**: Cada copropietario gestiona sus semanas disponibles y hace reservas fácilmente.
 * **Seguimiento de gastos comunes**: Control de mantenimiento, limpieza, suministros y otros costes.
+* **Seguimiento de incidencias**: Control de incidencias,ejemplo piscina sucia .
 * **Documentación legal compartida**: Acceso a estatutos, acuerdos, escrituras y normas internas.
 * **Sistema de votaciones**: Para reformas, reglas internas o decisiones comunitarias.
 * **Resolución y seguimiento de incidencias**: Reporte de problemas (averías, limpieza, accesos...) y trazabilidad de su resolución.
