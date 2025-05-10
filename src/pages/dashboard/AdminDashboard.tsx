@@ -12,19 +12,21 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils'; // Asegúrate que esta utilidad exista y funcione
+import { FaSyncAlt } from 'react-icons/fa';
 
 // Asegúrate que la ruta a tus componentes (ui/button, ui/avatar, etc.) y hooks (useAuth) sea correcta
 
 const menuItems = [
-    { icon: <Home className="w-5 h-5" />, label: 'Panel de Control', path: '/dashboard/admin' },
-    { icon: <Users className="w-5 h-5" />, label: 'Propietarios', path: '/dashboard/admin/owners' },
-    { icon: <Building className="w-5 h-5" />, label: 'Propiedades', path: '/dashboard/admin/properties' },
-    { icon: <FileText className="w-5 h-5" />, label: 'Facturas', path: '/dashboard/admin/invoices' },
-    { icon: <AlertTriangle className="w-5 h-5" />, label: 'Incidencias', path: '/dashboard/admin/incidents' },
-    { icon: <MessageSquare className="w-5 h-5" />, label: 'Mensajes', path: '/dashboard/admin/messages' },
-    { icon: <DollarSign className="w-5 h-5" />, label: 'Comisiones', path: '/dashboard/admin/commissions' },
-    { icon: <Building className="w-5 h-5" />, label: 'Agencias', path: '/dashboard/admin/agencies' },
-    { icon: <Users className="w-5 h-5" />, label: 'Agentes', path: '/dashboard/admin/agents' }
+  { icon: <Home className="w-5 h-5" />, label: 'Panel de Control', path: '/dashboard/admin' },
+  { icon: <Users className="w-5 h-5" />, label: 'Propietarios', path: '/dashboard/admin/owners' },
+  { icon: <Building className="w-5 h-5" />, label: 'Propiedades', path: '/dashboard/admin/properties' },
+  { icon: <FileText className="w-5 h-5" />, label: 'Facturas', path: '/dashboard/admin/invoices' },
+  { icon: <AlertTriangle className="w-5 h-5" />, label: 'Incidencias', path: '/dashboard/admin/incidents' },
+  { icon: <FaSyncAlt className="w-5 h-5" />, label: 'Intercambios', path: '/dashboard/admin/exchange' },
+  { icon: <MessageSquare className="w-5 h-5" />, label: 'Mensajes', path: '/dashboard/admin/messages' },
+  { icon: <DollarSign className="w-5 h-5" />, label: 'Comisiones', path: '/dashboard/admin/commissions' },
+  { icon: <Building className="w-5 h-5" />, label: 'Agencias', path: '/dashboard/admin/agencies' },
+  { icon: <Users className="w-5 h-5" />, label: 'Agentes', path: '/dashboard/admin/agents' }
 ];
 
 const SIDEBAR_ID = "app-sidebar";

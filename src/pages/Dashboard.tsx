@@ -1,6 +1,5 @@
 import React, { useEffect, useState, ReactNode } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import Sidebar from '@/components/layout/Sidebar';
 import Navbar from '@/components/layout/Navbar';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
@@ -87,7 +86,6 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
     <div className="min-h-screen bg-gray-100">
       <Navbar />
       <div className="flex">
-        <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} isMobile={isMobile} />
         <main className="flex-1">
           {location.pathname === '/dashboard' ? (
             children || (

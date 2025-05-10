@@ -47,6 +47,13 @@ interface CalendarEvent {
 
 interface ReservationCalendarProps {
   propertyId?: string;
+  exchangeMode?: boolean; // Si es true, reserva en exchange_reservations
+  pointsConfig?: {
+    points_per_day: number;
+    points_per_day_weekday: number;
+  };
+  ownerPoints?: number;
+  onPointsChange?: (newPoints: number) => void;
 }
 
 // --- Configuración del Calendario ---
@@ -61,7 +68,15 @@ const localizer = dateFnsLocalizer({
 
 const Colores = ['#4f8cff', '#ffb84f', '#4fff8c', '#ff4f8c', '#8c4fff', '#ff7b4f', '#4fffc3'];
 
-const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId }) => {
+// Colores para estados de reservas de intercambio
+const exchangeStatusColors: Record<string, string> = {
+  'aprobada': '#4f8cff', // azul
+  'pendiente': '#ffb84f', // naranja
+  'anulada': '#ff4f8c', // rojo
+  'cancelada': '#cccccc', // gris
+};
+
+const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, exchangeMode = false, pointsConfig, ownerPoints, onPointsChange }) => {
   const { user } = useAuth();
   const params = useParams();
   const navigate = useNavigate();
@@ -166,16 +181,36 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId })
               setOwnerSeleccionado(userOwner);
             }
           }
+          // Si el usuario es admin, seleccionar automáticamente el primer propietario
+          if (user?.role === 'admin' && propietariosConShare.length > 0) {
+            setOwnerSeleccionado(propietariosConShare[0]);
+          }
         }
 
-        // Cargar reservas
+        // Cargar reservas normales
         const { data: reservationsData, error: reservationsError } = await supabase
           .from('property_reservations')
           .select('*')
           .eq('property_id', propiedadSeleccionada.id);
-
         if (reservationsError) throw reservationsError;
-        setReservas(reservationsData || []);
+
+        // Cargar reservas de intercambio
+        const { data: exchangeData, error: exchangeError } = await supabase
+          .from('exchange_reservations')
+          .select('*')
+          .eq('property_id', propiedadSeleccionada.id);
+        if (exchangeError) throw exchangeError;
+
+        // Unir ambas reservas
+        const allReservations = [
+          ...(reservationsData || []),
+          ...((exchangeData || []).map(r => ({
+            ...r,
+            title: 'Reserva Guest points',
+            isExchange: true
+          })))
+        ];
+        setReservas(allReservations);
 
       } catch (error) {
         console.error('Error al cargar datos:', error);
@@ -246,6 +281,51 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId })
         return;
       }
 
+      // --- Lógica de intercambio ---
+      if (exchangeMode && pointsConfig && ownerPoints !== undefined && onPointsChange) {
+        // Calcular coste en puntos
+        let total = 0;
+        let d = new Date(start);
+        const endDate = new Date(end);
+        while (d <= endDate) {
+          if ([0, 6].includes(d.getDay())) {
+            total += pointsConfig.points_per_day;
+          } else {
+            total += pointsConfig.points_per_day_weekday;
+          }
+          d.setDate(d.getDate() + 1);
+        }
+        if (total > ownerPoints) {
+          toast({
+            title: 'Error',
+            description: 'No tienes suficientes puntos para esta reserva',
+            variant: 'destructive'
+          });
+          return;
+        }
+        // Insertar en exchange_reservations
+        const { error: upsertError } = await supabase
+          .from('exchange_reservations')
+          .insert({
+            property_id: propiedadSeleccionada.id,
+            owner_id: ownerSeleccionado.id,
+            start_date: format(start, 'yyyy-MM-dd'),
+            end_date: format(end, 'yyyy-MM-dd'),
+            status: 'pendiente',
+            points: total,
+            points_used: total
+          });
+        if (upsertError) throw upsertError;
+        onPointsChange(ownerPoints - total);
+        toast({
+          title: 'Éxito',
+          description: 'Reserva de intercambio enviada y puntos descontados. Pendiente de aprobación.',
+          variant: 'success'
+        });
+        // Recargar reservas (opcional)
+        return;
+      }
+      // --- Lógica normal ---
       const { error: upsertError } = await supabase
         .from('property_reservations')
         .upsert([{
@@ -283,6 +363,20 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId })
 
   // --- Estilo de Eventos ---
   const eventPropGetter: EventPropGetter<CalendarEvent> = (event) => {
+    // Si es reserva de intercambio, usar color según estado
+    if ((event as any).isExchange && (event as any).status) {
+      const color = exchangeStatusColors[(event as any).status] || '#cccccc';
+      return {
+        style: {
+          backgroundColor: color,
+          color: '#222',
+          borderRadius: '4px',
+          border: 'none',
+          opacity: 0.9
+        },
+      };
+    }
+    // Normal: color por propietario
     const ownerIndex = propietarios.findIndex((p) => p.id === event.owner_id);
     const backgroundColor = ownerIndex !== -1 ? Colores[ownerIndex % Colores.length] : '#cccccc';
     return {
@@ -302,10 +396,11 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId })
     const startDate = new Date(r.start_date + 'T00:00:00Z');
     const endDate = new Date(r.end_date + 'T00:00:00Z');
     return {
-      title: owner ? `${owner.first_name} ${owner.last_name}` : 'Reservado (???)',
+      title: (typeof (r as any).title === 'string' && (r as any).title) || (owner ? `${owner.first_name} ${owner.last_name}` : 'Reservado (???)'),
       start: startDate,
       end: endDate,
       owner_id: r.owner_id,
+      ...(r.isExchange ? { isExchange: true, status: (r as any).status } : {})
     };
   });
 
@@ -417,9 +512,9 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId })
       )}
 
       {propiedadSeleccionada && (
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Columna 1: Histórico y resumen */}
-          <div className="w-full lg:w-1/3 bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+        <div className="flex flex-col gap-8 lg:gap-8">
+          {/* Resumen e histórico arriba en escritorio */}
+          <div className="w-full bg-white rounded-lg shadow-sm p-4 border border-gray-200 mb-4">
             <h3 className="font-semibold mb-3">Histórico de reservas</h3>
             {/* Resumen */}
             <div className="grid grid-cols-2 gap-3 mb-4">
@@ -459,11 +554,9 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId })
               <div className="text-gray-500 text-sm">No hay reservas para esta propiedad.</div>
             )}
           </div>
-
-          {/* Columna 2: Calendario y formulario */}
-          <div className="w-full lg:w-2/3">
-            {/* Calendario */}
-            <div className="relative h-[600px] mt-6 lg:mt-0">
+          {/* Calendario ocupa todo el ancho */}
+          <div className="w-full">
+            <div className="relative h-[700px] mt-6 lg:mt-0">
               {loadingReservations && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
                   <div className="bg-white p-3 rounded-lg shadow-sm">Cargando reservas...</div>
@@ -479,7 +572,7 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId })
                 eventPropGetter={eventPropGetter}
                 views={['month', 'week']}
                 className={cn(
-                  "h-[550px] transition-opacity duration-200",
+                  "h-[700px] transition-opacity duration-200",
                   loadingReservations && "opacity-50"
                 )}
                 messages={{
@@ -499,49 +592,6 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId })
                 culture='es'
               />
             </div>
-
-            {/* Lista de reservas adjudicadas */}
-            {propiedadSeleccionada && reservas.length > 0 && (
-              <div className="mt-6">
-                <h4 className="font-semibold mb-3">Semanas adjudicadas:</h4>
-                <ul className="space-y-2">
-                  {reservas.map((r) => {
-                    const owner = propietarios.find((p) => p.id === r.owner_id);
-                    return (
-                      <li key={r.id} className="flex items-center justify-between">
-                        <span>
-                          {owner ? `${owner.first_name} ${owner.last_name}` : 'Propietario desconocido'}: 
-                          {` del ${r.start_date} al ${r.end_date}`}
-                        </span>
-                        <button
-                          className="ml-3 px-3 py-1 text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
-                          onClick={async () => {
-                            if (window.confirm('¿Seguro que quieres eliminar esta reserva?')) {
-                              const { error } = await supabase
-                                .from('property_reservations')
-                                .delete()
-                                .eq('id', r.id);
-                              if (!error) {
-                                // Recargar reservas
-                                const { data: updatedReservations } = await supabase
-                                  .from('property_reservations')
-                                  .select('*')
-                                  .eq('property_id', propiedadSeleccionada.id);
-                                setReservas(updatedReservations || []);
-                              } else {
-                                alert('Error al eliminar la reserva');
-                              }
-                            }
-                          }}
-                        >
-                          🗑️ Eliminar
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
           </div>
         </div>
       )}

@@ -4,6 +4,7 @@ import {
   Building, Users, Calendar, FileText, AlertTriangle, MessageSquare, DollarSign,
   User, LogOut, Home, Menu, ChevronLeft, PhoneCall
 } from 'lucide-react';
+import { FaSyncAlt } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ const menuItems = [
   { icon: <Calendar className="w-5 h-5 text-white" />, label: 'Reservas', path: '/dashboard/admin/reservations' },
   { icon: <FileText className="w-5 h-5 text-white" />, label: 'Facturas', path: '/dashboard/admin/invoices' },
   { icon: <AlertTriangle className="w-5 h-5 text-white" />, label: 'Incidencias', path: '/dashboard/admin/incidents' },
+  { icon: <FaSyncAlt className="w-5 h-5 text-white" />, label: 'Intercambios', path: '/dashboard/admin/exchange' },
   { icon: <MessageSquare className="w-5 h-5 text-white" />, label: 'Mensajes', path: '/dashboard/admin/messages' },
   { icon: <DollarSign className="w-5 h-5 text-white" />, label: 'Comisiones', path: '/dashboard/admin/commissions' },
   { icon: <Building className="w-5 h-5 text-white" />, label: 'Agencias', path: '/dashboard/admin/agencies' },

@@ -4,6 +4,7 @@ import {
   Building, Users, Calendar, FileText, AlertTriangle, MessageSquare, DollarSign,
   User, LogOut, Home, Menu, ChevronLeft
 } from 'lucide-react';
+import { FaExchangeAlt } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ const menuItems = [
   { icon: <Building className="w-5 h-5" />, label: 'Propiedades', path: '/dashboard/admin/properties' },
   { icon: <FileText className="w-5 h-5" />, label: 'Facturas', path: '/dashboard/admin/invoices' },
   { icon: <AlertTriangle className="w-5 h-5" />, label: 'Incidencias', path: '/dashboard/admin/incidents' },
+  { icon: <FaExchangeAlt className="w-5 h-5" />, label: 'Intercambios', path: '/dashboard/admin/exchange' },
   { icon: <MessageSquare className="w-5 h-5" />, label: 'Mensajes', path: '/dashboard/admin/messages' },
   { icon: <DollarSign className="w-5 h-5" />, label: 'Comisiones', path: '/dashboard/admin/commissions' },
   { icon: <Building className="w-5 h-5" />, label: 'Agencias', path: '/dashboard/admin/agencies' },

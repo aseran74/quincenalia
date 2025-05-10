@@ -17,7 +17,8 @@ import {
   FaUser,
   FaSignOutAlt, // Para el botón de logout
   FaBars,       // Reemplazo para Menu (lucide)
-  FaTimes       // Reemplazo para X (lucide)
+  FaTimes,      // Reemplazo para X (lucide)
+  FaExchangeAlt // Icono para Intercambio
 } from 'react-icons/fa';
 
 // --- Componentes de ejemplo (Facturas, Mensajes) - Sin cambios ---
@@ -44,6 +45,7 @@ const menuItems = [
   { icon: <FaHome className="w-5 h-5 flex-shrink-0" />, label: 'Inicio', path: '/dashboard/owner' },
   { icon: <FaExclamationTriangle className="w-5 h-5 flex-shrink-0" />, label: 'Incidencias', path: '/dashboard/owner/incidents' },
   { icon: <FaCalendarAlt className="w-5 h-5 flex-shrink-0" />, label: 'Reservar Semanas', path: '/dashboard/owner/reservations' },
+  { icon: <FaExchangeAlt className="w-5 h-5 flex-shrink-0" />, label: 'Intercambio', path: '/dashboard/owner/exchange' },
   { icon: <FaFileInvoiceDollar className="w-5 h-5 flex-shrink-0" />, label: 'Facturas', path: '/dashboard/owner/invoices' },
   { icon: <FaEnvelope className="w-5 h-5 flex-shrink-0" />, label: 'Mensajes', path: '/dashboard/owner/messages' },
   { icon: <FaUser className="w-5 h-5 flex-shrink-0" />, label: 'Perfil', path: '/dashboard/owner/profile' }

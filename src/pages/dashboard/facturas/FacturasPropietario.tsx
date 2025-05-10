@@ -213,23 +213,61 @@ const FacturasPropietario: React.FC = () => {
       
       {/* Selector de Propietario para Admin */}
       {user?.role === 'admin' && (
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg border max-w-2xl w-full transition-all duration-300"> {/* Ancho fijo y consistente */}
           <label htmlFor="ownerSelect" className="block mb-2 font-medium text-gray-700">Selecciona un Propietario</label>
-          <div className="relative">
-          <select
-              id="ownerSelect"
-              className="w-full md:w-48 border border-gray-300 rounded-md px-3 py-2 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            value={ownerId}
-            onChange={e => setOwnerId(e.target.value)}
-          >
-              <option value="">-- Todos los propietarios --</option>
-            {owners.map(o => (
-              <option key={o.id} value={o.id}>{o.first_name} {o.last_name}</option>
-            ))}
-          </select>
+          <div className="relative w-full">
+            <select
+                id="ownerSelect"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={ownerId}
+              onChange={e => setOwnerId(e.target.value)}
+            >
+                <option value="">-- Todos los propietarios --</option>
+              {owners.map(o => (
+                <option key={o.id} value={o.id}>{o.first_name} {o.last_name}</option>
+              ))}
+            </select>
             <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
           </div>
             {!ownerId && <p className="text-xs text-gray-500 mt-1">Selecciona un propietario para ver o crear facturas.</p>}
+        </div>
+      )}
+
+      {/* Resumen últimas 10 facturas para admin */}
+      {user?.role === 'admin' && facturas.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-2">Últimas 10 facturas emitidas</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm border rounded">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-2 py-1 text-left">Tipo</th>
+                  <th className="px-2 py-1 text-left">Importe</th>
+                  <th className="px-2 py-1 text-left">Estado</th>
+                  <th className="px-2 py-1 text-left">Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                {facturas.slice(0, 10).map(f => (
+                  <tr key={f.id} className="border-b hover:bg-gray-50">
+                    <td className="px-2 py-1">{TIPOS.find(t => t.value === f.type)?.label || f.type}</td>
+                    <td className="px-2 py-1">{Number(f.amount).toFixed(2)} €</td>
+                    <td className="px-2 py-1">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                        ${f.status === 'pagada' ? 'bg-green-100 text-green-800' : ''}
+                        ${f.status === 'pendiente' ? 'bg-yellow-100 text-yellow-800' : ''}
+                        ${f.status === 'devuelta' ? 'bg-red-100 text-red-800' : ''}
+                        ${f.status === 'enviado_banco' ? 'bg-blue-100 text-blue-800' : ''}
+                      `}>
+                        {ESTADOS.find(e => e.value === f.status)?.label}
+                      </span>
+                    </td>
+                    <td className="px-2 py-1">{new Date(f.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -610,43 +648,6 @@ const FacturasPropietario: React.FC = () => {
               </form>
             </div>
           )}
-        </div>
-      )}
-
-      {user?.role === 'admin' && facturas.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-2">Últimas 10 facturas emitidas</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm border rounded">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-2 py-1 text-left">Tipo</th>
-                  <th className="px-2 py-1 text-left">Importe</th>
-                  <th className="px-2 py-1 text-left">Estado</th>
-                  <th className="px-2 py-1 text-left">Fecha</th>
-                </tr>
-              </thead>
-              <tbody>
-                {facturas.slice(0, 10).map(f => (
-                  <tr key={f.id} className="border-b hover:bg-gray-50">
-                    <td className="px-2 py-1">{TIPOS.find(t => t.value === f.type)?.label || f.type}</td>
-                    <td className="px-2 py-1">{Number(f.amount).toFixed(2)} €</td>
-                    <td className="px-2 py-1">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                        ${f.status === 'pagada' ? 'bg-green-100 text-green-800' : ''}
-                        ${f.status === 'pendiente' ? 'bg-yellow-100 text-yellow-800' : ''}
-                        ${f.status === 'devuelta' ? 'bg-red-100 text-red-800' : ''}
-                        ${f.status === 'enviado_banco' ? 'bg-blue-100 text-blue-800' : ''}
-                      `}>
-                        {ESTADOS.find(e => e.value === f.status)?.label}
-                      </span>
-                    </td>
-                    <td className="px-2 py-1">{new Date(f.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       )}
     </div>

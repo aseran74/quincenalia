@@ -40,6 +40,9 @@ import AdminReservations from './pages/dashboard/admin/AdminReservations';
 import IncidentDetail from './pages/dashboard/incidencias/IncidentDetail';
 import DashboardRedirect from './pages/dashboard/DashboardRedirect';
 import OwnerMessagesBoard from './pages/dashboard/owner/OwnerMessagesBoard';
+import OwnerExchange from './pages/dashboard/owner/OwnerExchange';
+import AdminExchange from './pages/dashboard/admin/AdminExchange';
+import OwnerSoldProperties from './pages/dashboard/owner/OwnerSoldProperties';
 
 const Profile = () => (
   <div style={{ padding: 32 }}>
@@ -84,9 +87,11 @@ function App() {
             <Route index element={<OwnerHome />} />
             <Route path="incidents" element={<OwnerIncidents />} />
             <Route path="reservations" element={<OwnerReservations />} />
+            <Route path="exchange" element={<OwnerExchange />} />
             <Route path="invoices" element={<OwnerInvoicesBoard />} />
             <Route path="messages" element={<OwnerMessagesBoard />} />
             <Route path="profile" element={<ProfilePanel />} />
+            <Route path="sold-properties" element={<OwnerSoldProperties />} />
           </Route>
 
           {/* Dashboard General */}
@@ -114,6 +119,7 @@ function App() {
             <Route path="incidents" element={<IncidenciasPanel />} />
             <Route path="incidents/new" element={<IncidenciaForm />} />
             <Route path="incidents/:id" element={<IncidentDetail />} />
+            <Route path="exchange" element={<AdminExchange />} />
             <Route path="messages" element={<MessagesBoard />} />
             <Route path="commissions" element={<ComisionesPanel />} />
             <Route path="profile" element={<ProfilePanel />} />

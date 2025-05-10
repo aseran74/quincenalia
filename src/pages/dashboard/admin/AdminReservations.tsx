@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ChevronDown, Trash2, Plus, X, Home, User, Tag, Calendar } from 'lucide-react';
 import ReservationCalendar from '../properties/ReservationCalendar';
+import ExchangeReservationCard from '@/components/exchange/ExchangeReservationCard';
 
 // Opciones de estado con colores
 const STATUS_OPTIONS = [
@@ -136,7 +137,7 @@ const AdminReservations: React.FC = () => {
         });
       } else {
         console.log('Reserva eliminada correctamente de Supabase');
-      toast({ title: 'Eliminada', description: 'Reserva eliminada correctamente' });
+        toast({ title: 'Eliminada', description: 'Reserva eliminada correctamente', variant: 'success' });
         setReservations(prevReservations =>
           prevReservations.filter(r => r.id !== reservationToDelete.id)
         );
@@ -242,7 +243,7 @@ const AdminReservations: React.FC = () => {
           variant: 'destructive'
         });
       } else {
-        toast({ title: 'Eliminada', description: 'Reserva eliminada correctamente' });
+        toast({ title: 'Eliminada', description: 'Reserva eliminada correctamente', variant: 'success' });
         setReservations(prev => prev.filter(res => res.id !== reservation.id));
       }
     } catch (e: any) {
@@ -336,8 +337,8 @@ const AdminReservations: React.FC = () => {
         ))}
       </div>
 
-      {/* Cards en móvil */}
-      <div className="space-y-4 md:hidden">
+      {/* Cards en móvil y tablet */}
+      <div className="space-y-4 lg:hidden">
         {filteredReservations.length === 0 ? (
           <p className="text-center text-gray-500 py-6">No hay reservas que coincidan con los filtros.</p>
         ) : (
@@ -346,23 +347,15 @@ const AdminReservations: React.FC = () => {
             const property = r.properties;
             const owner = r.owner;
             return (
-              <div key={r.id} className={`border rounded-lg p-4 shadow-sm relative ${statusStyle.borderColor} bg-white`}>
-                <div className="flex justify-between items-start mb-3">
-                  <span className="font-semibold text-gray-800 truncate pr-2" title={property?.title}>{property?.title || 'Propiedad no encontrada'}</span>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyle.color} whitespace-nowrap`}>
-                    {statusStyle.label}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600 mb-1">
-                  <User className="inline-block mr-1.5 h-4 w-4 text-gray-400" />
-                  {owner ? `${owner.first_name} ${owner.last_name}` : r.owner_id}
-                </p>
-                <p className="text-sm text-gray-600 mb-3">
-                  <Calendar className="inline-block mr-1.5 h-4 w-4 text-gray-400" />
-                  {formatDate(r.start_date)} - {formatDate(r.end_date)}
-                </p>
-                <div className="flex items-center justify-between border-t border-gray-200 pt-3 mt-3 gap-3">
-                  <div className="flex-1 min-w-0">
+              <ExchangeReservationCard
+                key={r.id}
+                startDate={formatDate(r.start_date)}
+                endDate={formatDate(r.end_date)}
+                points={0} // Puedes mostrar puntos si aplica, o dejar 0 para reservas normales
+                status={r.status}
+                ownerName={owner ? `${owner.first_name} ${owner.last_name}` : r.owner_id}
+                actions={
+                  <div className="flex items-center gap-2 w-full">
                     <select
                       value={r.status}
                       onChange={e => handleStatusChange(r.id, e.target.value)}
@@ -371,30 +364,26 @@ const AdminReservations: React.FC = () => {
                     >
                       {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                     </select>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:bg-red-50 hover:text-red-700 p-1"
+                      onClick={() => handleDeleteConfirmation(r)}
+                      disabled={creatingOrUpdating}
+                      aria-label="Eliminar reserva"
+                    >
+                      <Trash2 size={18} />
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-600 hover:bg-red-50 hover:text-red-700 px-2"
-                    onClick={() => {
-                      if (window.confirm(`¿Seguro que quieres eliminar la reserva ${r.id}?`)) {
-                        handleDeleteDirecto(r);
-                      }
-                    }}
-                    disabled={creatingOrUpdating}
-                    aria-label="Eliminar reserva"
-                  >
-                    <Trash2 size={16} />
-                  </Button>
-                </div>
-              </div>
+                }
+              />
             );
           })
         )}
       </div>
 
-      {/* Tabla en escritorio */}
-      <div className="hidden md:block overflow-x-auto border border-gray-200 rounded-lg bg-white shadow-sm">
+      {/* Tabla solo en escritorio grande */}
+      <div className="hidden lg:block overflow-x-auto border border-gray-200 rounded-lg bg-white shadow-sm">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -439,11 +428,7 @@ const AdminReservations: React.FC = () => {
                         variant="ghost"
                         size="sm"
                         className="text-red-600 hover:bg-red-50 hover:text-red-700 p-1"
-                        onClick={() => {
-                          if (window.confirm(`¿Seguro que quieres eliminar la reserva ${r.id}?`)) {
-                            handleDeleteDirecto(r);
-                          }
-                        }}
+                        onClick={() => handleDeleteConfirmation(r)}
                         disabled={creatingOrUpdating}
                         aria-label="Eliminar reserva"
                       >
@@ -584,6 +569,20 @@ const AdminReservations: React.FC = () => {
       >
         <Plus className="h-6 w-6" />
       </Button>
+
+      {/* Modal para confirmar eliminación */}
+      {reservationToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <h2 className="text-lg font-bold mb-4">¿Seguro que quieres eliminar la reserva?</h2>
+            <p className="mb-6 text-gray-700">Esta acción no se puede deshacer.</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setReservationToDelete(null)} disabled={creatingOrUpdating}>Cancelar</Button>
+              <Button variant="destructive" onClick={() => handleDeleteDirecto(reservationToDelete!)} disabled={creatingOrUpdating}>Eliminar</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -6,20 +6,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Home, Car, Sun, Wind, ArrowUpDown, Warehouse, Eye, Star, Waves } from 'lucide-react';
 
 interface PropertyFiltersProps {
   onFiltersChange: (filters: any) => void;
 }
 
+const FEATURES_LIST = [
+  { key: 'pool', label: 'Piscina', icon: <Home className="w-4 h-4" /> },
+  { key: 'garden', label: 'Jardín', icon: <Home className="w-4 h-4" /> },
+  { key: 'garage', label: 'Garaje', icon: <Car className="w-4 h-4" /> },
+  { key: 'terrace', label: 'Terraza', icon: <Sun className="w-4 h-4" /> },
+  { key: 'airConditioning', label: 'Aire Acond.', icon: <Wind className="w-4 h-4" /> },
+  { key: 'elevator', label: 'Ascensor', icon: <ArrowUpDown className="w-4 h-4" /> },
+  { key: 'storage', label: 'Trastero', icon: <Warehouse className="w-4 h-4" /> },
+  { key: 'seaView', label: 'Vistas al mar', icon: <Waves className="w-4 h-4" /> },
+  { key: 'accessible', label: 'Accesible', icon: <Eye className="w-4 h-4" /> },
+  { key: 'luxury', label: 'Lujo', icon: <Star className="w-4 h-4" /> },
+];
+
 const PropertyFilters = ({ onFiltersChange }: PropertyFiltersProps) => {
   const [filters, setFilters] = useState({
     bedrooms: '',
     minSize: 0,
-    priceRange: [0, 1000000],
     features: {
       pool: false,
       garden: false,
@@ -31,7 +43,8 @@ const PropertyFilters = ({ onFiltersChange }: PropertyFiltersProps) => {
       seaView: false,
       accessible: false,
       luxury: false,
-    }
+    },
+    showFeatures: false,
   });
 
   const handleFilterChange = (key: string, value: any) => {
@@ -41,13 +54,12 @@ const PropertyFilters = ({ onFiltersChange }: PropertyFiltersProps) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 space-y-6 text-[16px]">
+    <div className="bg-white rounded-lg shadow-lg p-6 space-y-6 text-[16px] w-full max-w-xl mx-auto">
       <div>
         <h3 className="text-lg font-semibold mb-4 text-[16px]">Filtros de búsqueda</h3>
-        
         {/* Habitaciones */}
-        <div className="space-y-4">
-          <label className="block font-medium text-[16px]">
+        <div className="mb-4">
+          <label className="block font-medium text-[16px] mb-1">
             Número de habitaciones
           </label>
           <Select
@@ -66,9 +78,8 @@ const PropertyFilters = ({ onFiltersChange }: PropertyFiltersProps) => {
             </SelectContent>
           </Select>
         </div>
-
         {/* Tamaño mínimo */}
-        <div className="mt-6">
+        <div className="mb-4">
           <label className="block font-medium mb-2 text-[16px]">
             Tamaño mínimo (m²)
           </label>
@@ -80,65 +91,43 @@ const PropertyFilters = ({ onFiltersChange }: PropertyFiltersProps) => {
             className="w-full text-[16px] min-h-[40px]"
           />
         </div>
-
-        {/* Rango de precio */}
-        <div className="mt-6">
-          <label className="block font-medium mb-4 text-[16px]">
-            Rango de precio: {filters.priceRange[0]}€ - {filters.priceRange[1]}€
+        {/* Características (colapsable) */}
+        <div className="mb-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <Checkbox
+              checked={filters.showFeatures}
+              onCheckedChange={(checked) => handleFilterChange('showFeatures', checked)}
+              className="mr-2"
+            />
+            Ver características
           </label>
-          <Slider
-            defaultValue={[0, 1000000]}
-            max={1000000}
-            step={1000}
-            value={filters.priceRange}
-            onValueChange={(value) => handleFilterChange('priceRange', value)}
-            className="mt-2"
-          />
+          {filters.showFeatures && (
+            <div className="mt-4 space-y-2">
+              {FEATURES_LIST.map(({ key, label, icon }) => (
+                <div key={key} className="flex items-center space-x-3 py-1">
+                  <Checkbox
+                    id={key}
+                    checked={filters.features[key]}
+                    onCheckedChange={(checked) =>
+                      handleFilterChange('features', {
+                        ...filters.features,
+                        [key]: checked
+                      })
+                    }
+                    className="w-4 h-4 min-w-[16px] min-h-[16px]"
+                  />
+                  <label htmlFor={key} className="text-base select-none cursor-pointer flex items-center gap-2">
+                    {icon} {label}
+                  </label>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-
-        {/* Características */}
-        <div className="mt-6">
-          <label className="block font-medium mb-4 text-base">
-            Características
-          </label>
-          <div className="grid grid-cols-1 gap-5">
-            {[
-              { key: 'pool', label: 'Piscina' },
-              { key: 'garden', label: 'Jardín' },
-              { key: 'garage', label: 'Garaje' },
-              { key: 'terrace', label: 'Terraza' },
-              { key: 'airConditioning', label: 'Aire Acond.' },
-              { key: 'elevator', label: 'Ascensor' },
-              { key: 'storage', label: 'Trastero' },
-              { key: 'seaView', label: 'Vistas al mar' },
-              { key: 'accessible', label: 'Accesible' },
-              { key: 'luxury', label: 'Lujo' },
-            ].map(({ key, label }) => (
-              <div key={key} className="flex items-center space-x-4 py-2 text-base">
-                <Checkbox
-                  id={key}
-                  checked={filters.features[key]}
-                  onCheckedChange={(checked) => 
-                    handleFilterChange('features', {
-                      ...filters.features,
-                      [key]: checked
-                    })
-                  }
-                  className="w-4 h-4 min-w-[16px] min-h-[16px]"
-                  style={{ width: 16, height: 16 }}
-                />
-                <label htmlFor={key} className="text-base select-none cursor-pointer">
-                  {label}
-                </label>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Botones */}
         <div className="mt-6 flex space-x-4">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => {
               const resetFeatures: typeof filters.features = {
                 pool: false,
@@ -155,8 +144,8 @@ const PropertyFilters = ({ onFiltersChange }: PropertyFiltersProps) => {
               const resetFilters = {
                 bedrooms: '',
                 minSize: 0,
-                priceRange: [0, 1000000],
-                features: resetFeatures
+                features: resetFeatures,
+                showFeatures: false,
               };
               setFilters(resetFilters);
               onFiltersChange(resetFilters);
@@ -165,7 +154,6 @@ const PropertyFilters = ({ onFiltersChange }: PropertyFiltersProps) => {
           >
             Limpiar filtros
           </Button>
-          <Button className="text-[16px] min-h-[40px]">Aplicar filtros</Button>
         </div>
       </div>
     </div>
