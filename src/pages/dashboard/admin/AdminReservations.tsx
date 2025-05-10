@@ -54,6 +54,7 @@ const AdminReservations: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [reservationToDelete, setReservationToDelete] = useState<Reservation | null>(null);
   const [creatingOrUpdating, setCreatingOrUpdating] = useState(false);
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
 
   // Refs para el formulario de creación
   const formPropertyRef = useRef<HTMLSelectElement>(null);
@@ -556,7 +557,12 @@ const AdminReservations: React.FC = () => {
           <h2 className="text-xl font-semibold mb-4 text-gray-700">
             Calendario de Disponibilidad: <span className='font-bold'>{properties.find(p => p.id === filterProperty)?.title}</span>
           </h2>
-          <ReservationCalendar key={filterProperty} propertyId={filterProperty} />
+          <ReservationCalendar
+            key={filterProperty}
+            propertyId={filterProperty}
+            selectedDates={selectedDates}
+            onSelectedDatesChange={setSelectedDates}
+          />
         </div>
       )}
 

@@ -152,7 +152,9 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
         ].filter(s => s.owner_id);
 
         const ownerIds = shares.map(s => s.owner_id as string);
+        console.log('[RESERVAS] ownerIds:', ownerIds);
 
+        let propietariosConShare: Owner[] = [];
         if (ownerIds.length > 0) {
           const { data: ownersData, error: ownersError } = await supabase
             .from('profiles')
@@ -162,33 +164,14 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
 
           if (ownersError) throw ownersError;
 
-          const propietariosConShare = shares
+          console.log('[RESERVAS] ownersData:', ownersData);
+
+          propietariosConShare = shares
             .map(share => {
               const owner = (ownersData || []).find(o => o.id === share.owner_id);
               return owner ? { ...owner, shareLabel: share.label } : undefined;
             })
             .filter((o): o is Owner => Boolean(o));
-
-          setPropietarios(propietariosConShare);
-
-          // Si el usuario es propietario, seleccionar automáticamente su share
-          if (user?.role === 'owner') {
-            const userOwner = propietariosConShare.find(o => o.id === user.id);
-            if (userOwner) {
-              setOwnerSeleccionado(userOwner);
-            } else if (exchangeMode) {
-              setOwnerSeleccionado({
-                id: user.id,
-                first_name: (user as any).first_name || '',
-                last_name: (user as any).last_name || '',
-                shareLabel: 'Intercambio'
-              });
-            }
-          }
-          // Si el usuario es admin, seleccionar automáticamente el primer propietario
-          if (user?.role === 'admin' && propietariosConShare.length > 0) {
-            setOwnerSeleccionado(propietariosConShare[0]);
-          }
         }
 
         // Cargar reservas normales
@@ -216,9 +199,9 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
         ];
         setReservas(allReservations);
 
-        // --- Añadir owners de reservas que no estén en propietarios ---
+        // --- Añadir owners de reservas que no estén en propietariosConShare ---
         const allOwnerIds = Array.from(new Set(allReservations.map(r => r.owner_id)));
-        const missingOwnerIds = allOwnerIds.filter(id => !propietarios.some(o => o.id === id));
+        const missingOwnerIds = allOwnerIds.filter(id => !propietariosConShare.some(o => o.id === id));
         let extraOwners: any[] = [];
         if (missingOwnerIds.length > 0) {
           const { data: extraOwnersData } = await supabase
@@ -227,7 +210,30 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
             .in('id', missingOwnerIds);
           extraOwners = extraOwnersData || [];
         }
-        setPropietarios([...propietarios, ...extraOwners]);
+        // Unir ambos arrays sin duplicados
+        const allOwners = [
+          ...propietariosConShare,
+          ...extraOwners.filter(o => !propietariosConShare.some(p => p.id === o.id))
+        ];
+        setPropietarios(allOwners);
+
+        // Selección automática de propietario
+        if (user?.role === 'owner') {
+          const userOwner = allOwners.find(o => o.id === user.id);
+          if (userOwner) {
+            setOwnerSeleccionado(userOwner);
+          } else if (exchangeMode) {
+            setOwnerSeleccionado({
+              id: user.id,
+              first_name: (user as any).first_name || '',
+              last_name: (user as any).last_name || '',
+              shareLabel: 'Intercambio'
+            });
+          }
+        }
+        if (user?.role === 'admin' && allOwners.length > 0) {
+          setOwnerSeleccionado(allOwners[0]);
+        }
       } catch (error) {
         console.error('Error al cargar datos:', error);
         setError('Error al cargar los datos de la propiedad');
@@ -377,38 +383,9 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
     }
   };
 
-  // --- Estilo de Eventos ---
-  const eventPropGetter: EventPropGetter<CalendarEvent> = (event) => {
-    // Si es reserva de intercambio, usar color según estado
-    if ((event as any).isExchange && (event as any).status) {
-      const color = exchangeStatusColors[(event as any).status] || '#cccccc';
-      return {
-        style: {
-          backgroundColor: color,
-          color: '#222',
-          borderRadius: '4px',
-          border: 'none',
-          opacity: 0.9
-        },
-      };
-    }
-    // Normal: color por propietario
-    const ownerIndex = propietarios.findIndex((p) => p.id === event.owner_id);
-    const backgroundColor = ownerIndex !== -1 ? Colores[ownerIndex % Colores.length] : '#cccccc';
-    return {
-      style: {
-        backgroundColor,
-        color: '#222',
-        borderRadius: '4px',
-        border: 'none',
-        opacity: 0.9
-      },
-    };
-  };
-
   // --- Mapeo de Reservas a Eventos del Calendario ---
   console.log('Reservas para el calendario:', reservas);
-  const events: CalendarEvent[] = reservas.map((r) => {
+  let events: CalendarEvent[] = reservas.map((r) => {
     const owner = propietarios.find((p) => p.id === r.owner_id);
     const startDate = new Date(r.start_date + 'T00:00:00Z');
     const endDate = new Date(r.end_date + 'T00:00:00Z');
@@ -421,6 +398,20 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
       isExchange: !!(r as any).isExchange
     };
   });
+  // Si hay fechas seleccionadas, añadir evento temporal
+  if (selectedDates && selectedDates.length > 0) {
+    events = [
+      ...events,
+      {
+        title: 'Reserva pendiente',
+        start: new Date(selectedDates[0]),
+        end: new Date(selectedDates[selectedDates.length-1]),
+        owner_id: user?.id || '',
+        status: 'pendiente',
+        isPending: true
+      }
+    ];
+  }
 
   // --- Manejar Selección de Slot ---
   const handleSelectSlot = (slotInfo: SlotInfo) => {
@@ -457,6 +448,47 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
   }, 0);
   // Opcional: semanas libres (asumiendo 52 semanas/año)
   const semanasLibres = 52 - totalSemanasReservadas;
+
+  // --- Estilo de Eventos ---
+  const eventPropGetter: EventPropGetter<CalendarEvent> = (event) => {
+    // Si es evento temporal de reserva pendiente
+    if ((event as any).isPending) {
+      return {
+        style: {
+          backgroundColor: '#b3e0ff',
+          color: '#222',
+          borderRadius: '4px',
+          border: '2px dashed #0077cc',
+          opacity: 0.7
+        },
+      };
+    }
+    // Si es reserva de intercambio, usar color según estado
+    if ((event as any).isExchange && (event as any).status) {
+      const color = exchangeStatusColors[(event as any).status] || '#cccccc';
+      return {
+        style: {
+          backgroundColor: color,
+          color: '#222',
+          borderRadius: '4px',
+          border: 'none',
+          opacity: 0.9
+        },
+      };
+    }
+    // Normal: color por propietario
+    const ownerIndex = propietarios.findIndex((p) => p.id === event.owner_id);
+    const backgroundColor = ownerIndex !== -1 ? Colores[ownerIndex % Colores.length] : '#cccccc';
+    return {
+      style: {
+        backgroundColor,
+        color: '#222',
+        borderRadius: '4px',
+        border: 'none',
+        opacity: 0.9
+      },
+    };
+  };
 
   // --- Renderizado ---
   return (
@@ -536,6 +568,22 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
                 )}
               </button>
             ))}
+        </div>
+      )}
+
+      {/* Botón Confirmar Reserva para admin */}
+      {user?.role === 'admin' && propiedadSeleccionada && ownerSeleccionado && selectedDates && selectedDates.length > 0 && (
+        <div className="mb-6 flex items-center gap-4">
+          <div className="text-sm text-gray-700">
+            <b>Propietario:</b> {ownerSeleccionado.first_name} {ownerSeleccionado.last_name} <br />
+            <b>Fechas:</b> {format(selectedDates[0], 'dd/MM/yyyy')} - {format(selectedDates[selectedDates.length-1], 'dd/MM/yyyy')}
+          </div>
+          <button
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded shadow"
+            onClick={() => reservarSemana({ start: selectedDates[0], end: selectedDates[selectedDates.length-1] })}
+          >
+            Confirmar reserva
+          </button>
         </div>
       )}
 

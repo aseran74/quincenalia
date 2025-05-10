@@ -43,6 +43,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobile }) => {
       roles: ['admin', 'agency']
     },
     {
+      icon: <Calendar className="h-5 w-5" />,
+      label: 'Explorar intercambios',
+      path: '/dashboard/owner/explorar',
+      roles: ['owner']
+    },
+    {
       icon: <Building className="h-5 w-5" />,
       label: 'Agencias',
       path: '/dashboard/agencies',

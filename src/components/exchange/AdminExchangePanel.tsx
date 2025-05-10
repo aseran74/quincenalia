@@ -224,6 +224,22 @@ const AdminExchangePanel: React.FC = () => {
         });
       }
     }
+    // Si se ANULA, devolver puntos al owner y deshacer reparto
+    if (status === 'anulada') {
+      const { data, error } = await supabase
+        .from('exchange_reservations')
+        .select('owner_id, points_used, property_id')
+        .eq('id', id)
+        .single();
+      if (!error && data) {
+        // Devolver puntos al owner y deshacer reparto
+        await supabase.rpc('deshacer_reparto_puntos_owner', {
+          ownerid: data.owner_id,
+          puntos: data.points_used,
+          propertyid: data.property_id
+        });
+      }
+    }
     const { error } = await supabase
       .from('exchange_reservations')
       .update({ status })

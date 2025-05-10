@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { format, isWeekend, addDays } from 'date-fns';
 import ReservationCalendar from '@/pages/dashboard/properties/ReservationCalendar';
 import type { Property } from '@/types/property';
+import { useLocation } from 'react-router-dom';
 
 interface ExchangeProperty {
   id: string;
@@ -35,6 +36,7 @@ interface Owner {
 
 const OwnerExchangePanel: React.FC = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const [points, setPoints] = useState<number>(0);
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<string>('');
@@ -45,6 +47,25 @@ const OwnerExchangePanel: React.FC = () => {
   const [calendarDisabledDates, setCalendarDisabledDates] = useState<Date[]>([]);
   const [reservationCost, setReservationCost] = useState<number>(0);
   const [owners, setOwners] = useState<Owner[]>([]);
+
+  // Inicializar con property y dateRange si vienen de location.state
+  useEffect(() => {
+    if (location.state && location.state.property) {
+      setSelectedProperty(location.state.property.id);
+    }
+    if (location.state && location.state.dateRange && location.state.dateRange.from && location.state.dateRange.to) {
+      // Generar array de fechas entre from y to
+      const from = new Date(location.state.dateRange.from);
+      const to = new Date(location.state.dateRange.to);
+      const dates: Date[] = [];
+      let d = new Date(from);
+      while (d <= to) {
+        dates.push(new Date(d));
+        d.setDate(d.getDate() + 1);
+      }
+      setSelectedDates(dates);
+    }
+  }, [location.state]);
 
   // Cargar puntos y propiedades 100% vendidas
   useEffect(() => {
@@ -277,6 +298,15 @@ const OwnerExchangePanel: React.FC = () => {
               onSelectedDatesChange={setSelectedDates}
             />
           </div>
+          {/* Resumen de reserva antes de confirmar */}
+          {selectedDates.length > 0 && (
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-900">
+              <div className="font-semibold mb-1">Resumen de tu reserva:</div>
+              <div>Fechas: <b>{format(selectedDates[0], 'dd/MM/yyyy')}</b> a <b>{format(selectedDates[selectedDates.length-1], 'dd/MM/yyyy')}</b></div>
+              <div>Días: <b>{selectedDates.length}</b></div>
+              <div>Coste en puntos: <b>{reservationCost}</b></div>
+            </div>
+          )}
         </CardContent>
       </Card>
       <Card className="w-full max-w-full">

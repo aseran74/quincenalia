@@ -43,6 +43,8 @@ import OwnerMessagesBoard from './pages/dashboard/owner/OwnerMessagesBoard';
 import OwnerExchange from './pages/dashboard/owner/OwnerExchange';
 import AdminExchange from './pages/dashboard/admin/AdminExchange';
 import OwnerSoldProperties from './pages/dashboard/owner/OwnerSoldProperties';
+import CoPropertiesCalendar from './pages/dashboard/owner/CoPropertiesCalendar';
+import ExploreExchangeProperties from './pages/dashboard/owner/ExploreExchangeProperties';
 
 const Profile = () => (
   <div style={{ padding: 32 }}>
@@ -92,6 +94,8 @@ function App() {
             <Route path="messages" element={<OwnerMessagesBoard />} />
             <Route path="profile" element={<ProfilePanel />} />
             <Route path="sold-properties" element={<OwnerSoldProperties />} />
+            <Route path="copropiedades" element={<CoPropertiesCalendar />} />
+            <Route path="explorar" element={<ExploreExchangeProperties />} />
           </Route>
 
           {/* Dashboard General */}
