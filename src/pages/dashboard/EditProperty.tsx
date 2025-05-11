@@ -157,11 +157,11 @@ const EditProperty = () => {
   useEffect(() => {
     if (!id) return;
     const fetchProperty = async () => {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('id', id)
-        .single();
+        const { data, error } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('id', id)
+          .single();
       if (error || !data) {
         toast({ title: 'Error', description: 'No se pudo cargar la propiedad', variant: 'destructive' });
         navigate('/dashboard/properties');
@@ -182,7 +182,7 @@ const EditProperty = () => {
         setCoordinates({ lat: data.latitude, lng: data.longitude });
       }
     };
-    fetchProperty();
+      fetchProperty();
   }, [id, navigate, toast]);
 
   // Inicializar el formulario solo cuando initialValues está listo
@@ -294,117 +294,117 @@ const EditProperty = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Columna 1 */}
                 <div className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Título</FormLabel>
-                        <FormControl>
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Título</FormLabel>
+                    <FormControl>
                           <Input placeholder="Título de la propiedad" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Descripción</FormLabel>
-                        <FormControl>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descripción</FormLabel>
+                    <FormControl>
                           <Textarea placeholder="Descripción de la propiedad" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="price"
-                      render={({ field }) => (
-                        <FormItem>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
                           <FormLabel>Precio (€)</FormLabel>
-                          <FormControl>
+                      <FormControl>
                             <Input type="number" placeholder="Precio" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
                       name="area"
-                      render={({ field }) => (
-                        <FormItem>
+                  render={({ field }) => (
+                    <FormItem>
                           <FormLabel>Área (m²)</FormLabel>
-                          <FormControl>
+                      <FormControl>
                             <Input type="number" placeholder="Área" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
                   {/* Dormitorios, baños y aseo en la misma fila */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="bedrooms"
-                      render={({ field }) => (
-                        <FormItem>
+                <FormField
+                  control={form.control}
+                  name="bedrooms"
+                  render={({ field }) => (
+                    <FormItem>
                           <FormLabel className="flex items-center gap-1"><Bed className="w-4 h-4" /> Dormitorios</FormLabel>
-                          <FormControl>
+                      <FormControl>
                             <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
                               <option value="">Dormitorios</option>
                               {[...Array(7).keys()].map(n => (
                                 <option key={n+1} value={n+1}>{n+1}</option>
                               ))}
                             </select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="bathrooms"
-                      render={({ field }) => (
-                        <FormItem>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="bathrooms"
+                  render={({ field }) => (
+                    <FormItem>
                           <FormLabel className="flex items-center gap-1"><Bath className="w-4 h-4" /> Baños</FormLabel>
-                          <FormControl>
+                      <FormControl>
                             <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
                               <option value="">Baños</option>
                               {[...Array(7).keys()].map(n => (
                                 <option key={n+1} value={n+1}>{n+1}</option>
                               ))}
                             </select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
                       name="lavabos"
-                      render={({ field }) => (
-                        <FormItem>
+                  render={({ field }) => (
+                    <FormItem>
                           <FormLabel className="flex items-center gap-1"><Toilet className="w-4 h-4" /> Aseo</FormLabel>
-                          <FormControl>
+                      <FormControl>
                             <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
                               <option value="">Aseo</option>
                               {[...Array(7).keys()].map(n => (
                                 <option key={n+1} value={n+1}>{n+1}</option>
                               ))}
                             </select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
                   {/* Ubicación con Google Places Autocomplete */}
                   <FormField
                     control={form.control}
@@ -681,24 +681,24 @@ const EditProperty = () => {
                             <label className="block text-xs text-gray-500">Precio</label>
                             <Input value={form.getValues('price') ? (Number(form.getValues('price'))/4).toFixed(2) : ''} readOnly className="bg-gray-100" />
                           </div>
-                          <FormField
-                            control={form.control}
+              <FormField
+                control={form.control}
                             name={`share${n}_status` as any}
-                            render={({ field }) => (
-                              <FormItem>
+                render={({ field }) => (
+                  <FormItem>
                                 <FormLabel>Estado</FormLabel>
-                                <FormControl>
+                    <FormControl>
                                   <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
                                     <option value="">Selecciona estado</option>
                                     {SHARE_STATUS_OPTIONS.map(opt => (
                                       <option key={opt} value={opt}>{opt}</option>
                                     ))}
                                   </select>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
                           <FormField
                             control={form.control}
                             name={`share${n}_owner_id` as any}

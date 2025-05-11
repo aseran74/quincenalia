@@ -39,7 +39,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ agentId, propertyId, classNam
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('contact_requests')
         .insert({
           name: formData.name,
@@ -51,11 +51,15 @@ const ContactForm: React.FC<ContactFormProps> = ({ agentId, propertyId, classNam
           status: 'pendiente'
         });
 
+      // LOGS DE DEPURACIÓN
+      console.log('DATA:', data);
+      console.log('ERROR:', error);
+
       if (error) throw error;
 
       toast({
-        title: "¡Solicitud enviada!",
-        description: "Nos pondremos en contacto contigo pronto.",
+        title: "¡Solicitud recibida!",
+        description: "Un agente te responderá en breve. Gracias por tu interés.",
       });
 
       // Limpiar el formulario

@@ -333,20 +333,20 @@ const HomePage = () => {
               <ContactForm />
             </div>
             {/* Columna 2: Datos de contacto y beneficios */}
-            <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white border-t md:border-t-0 md:border-l border-gray-100">
-              <h2 className="text-3xl font-bold mb-6 text-primary text-center">Contacto</h2>
-              <p className="text-primary font-semibold text-3x1 mb-6 text-center">🌟 Propietario + Viajero + Inversor: Todo en uno. 🌟</p>
+            <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white border-t md:border-t-0 md:border-l border-gray-100 text-center text-[16px]">
+              <h2 className="text-3xl font-bold mb-6 text-primary">Contacto</h2>
+              <p className="text-primary font-semibold text-3x1 mb-6">🌟 Propietario + Viajero + Inversor: Todo en uno. 🌟</p>
               <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3 text-lg text-gray-700"><Mail className="w-6 h-6 text-primary"/> <a href="mailto:info@quincenalia.com" className="hover:underline">info@quincenalia.com</a></li>
-                <li className="flex items-center gap-3 text-lg text-gray-700"><Phone className="w-6 h-6 text-primary"/> <a href="tel:+914156882" className="hover:underline">+34 914156882 </a></li>
-                <li className="flex items-center gap-3 text-lg text-gray-700"><MapPin className="w-6 h-6 text-primary"/> Avenida de Burgos 155 , Madrid , 28036, España </li>
+                <li className="flex flex-col items-center gap-2"><Mail className="w-6 h-6 text-primary mb-1"/> <a href="mailto:info@quincenalia.com" className="hover:underline">info@quincenalia.com</a></li>
+                <li className="flex flex-col items-center gap-2"><Phone className="w-6 h-6 text-primary mb-1"/> <a href="tel:+914156882" className="hover:underline">+34 914156882 </a></li>
+                <li className="flex flex-col items-center gap-2"><MapPin className="w-6 h-6 text-primary mb-1"/> Avenida de Burgos 155 , Madrid , 28036, España </li>
               </ul>
             </div>
           </div>
         </div>
       </section>
 
-      <footer className="bg-slate-900 text-gray-300 py-12 sm:py-16">
+      <footer className="bg-slate-900 text-gray-300 py-12 sm:py-16 text-[16px] font-normal">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div className="md:col-span-1">
@@ -356,32 +356,32 @@ const HomePage = () => {
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-gray-100">Explorar</h4>
+              <h4 className="font-semibold mb-4 text-gray-100 uppercase tracking-wide">Explorar</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">Propiedades</a></li>
-                <li><a href="#como-funciona" className="hover:text-white transition-colors">Cómo Funciona</a></li>
-                <li><a href="#faq" className="hover:text-white transition-colors">Preguntas Frecuentes</a></li>
-                <li><a href="#contacto" className="hover:text-white transition-colors">Contacto</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Propiedades</a></li>
+                <li><a href="#como-funciona" className="hover:text-primary transition-colors">Cómo Funciona</a></li>
+                <li><a href="#faq" className="hover:text-primary transition-colors">Preguntas Frecuentes</a></li>
+                <li><a href="#contacto" className="hover:text-primary transition-colors">Contacto</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-gray-100">Legal</h4>
+              <h4 className="font-semibold mb-4 text-gray-100 uppercase tracking-wide">Legal</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">Términos de Servicio</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Política de Privacidad</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Política de Cookies</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Términos de Servicio</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Política de Privacidad</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Política de Cookies</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-gray-100">Contacto</h4>
+              <h4 className="font-semibold mb-4 text-gray-100 uppercase tracking-wide">Contacto</h4>
               <ul className="space-y-2 text-sm">
                  <li className="flex items-center gap-2">
                     <Mail className="w-4 h-4 text-primary"/>
-                    <a href="mailto:info@quincenalia.com" className="hover:text-white transition-colors">info@quincenalia.com</a>
+                    <a href="mailto:info@quincenalia.com" className="hover:text-primary transition-colors">info@quincenalia.com</a>
                  </li>
                  <li className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-primary"/>
-                    <a href="tel:+914156882" className="hover:text-white transition-colors">+34 914156882 </a></li>
+                    <a href="tel:+914156882" className="hover:text-primary transition-colors">+34 914156882 </a></li>
                  <li className="flex items-start gap-2">
                     <MapPin className="w-4 h-4 text-primary mt-1"/>
                     <span>Avenida de Burgos 155<br/>Madrid, 28036, España</span>

@@ -84,16 +84,14 @@ const Navbar = () => {
             </Link>
             <Button 
               onClick={toggleMobileMenu}
-              className={`md:hidden transition-transform duration-200 active:scale-90 hover:scale-110 ${
-                isScrolled ? 'text-gray-700' : 'text-white'
-              }`} 
+              className={`md:hidden transition-transform duration-200 active:scale-90 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-600 text-white hover:bg-blue-600/20 hover:text-blue-600`} 
               variant="ghost" 
               size="icon"
             >
               {isMobileMenuOpen ? (
-                <X className="w-10 h-10" />
+                <X className="w-[84px] h-[84px]" />
               ) : (
-                <Menu className="w-10 h-10" />
+                <Menu className="w-[84px] h-[84px]" />
               )}
             </Button>
           </div>

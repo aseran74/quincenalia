@@ -77,7 +77,7 @@ export const AgentRequests = () => {
         .from('contact_requests')
         .select(`
           *,
-          agent:real_estate_agents(
+          agent:profiles(
             first_name,
             last_name,
             email

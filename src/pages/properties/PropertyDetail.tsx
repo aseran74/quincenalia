@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ChevronLeft, ChevronRight, Bed, Bath, Square, MapPin, Phone, Mail, Building, SquareArrowUp, Building2, Home, TreePalm } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bed, Bath, Square, MapPin, Phone, Mail, Building, SquareArrowUp, Building2, Home, TreePalm, X } from 'lucide-react';
 import { FaSwimmingPool, FaHotTub, FaChild, FaGamepad, FaUmbrellaBeach, FaParking, FaStore, FaHospital, 
   FaBus, FaSchool, FaUtensils, FaShoppingCart, FaMapMarkerAlt, FaImages, FaInfoCircle, 
   FaUserTie, FaSearch, FaArrowLeft, FaGlassCheers, FaTree, FaWater, FaShip, FaPrescriptionBottleAlt, FaUsers } from 'react-icons/fa';
@@ -224,6 +224,43 @@ export const PropertyDetail = () => {
   const mapsLoaded = useGoogleMaps(GOOGLE_MAPS_API_KEY);
   const [showContactForm, setShowContactForm] = useState(false);
   const contactFormRef = useRef<HTMLDivElement>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalImageIndex, setModalImageIndex] = useState(0);
+  // Swipe para miniaturas en móvil
+  const miniaturasRef = useRef<HTMLDivElement>(null);
+  let touchStartX = 0;
+  let scrollStartX = 0;
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    touchStartX = e.touches[0].clientX;
+    if (miniaturasRef.current) {
+      scrollStartX = miniaturasRef.current.scrollLeft;
+    }
+  };
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (miniaturasRef.current) {
+      const touchX = e.touches[0].clientX;
+      miniaturasRef.current.scrollLeft = scrollStartX - (touchX - touchStartX);
+    }
+  };
+
+  // Swipe para el carrusel grande del modal
+  let modalTouchStartX = 0;
+  let modalTouchEndX = 0;
+  const handleModalTouchStart = (e: React.TouchEvent<HTMLImageElement>) => {
+    modalTouchStartX = e.touches[0].clientX;
+  };
+  const handleModalTouchMove = (e: React.TouchEvent<HTMLImageElement>) => {
+    modalTouchEndX = e.touches[0].clientX;
+  };
+  const handleModalTouchEnd = () => {
+    if (modalTouchStartX - modalTouchEndX > 50) {
+      nextModalImage(); // Swipe izquierda
+    } else if (modalTouchEndX - modalTouchStartX > 50) {
+      prevModalImage(); // Swipe derecha
+    }
+    modalTouchStartX = 0;
+    modalTouchEndX = 0;
+  };
 
   useEffect(() => {
     if (mapsLoaded && property?.location && !coordinates) {
@@ -316,6 +353,21 @@ export const PropertyDetail = () => {
         contactFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 100);
   };
+
+  const openModal = (index: number) => {
+    setModalImageIndex(index);
+    setIsModalOpen(true);
+  };
+  const closeModal = () => setIsModalOpen(false);
+  const nextModalImage = () => {
+    if (!property?.images) return;
+    setModalImageIndex((prev) => (prev + 1) % property.images.length);
+  };
+  const prevModalImage = () => {
+    if (!property?.images) return;
+    setModalImageIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -365,71 +417,78 @@ export const PropertyDetail = () => {
             </Button>
        </div>
       <Card className="overflow-hidden shadow-lg">
-         <div id="galeria" className="relative group">
+         <div id="galeria" className="relative group mb-6">
               {property.images && property.images.length > 0 ? (
-            <>
-                <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden">
-                <img
-                  src={property.images[currentImageIndex]}
-                  alt={`${property.title} - Imagen ${currentImageIndex + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
-                />
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
-                </div>
-                {property.images.length > 1 && (
-                <>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={previousImage}
-                        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/70 hover:bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        aria-label="Imagen anterior"
-                    >
-                        <ChevronLeft className="h-5 w-5" />
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={nextImage}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/70 hover:bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        aria-label="Siguiente imagen"
-                    >
-                        <ChevronRight className="h-5 w-5" />
-                    </Button>
-                </>
-                )}
-                {/* Miniaturas debajo de la imagen principal */}
-                <div className="flex gap-2 mt-3 overflow-x-auto pb-2" style={{scrollBehavior: 'smooth'}}>
-                {property.images.map((image, index) => (
-                  <button
-                    key={index}
-                      onClick={() => {
-                        setCurrentImageIndex(index);
-                        // Hacer scroll automático a la miniatura seleccionada
-                        setTimeout(() => {
-                          const thumb = document.getElementById(`miniatura-${index}`);
-                          thumb?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                        }, 50);
-                      }}
-                      id={`miniatura-${index}`}
-                      className={`relative h-16 w-24 flex-shrink-0 border-2 rounded-lg overflow-hidden transition-all duration-200 ${index === currentImageIndex ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200'}`}
-                      aria-label={`Miniatura ${index + 1}`}
-                  >
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-2 lg:gap-4">
+                  {/* Bloque izquierdo: imagen destacada */}
+                  <div className="col-span-1 lg:col-span-2 row-span-2 cursor-pointer" onClick={() => openModal(0)}>
                     <img
-                      src={image}
-                        alt={`Miniatura ${index + 1}`}
-                        className="w-full h-full object-cover"
+                      src={property.images[0]}
+                      alt={`${property.title} - Imagen principal`}
+                      className="w-full h-[250px] sm:h-[350px] lg:h-[500px] object-cover rounded-lg shadow-md"
+                      style={{ boxShadow: 'inset 0 0 0 16px white' }}
                     />
-                  </button>
-                ))}
-              </div>
-            </>
-            ) : (
+                  </div>
+                  {/* Bloque derecho: 2 fotos arriba */}
+                  <div className="col-span-1 lg:col-span-3 grid grid-cols-2 gap-2 lg:gap-4">
+                    <img
+                      src={property.images[1] || property.images[0]}
+                      alt={`${property.title} - Imagen secundaria 1`}
+                      className="w-full h-[120px] sm:h-[170px] lg:h-[245px] object-cover rounded-lg shadow cursor-pointer"
+                      style={{ boxShadow: 'inset 0 0 0 16px white' }}
+                      onClick={() => openModal(1)}
+                    />
+                    <img
+                      src={property.images[2] || property.images[0]}
+                      alt={`${property.title} - Imagen secundaria 2`}
+                      className="w-full h-[120px] sm:h-[170px] lg:h-[245px] object-cover rounded-lg shadow cursor-pointer"
+                      style={{ boxShadow: 'inset 0 0 0 16px white' }}
+                      onClick={() => openModal(2)}
+                    />
+                  </div>
+                  {/* Bloque derecho: 1 foto abajo */}
+                  <div className="col-span-1 lg:col-span-3 mt-1 -mt-2 lg:-mt-3">
+                    <img
+                      src={property.images[3] || property.images[0]}
+                      alt={`${property.title} - Imagen secundaria 3`}
+                      className="w-full h-[120px] sm:h-[170px] lg:h-[245px] object-cover rounded-lg shadow cursor-pointer"
+                      style={{ boxShadow: 'inset 0 0 0 16px white' }}
+                      onClick={() => openModal(3)}
+                    />
+                  </div>
+                </div>
+              ) : (
                 <div className="w-full h-[250px] sm:h-[350px] bg-gray-200 flex items-center justify-center rounded-t-lg">
                     <FaImages className="w-12 h-12 text-gray-400" />
                     <p className="ml-2 text-gray-500">No hay imágenes disponibles</p>
                 </div>
-            )}
+              )}
+              {/* Miniaturas debajo de la galería principal */}
+              {property.images && property.images.length > 4 && (
+                <div
+                  className="flex gap-2 mt-3 overflow-x-auto pb-2"
+                  style={{scrollBehavior: 'smooth'}}
+                  ref={miniaturasRef}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                >
+                  {property.images.slice(4).map((image, index) => (
+                    <button
+                      key={index+4}
+                      onClick={() => openModal(index+4)}
+                      id={`miniatura-${index+4}`}
+                      className={`relative h-16 w-24 flex-shrink-0 border-4 border-white rounded-lg overflow-hidden transition-all duration-200`}
+                      aria-label={`Miniatura ${index+5}`}
+                    >
+                      <img
+                        src={image}
+                        alt={`Miniatura ${index+5}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
           </div>
          <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
             <div className="border-b pb-4 sm:pb-6">
@@ -646,6 +705,28 @@ export const PropertyDetail = () => {
           </div>
         </div>
       </Card>
+      {/* Modal/Carrusel de imágenes */}
+      {isModalOpen && property.images && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
+          <button onClick={closeModal} className="absolute top-6 right-6 text-white bg-black/60 rounded-full p-2 hover:bg-black/80 z-50">
+            <X className="w-8 h-8" />
+          </button>
+          <button onClick={prevModalImage} className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black/60 rounded-full p-2 hover:bg-black/80 z-50">
+            <ChevronLeft className="w-10 h-10" />
+          </button>
+          <img
+            src={property.images[modalImageIndex]}
+            alt={`Imagen ${modalImageIndex+1}`}
+            className="max-h-[80vh] max-w-[90vw] rounded-xl shadow-2xl border-4 border-white object-contain"
+            onTouchStart={handleModalTouchStart}
+            onTouchMove={handleModalTouchMove}
+            onTouchEnd={handleModalTouchEnd}
+          />
+          <button onClick={nextModalImage} className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black/60 rounded-full p-2 hover:bg-black/80 z-50">
+            <ChevronRight className="w-10 h-10" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };
