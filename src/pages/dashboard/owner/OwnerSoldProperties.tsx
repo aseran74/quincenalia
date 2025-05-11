@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import ReservationCalendar from '@/pages/dashboard/properties/ReservationCalendar';
@@ -7,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { MapPin, Bed, Bath, Square, Home } from 'lucide-react';
 import PropertyFilters from '@/components/properties/PropertyFilters';
 import { PropertyCard } from '@/components/properties/PropertyCard';
-import { useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { es } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';

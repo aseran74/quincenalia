@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
+import * as React from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';

@@ -1,4 +1,3 @@
-import React from 'react';
 import AdminExchangePanel from '@/components/exchange/AdminExchangePanel';
 
 const AdminExchange: React.FC = () => {

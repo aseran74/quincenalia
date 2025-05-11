@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,6 +29,8 @@ interface Property {
   share3_price?: number;
   share4_price?: number;
   features?: string[];
+  zona?: string;
+  lavabos?: number;
 }
 
 interface PropertiesListProps {
@@ -86,16 +89,8 @@ export const PropertiesList: React.FC<PropertiesListProps> = ({ properties, onDe
         const mainShareIdx = firstAvailableIdx !== -1 ? firstAvailableIdx : 0;
         const mainSharePrice = sharePrices[mainShareIdx] ?? property.price/4;
 
-        // Slide automático de imágenes
-        const [imgIdx, setImgIdx] = useState(0);
-        useEffect(() => {
-          if (!property.images || property.images.length <= 1) return;
-          const interval = setInterval(() => {
-            setImgIdx(idx => (idx + 1) % property.images.length);
-          }, 2500);
-          return () => clearInterval(interval);
-        }, [property.images]);
-        const currentImg = property.images && property.images.length > 0 ? property.images[imgIdx] : '/placeholder-property.jpg';
+        // Elimino el slide automático de imágenes: solo muestro la primera
+        const currentImg = property.images && property.images.length > 0 ? property.images[0] : '/placeholder-property.jpg';
 
         return (
           <Card
@@ -155,6 +150,18 @@ export const PropertiesList: React.FC<PropertiesListProps> = ({ properties, onDe
                 <HiOutlineMapPin className="w-4 h-4 sm:w-7 sm:h-7" />
                 <span className="truncate max-w-[120px]">{property.location}</span>
               </div>
+              {property.zona && (
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">Zona:</span>
+                  <span className="truncate max-w-[120px]">{property.zona}</span>
+                </div>
+              )}
+              {typeof property.lavabos === 'number' && (
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">Lavabos:</span>
+                  <span>{property.lavabos}</span>
+                </div>
+              )}
             </div>
             <CardContent className="pt-[120px] sm:pt-[140px] md:pt-[160px] pb-2 px-4 font-poppins" />
           </Card>

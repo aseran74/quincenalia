@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import * as React from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,8 @@ interface PropertyUpload {
   copropiedad: 'tipo1' | 'tipo2' | 'tipo3' | 'tipo4';
   features: string[];
   images: string[];
+  zona?: string;
+  lavabos?: number;
 }
 
 const BulkUpload: React.FC = () => {
@@ -48,6 +51,8 @@ const BulkUpload: React.FC = () => {
             copropiedad: row.copropiedad || 'tipo1',
             features: row.features ? row.features.split(',').map((f: string) => f.trim()) : [],
             images: row.images ? row.images.split(',').map((i: string) => i.trim()) : [],
+            zona: row.zona || '',
+            lavabos: Number(row.lavabos) || 0,
           }));
 
           resolve(properties);
@@ -109,7 +114,9 @@ const BulkUpload: React.FC = () => {
         status: 'disponible',
         copropiedad: 'tipo1',
         features: 'parking,pool,garden',
-        images: 'url1,url2,url3'
+        images: 'url1,url2,url3',
+        zona: 'Costa del Sol',
+        lavabos: 2
       }
     ];
 

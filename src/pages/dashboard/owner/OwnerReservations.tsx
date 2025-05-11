@@ -1,7 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-// Removido import innecesario de Calendar si no se usa directamente aquí
-// import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
-import 'react-big-calendar/lib/css/react-big-calendar.css'; // Mantén si ReservationCalendar lo necesita indirectamente
+import { useEffect, useState, useRef } from 'react';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { supabase } from '@/lib/supabase';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';

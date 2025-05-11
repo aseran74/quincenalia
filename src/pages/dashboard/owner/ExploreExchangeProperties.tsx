@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import * as React from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -40,6 +41,8 @@ interface Property {
   share2_owner_id?: string | null;
   share3_owner_id?: string | null;
   share4_owner_id?: string | null;
+  zona?: string;
+  lavabos?: number;
 }
 
 interface Reservation {
@@ -282,6 +285,16 @@ const ExploreExchangeProperties: React.FC = () => {
               <CardContent>
                 <div className="mt-3 mb-2 flex flex-col gap-1">
                   <div className="text-lg font-semibold">{prop.title}</div>
+                  {prop.zona && (
+                    <div className="flex items-center gap-2 text-gray-700 text-xs">
+                      <span className="font-semibold">Zona:</span> {prop.zona}
+                    </div>
+                  )}
+                  {typeof prop.lavabos === 'number' && (
+                    <div className="flex items-center gap-2 text-gray-700 text-xs">
+                      <span className="font-semibold">Lavabos:</span> {prop.lavabos}
+                    </div>
+                  )}
                   <div className="text-sm text-gray-600">{prop.location}</div>
                   <div className="flex gap-3 text-sm text-gray-500 mt-1">
                     <span>🛏 {prop.bedrooms || '-'} hab.</span>

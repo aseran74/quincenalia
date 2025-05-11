@@ -2,7 +2,6 @@
 // npm install react-calendar
 // npm install --save-dev @types/react-calendar
 
-import React, { useEffect, useState } from 'react';
 import { Calendar, dateFnsLocalizer, EventPropGetter, SlotInfo } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { supabase } from '@/lib/supabase';
@@ -12,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import { useEffect, useState } from 'react';
 
 // --- Interfaces ---
 interface Property {
@@ -43,6 +43,9 @@ interface CalendarEvent {
   start: Date;
   end: Date;
   owner_id: string;
+  status?: string;
+  isExchange?: boolean;
+  isPending?: boolean;
 }
 
 interface ReservationCalendarProps {
@@ -56,6 +59,8 @@ interface ReservationCalendarProps {
   onPointsChange?: (newPoints: number) => void;
   selectedDates?: Date[];
   onSelectedDatesChange?: (dates: Date[]) => void;
+  ownerIdForReservation?: string; // Añadido para soporte admin
+  onReservationCreated?: () => void; // Por si se usa
 }
 
 // --- Configuración del Calendario ---
@@ -78,7 +83,7 @@ const exchangeStatusColors: Record<string, string> = {
   'cancelada': '#cccccc', // gris
 };
 
-const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, exchangeMode = false, pointsConfig, ownerPoints, onPointsChange, selectedDates, onSelectedDatesChange }) => {
+const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, exchangeMode = false, pointsConfig, ownerPoints, onPointsChange, selectedDates, onSelectedDatesChange, ownerIdForReservation, onReservationCreated }) => {
   const { user } = useAuth();
   const params = useParams();
   const navigate = useNavigate();
@@ -389,12 +394,15 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
     const owner = propietarios.find((p) => p.id === r.owner_id);
     const startDate = new Date(r.start_date + 'T00:00:00Z');
     const endDate = new Date(r.end_date + 'T00:00:00Z');
+    const status = (r as any).status || '';
     return {
-      title: (typeof (r as any).title === 'string' && (r as any).title) || (owner ? `${owner.first_name} ${owner.last_name}` : 'Reservado (???)'),
+      title: status === 'fija'
+        ? 'Reserva fija' + (owner ? ` (${owner.first_name} ${owner.last_name})` : '')
+        : (typeof (r as any).title === 'string' && (r as any).title) || (owner ? `${owner.first_name} ${owner.last_name}` : 'Reservado (???)'),
       start: startDate,
       end: endDate,
       owner_id: r.owner_id,
-      status: (r as any).status || '',
+      status,
       isExchange: !!(r as any).isExchange
     };
   });
@@ -460,6 +468,18 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
           borderRadius: '4px',
           border: '2px dashed #0077cc',
           opacity: 0.7
+        },
+      };
+    }
+    // Si es reserva fija
+    if ((event as any).status === 'fija') {
+      return {
+        style: {
+          backgroundColor: '#a5d8ff', // azul claro
+          color: '#1c3a5b',
+          borderRadius: '4px',
+          border: '2px solid #339af0',
+          opacity: 0.95
         },
       };
     }

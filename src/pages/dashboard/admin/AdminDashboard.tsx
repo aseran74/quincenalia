@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import * as React from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Outlet, Routes, Route } from 'react-router-dom';
 import {
   Building, Users, Calendar, FileText, AlertTriangle, MessageSquare, DollarSign,
   User, LogOut, Home, Menu, ChevronLeft
@@ -13,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import AddProperty2 from '../AddProperty2';
 
 const menuItems = [
   { icon: <Home className="w-5 h-5" />, label: 'Panel de Control', path: '/dashboard/admin' },
@@ -185,4 +187,12 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard; 
+export default AdminDashboard;
+
+export function AdminDashboardRoutes() {
+  return (
+    <Routes>
+      <Route path="properties/new2" element={<AddProperty2 />} />
+    </Routes>
+  );
+} 

@@ -1,6 +1,5 @@
 import * as React from 'react';
-import { useEffect, useState, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -18,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
+import { useEffect, useState, useRef } from 'react';
 import { Autocomplete, useLoadScript } from '@react-google-maps/api';
 import { Bed, Bath, Toilet } from 'lucide-react';
 
@@ -78,7 +78,7 @@ const ZONAS_OPTIONS = [
   'Canarias.',
   'Baleares.',
   'Costa Catalana',
-  'Andalucia',
+  'Anadalucia',
   'Euskadi.',
   'Asturias.',
   'Galicia',
@@ -125,20 +125,19 @@ const FEATURES_OPTIONS = [
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 const GOOGLE_MAPS_LIBRARIES = ["places"] as ["places"];
 
-const EditProperty = () => {
-  const { id } = useParams();
+const AddProperty2 = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [owners, setOwners] = useState<{ id: string; name: string }[]>([]);
   const [agents, setAgents] = useState<{ id: string; name: string }[]>([]);
-  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [hydrated, setHydrated] = useState(false);
+  const [initialValues, setInitialValues] = useState<PropertyFormValues | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const autocompleteRef = useRef<any>(null);
   const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY, libraries: GOOGLE_MAPS_LIBRARIES });
-  const [initialValues, setInitialValues] = useState<PropertyFormValues | null>(null);
-  const [hydrated, setHydrated] = useState(false);
 
-  // Cargar propietarios y agentes
+  // Cargar usuarios propietarios y agentes
   useEffect(() => {
     supabase
       .from('profiles')
@@ -147,43 +146,94 @@ const EditProperty = () => {
       .then(({ data, error }) => {
         if (error) {
           console.error('Error cargando perfiles:', error);
+        } else {
+          console.log('Perfiles cargados:', data);
         }
         setOwners((data || []).filter(u => u.role === 'owner'));
         setAgents((data || []).filter(u => u.role === 'agent'));
       });
   }, []);
 
-  // Cargar datos de la propiedad
+  // Persistencia: cargar valores iniciales de localStorage
   useEffect(() => {
-    if (!id) return;
-    const fetchProperty = async () => {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('id', id)
-        .single();
-      if (error || !data) {
-        toast({ title: 'Error', description: 'No se pudo cargar la propiedad', variant: 'destructive' });
-        navigate('/dashboard/properties');
-        return;
+    const saved = localStorage.getItem('add-property2-form');
+    if (saved) {
+      try {
+        setInitialValues(JSON.parse(saved));
+      } catch (e) {
+        localStorage.removeItem('add-property2-form');
+        setInitialValues({
+          title: '',
+          description: '',
+          price: 0,
+          location: '',
+          bedrooms: 0,
+          bathrooms: 0,
+          area: 0,
+          zona: '',
+          lavabos: 0,
+          url_externa_anuncio: '',
+          tipo_vivienda: '',
+          features: [],
+          features_extra: [],
+          images: [],
+          nearby_services: [],
+          latitude: undefined,
+          longitude: undefined,
+          destacada: false,
+          status: '',
+          agent_id: '',
+          share1_price: undefined,
+          share1_status: '',
+          share1_owner_id: '',
+          share2_price: undefined,
+          share2_status: '',
+          share2_owner_id: '',
+          share3_price: undefined,
+          share3_status: '',
+          share3_owner_id: '',
+          share4_price: undefined,
+          share4_status: '',
+          share4_owner_id: '',
+        });
       }
+    } else {
       setInitialValues({
-        ...data,
-        images: data.images || [],
-        features: data.features || [],
-        features_extra: data.features_extra || [],
-        nearby_services: data.nearby_services || [],
-        destacada: !!data.destacada,
-        lavabos: data.lavabos ?? 0,
-        latitude: data.latitude,
-        longitude: data.longitude,
+        title: '',
+        description: '',
+        price: 0,
+        location: '',
+        bedrooms: 0,
+        bathrooms: 0,
+        area: 0,
+        zona: '',
+        lavabos: 0,
+        url_externa_anuncio: '',
+        tipo_vivienda: '',
+        features: [],
+        features_extra: [],
+        images: [],
+        nearby_services: [],
+        latitude: undefined,
+        longitude: undefined,
+        destacada: false,
+        status: '',
+        agent_id: '',
+        share1_price: undefined,
+        share1_status: '',
+        share1_owner_id: '',
+        share2_price: undefined,
+        share2_status: '',
+        share2_owner_id: '',
+        share3_price: undefined,
+        share3_status: '',
+        share3_owner_id: '',
+        share4_price: undefined,
+        share4_status: '',
+        share4_owner_id: '',
       });
-      if (data.latitude && data.longitude) {
-        setCoordinates({ lat: data.latitude, lng: data.longitude });
-      }
-    };
-    fetchProperty();
-  }, [id, navigate, toast]);
+    }
+  }, []);
 
   // Inicializar el formulario solo cuando initialValues está listo
   const form = useForm<PropertyFormValues>({
@@ -198,6 +248,34 @@ const EditProperty = () => {
       setHydrated(true);
     }
   }, [initialValues, hydrated, form]);
+
+  // Guardar en localStorage cuando el formulario cambia
+  useEffect(() => {
+    if (!hydrated) return;
+    const subscription = form.watch((value) => {
+      localStorage.setItem('add-property2-form', JSON.stringify(value));
+    });
+    return () => subscription.unsubscribe();
+  }, [form, hydrated]);
+
+  // Sincronizar entre pestañas
+  useEffect(() => {
+    if (!hydrated) return;
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'add-property2-form' && e.newValue) {
+        try {
+          form.reset(JSON.parse(e.newValue));
+        } catch (e) {
+          localStorage.removeItem('add-property2-form');
+        }
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [form, hydrated]);
+
+  // Renderizar solo cuando initialValues y hydrated están listos
+  if (!initialValues || !hydrated) return <div>Cargando...</div>;
 
   // Añade esta función para obtener la URL pública de una imagen
   const getImageUrl = (img: string) => {
@@ -242,12 +320,20 @@ const EditProperty = () => {
     }
   };
 
+  // Lógica para mover imágenes
+  const moveImage = (fromIdx: number, toIdx: number) => {
+    const images = [...form.getValues('images') || []];
+    if (toIdx < 0 || toIdx >= images.length) return;
+    const [moved] = images.splice(fromIdx, 1);
+    images.splice(toIdx, 0, moved);
+    form.setValue('images', images);
+  };
+
   const onSubmit = async (data: PropertyFormValues) => {
     try {
-      if (!id) throw new Error('ID no proporcionado');
       const dataToSend = { ...data };
       [1,2,3,4].forEach(n => {
-        if (dataToSend[`share${n}_status`] === 'disponible' || dataToSend[`share${n}_owner_id`] === null) {
+        if (dataToSend[`share${n}_status`] === 'disponible') {
           delete dataToSend[`share${n}_owner_id`];
         }
       });
@@ -258,35 +344,31 @@ const EditProperty = () => {
       });
       const { error } = await supabase
         .from('properties')
-        .update(dataToSend)
-        .eq('id', id);
+        .insert([dataToSend]);
+
       if (error) throw error;
-      toast({ title: 'Éxito', description: 'Propiedad actualizada correctamente' });
-      setTimeout(() => {
-        navigate('/dashboard/admin/properties');
-      }, 1200);
+
+      toast({
+        title: 'Éxito',
+        description: 'La propiedad se ha creado exitosamente.',
+      });
+      localStorage.removeItem('add-property2-form');
+      navigate('/dashboard/admin/properties');
     } catch (error) {
       console.error('Error:', error);
-      toast({ title: 'Error', description: 'Error al actualizar la propiedad', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'Error al crear la propiedad',
+        variant: 'destructive',
+      });
     }
   };
-
-  // Lógica para mover imágenes
-  const moveImage = (fromIdx: number, toIdx: number) => {
-    const images = [...form.getValues('images') || []];
-    if (toIdx < 0 || toIdx >= images.length) return;
-    const [moved] = images.splice(fromIdx, 1);
-    images.splice(toIdx, 0, moved);
-    form.setValue('images', images);
-  };
-
-  if (!initialValues || !hydrated) return <div>Cargando...</div>;
 
   return (
     <div className="container mx-auto py-8">
       <Card>
         <CardHeader>
-          <CardTitle>Editar Propiedad</CardTitle>
+          <CardTitle>Agregar Nueva Propiedad (Avanzado)</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -703,9 +785,8 @@ const EditProperty = () => {
                             control={form.control}
                             name={`share${n}_owner_id` as any}
                             render={({ field }) => {
+                              // Deshabilitar si el estado es 'disponible'
                               const status = form.getValues(`share${n}_status` as any);
-                              // Si el valor es null o el estado es disponible, forzamos string vacío y deshabilitamos
-                              const value = status === 'disponible' || field.value == null ? '' : field.value;
                               return (
                                 <FormItem>
                                   <FormLabel>Propietario</FormLabel>
@@ -714,7 +795,7 @@ const EditProperty = () => {
                                       {...field}
                                       className="w-full border rounded px-3 py-2 text-sm h-10"
                                       disabled={status === 'disponible'}
-                                      value={value}
+                                      value={status === 'disponible' ? '' : field.value}
                                       onChange={e => field.onChange(e.target.value)}
                                     >
                                       <option value="">Selecciona propietario</option>
@@ -762,7 +843,7 @@ const EditProperty = () => {
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
+                  {form.formState.isSubmitting ? 'Guardando...' : 'Guardar Propiedad'}
                 </Button>
               </div>
             </form>
@@ -773,4 +854,4 @@ const EditProperty = () => {
   );
 };
 
-export default EditProperty; 
+export default AddProperty2; 

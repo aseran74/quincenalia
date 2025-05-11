@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import * as React from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,8 @@ interface Property {
   nearby_services?: string[];
   tipo_vivienda?: string;
   features_extra?: string[];
+  zona?: string;
+  lavabos?: number;
 }
 
 interface Agent {
@@ -381,6 +384,16 @@ const PropertyDetail = () => {
             {property.tipo_vivienda && (
               <div className="mb-2">
                 <span className="inline-block bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full font-semibold mr-2">{property.tipo_vivienda}</span>
+              </div>
+            )}
+            {property.zona && (
+              <div className="flex items-center gap-2 text-gray-700 text-sm">
+                <span className="font-semibold">Zona:</span> {property.zona}
+              </div>
+            )}
+            {typeof property.lavabos === 'number' && (
+              <div className="flex items-center gap-2 text-gray-700 text-sm">
+                <span className="font-semibold">Lavabos:</span> {property.lavabos}
               </div>
             )}
             <div className="flex flex-wrap gap-6 items-center mb-2">

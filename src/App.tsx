@@ -23,7 +23,6 @@ import IncidenciasPanel from './pages/dashboard/incidencias/IncidenciasPanel';
 import IncidenciaForm from './pages/dashboard/incidencias/IncidenciaForm';
 import ComisionesPanel from './pages/dashboard/commissions/ComisionesPanel';
 import ProfilePanel from './pages/dashboard/profile/ProfilePanel';
-import React from 'react';
 import HomePage from './pages/home/HomePage';
 import DashboardHome from './pages/dashboard/DashboardHome';
 import { PropertiesPage } from './pages/properties';
@@ -45,6 +44,7 @@ import AdminExchange from './pages/dashboard/admin/AdminExchange';
 import OwnerSoldProperties from './pages/dashboard/owner/OwnerSoldProperties';
 import CoPropertiesCalendar from './pages/dashboard/owner/CoPropertiesCalendar';
 import ExploreExchangeProperties from './pages/dashboard/owner/ExploreExchangeProperties';
+import AddProperty2 from './pages/dashboard/AddProperty2';
 
 const Profile = () => (
   <div style={{ padding: 32 }}>

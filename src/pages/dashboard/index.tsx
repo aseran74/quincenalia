@@ -8,6 +8,7 @@ import AgencyForm from './agencies/AgencyForm';
 import AgentsList from './agents/AgentsList';
 import AgentForm from './agents/AgentForm';
 import DashboardHome from './DashboardHome';
+import AddProperty2 from './AddProperty2';
 
 const Dashboard = () => {
   return (

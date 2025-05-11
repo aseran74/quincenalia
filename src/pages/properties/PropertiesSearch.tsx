@@ -7,9 +7,10 @@ import { MapIcon, ListBulletIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useLoadScript, Autocomplete } from '@react-google-maps/api';
+import type { Libraries } from '@react-google-maps/api';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-const GOOGLE_MAPS_LIBRARIES = ['places'];
+const GOOGLE_MAPS_LIBRARIES: Libraries = ['places'];
 
 const PropertiesSearch = () => {
   const [viewMode, setViewMode] = useState<'map' | 'list'>('list');
@@ -173,6 +174,16 @@ const PropertiesSearch = () => {
                     <div className="p-4">
                       <h3 className="text-lg font-semibold">{property.title}</h3>
                       <div className="mt-2 text-sm text-gray-600">
+                        {property.zona && (
+                          <div className="flex items-center gap-2 text-gray-700 text-xs">
+                            <span className="font-semibold">Zona:</span> {property.zona}
+                          </div>
+                        )}
+                        {typeof property.lavabos === 'number' && (
+                          <div className="flex items-center gap-2 text-gray-700 text-xs">
+                            <span className="font-semibold">Lavabos:</span> {property.lavabos}
+                          </div>
+                        )}
                         <p>{property.bedrooms} habitaciones • {property.bathrooms} baños</p>
                         <p>{property.area || property.size}m² • {property.location}</p>
                       </div>
