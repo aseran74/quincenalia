@@ -298,7 +298,7 @@ const ZONAS_DESTACADAS = [
 
 // Función para normalizar zonas (sin tildes y en minúsculas)
 function normalizaZona(z: string) {
-  return z.normalize('NFD').replace(/[ -]/g, '').toLowerCase();
+  return z.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
 const HomePage = () => {
