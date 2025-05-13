@@ -13,4 +13,13 @@
   100% {
     transform: scale(1);
   }
+}
+
+/* Oculta la barra de scroll en todos los navegadores */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE y Edge */
+  scrollbar-width: none;     /* Firefox */
 } 

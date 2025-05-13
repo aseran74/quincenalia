@@ -40,6 +40,7 @@ export interface Property {
   address?: string;
   city?: string;
   type?: string;
+  zona?: string;
 }
 
 export interface DateRange {

@@ -107,13 +107,18 @@ const ContactRequestsTable = () => {
     }
   };
 
+  const isAgent = user?.role === 'agent';
+
   if (loading) {
     return <div>Cargando solicitudes...</div>;
   }
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold">Solicitudes de contacto</h2>
+      <h2 className={`text-2xl font-bold ${isAgent ? 'text-right sm:text-left' : 'text-center'}`}>
+        <span className="hidden sm:inline">Solicitudes de contacto</span>
+        <span className="inline sm:hidden">Solicitudes<br />de contacto</span>
+      </h2>
       {/* Tabla solo visible en md+ */}
       <Table className="hidden md:table">
         <TableHeader>

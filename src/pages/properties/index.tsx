@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -25,6 +25,7 @@ type Filters = {
   propertyTypes: string[];
   features: string[];
   location: string;
+  zona: string;
 };
 
 const initialFilters: Filters = {
@@ -35,6 +36,7 @@ const initialFilters: Filters = {
   propertyTypes: [],
   features: [],
   location: '',
+  zona: '',
 };
 
 const priceOptions = [
@@ -119,6 +121,10 @@ const getMarkerIcon = () => {
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 const AUTOCOMPLETE_LIBRARIES: Libraries = ['places'];
 
+const ZONAS_OPTIONS = [
+  'Andalucía', 'Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Málaga', 'Islas Baleares', 'Islas Canarias', 'Galicia', 'Asturias', 'Cantabria', 'País Vasco', 'Murcia', 'Castilla y León', 'Castilla-La Mancha', 'Aragón', 'Navarra', 'La Rioja', 'Extremadura', 'Costa de levante', 'Canarias'
+];
+
 export const PropertiesPage = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -137,6 +143,7 @@ export const PropertiesPage = () => {
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries: AUTOCOMPLETE_LIBRARIES,
   });
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -155,6 +162,14 @@ export const PropertiesPage = () => {
     fetchProperties();
   }, []);
 
+  // Filtro de zona desde query param
+  useEffect(() => {
+    const zonaParam = searchParams.get('zona');
+    if (zonaParam) {
+      setFilters(prev => ({ ...prev, zona: zonaParam }));
+    }
+  }, [searchParams]);
+
   const applyFilters = (propertiesToFilter: Property[]): Property[] => {
     return propertiesToFilter.filter(property => {
       const minShare = getMinSharePrice(property);
@@ -167,7 +182,8 @@ export const PropertiesPage = () => {
       const matchesType = filters.propertyTypes.length === 0 || (property.type && filters.propertyTypes.includes(property.type));
       const matchesFeatures = filters.features.length === 0 || (property.features && filters.features.every(f => property.features!.includes(f)));
       const matchesLocation = !filters.location || (property.location && property.location.toLowerCase().includes(filters.location.toLowerCase()));
-      return matchesBedrooms && matchesBathrooms && matchesType && matchesFeatures && matchesLocation;
+      const matchesZona = !filters.zona || (property.zona && property.zona === filters.zona);
+      return matchesBedrooms && matchesBathrooms && matchesType && matchesFeatures && matchesLocation && matchesZona;
     });
   };
 
@@ -326,6 +342,24 @@ export const PropertiesPage = () => {
       <Card className="mb-6 bg-card border shadow-sm rounded-lg">
         <CardContent className="p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            {/* Filtro de Zona */}
+            <div>
+              <label htmlFor="filterZona" className="block text-xs font-medium text-muted-foreground mb-1">Zona</label>
+              <Select
+                value={filters.zona || 'all'}
+                onValueChange={zona => setFilters(prev => ({ ...prev, zona: zona === 'all' ? '' : zona }))}
+              >
+                <SelectTrigger id="filterZona" className="w-full text-sm">
+                  <SelectValue placeholder="Todas las zonas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las zonas</SelectItem>
+                  {ZONAS_OPTIONS.map(z => (
+                    <SelectItem key={z} value={z}>{z}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             {/* ¿Dónde buscas? */}
             <div className="relative">
               <label htmlFor="filterLocation" className="block text-xs font-medium text-muted-foreground mb-1">¿Dónde buscas?</label>

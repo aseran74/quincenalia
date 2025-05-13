@@ -1,3 +1,4 @@
+// Modificación mínima para forzar commit y push
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
@@ -10,11 +11,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-    PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin
+    PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin, ChevronLeft
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ContactForm from '@/components/ContactForm';
 import './HomePage.css';
+import { supabase } from '@/lib/supabase';
 
 const FAQS = [
   {
@@ -241,7 +243,91 @@ const HeroParallax = () => {
   );
 };
 
+const ZONAS_DESTACADAS = [
+  {
+    zona: 'Costa de levante.',
+    image: '/LEvante.webp',
+    link: '/properties?zona=Costa%20de%20levante.',
+  },
+  {
+    zona: 'Canarias.',
+    image: '/Canarias.webp',
+    link: '/properties?zona=Canarias.',
+  },
+  {
+    zona: 'Baleares.',
+    image: '/Imagenes.webp',
+    link: '/properties?zona=Baleares.',
+  },
+  {
+    zona: 'Costa Catalana',
+    image: '/Costa catalana.webp',
+    link: '/properties?zona=Costa%20Catalana',
+  },
+  {
+    zona: 'Andalucia',
+    image: '/andalucia.jpg',
+    link: '/properties?zona=Andalucia',
+  },
+  {
+    zona: 'Euskadi.',
+    image: '/Euskadi.webp',
+    link: '/properties?zona=Euskadi.',
+  },
+  {
+    zona: 'Asturias.',
+    image: '/Asturias.webp',
+    link: '/properties?zona=Asturias.',
+  },
+  {
+    zona: 'Galicia',
+    image: '/Galicia.webp',
+    link: '/properties?zona=Galicia',
+  },
+  {
+    zona: 'Murcia',
+    image: '/placeholder.svg',
+    link: '/properties?zona=Murcia',
+  },
+  {
+    zona: 'Zonas de interior.',
+    image: '/placeholder.svg',
+    link: '/properties?zona=Zonas%20de%20interior.',
+  },
+];
+
+// Función para normalizar zonas (sin tildes y en minúsculas)
+function normalizaZona(z: string) {
+  return z.normalize('NFD').replace(/[ -]/g, '').toLowerCase();
+}
+
 const HomePage = () => {
+  const [viviendasPorZona, setViviendasPorZona] = useState<{ [key: string]: number }>({});
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchViviendasPorZona = async () => {
+      const { data, error } = await supabase.rpc('viviendas_por_zona');
+      if (error) return;
+      const counts: { [key: string]: number } = {};
+      (data || []).forEach((row: any) => {
+        if (row.zona) {
+          counts[row.zona] = Number(row.total);
+        }
+      });
+      setViviendasPorZona(counts);
+    };
+    fetchViviendasPorZona();
+  }, []);
+
+  // Renombrar la función scroll
+  const scrollZonaCarrusel = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = direction === 'left' ? -500 : 500;
+      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background font-poppins">
       <Navbar />
@@ -292,6 +378,73 @@ const HomePage = () => {
           </Button>
         </div>
       </section>
+      <section id="zonas-destacadas" className="py-16 sm:py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-3 text-gray-800">Explora por Zonas</h2>
+          <p className="text-lg text-center text-gray-600 mb-10 sm:mb-12 max-w-2xl mx-auto">
+            Encuentra tu refugio perfecto en las regiones más deseadas.
+          </p>
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 sm:-translate-x-6 z-10 rounded-full bg-white/80 hover:bg-white shadow-md backdrop-blur-sm"
+              onClick={() => scrollZonaCarrusel('left')}
+              aria-label="Scroll Left"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <div className="px-2 py-6">
+              <div ref={scrollContainerRef} className="flex space-x-4 md:space-x-6 overflow-x-auto pb-4 scrollbar-hide">
+                {ZONAS_DESTACADAS.map((zonaObj, index) => {
+                  const normalizedCurrentZona = normalizaZona(zonaObj.zona);
+                  const count = viviendasPorZona[normalizedCurrentZona] || 0;
+                  return (
+                    <Link to={zonaObj.link} key={index} className="flex-shrink-0 w-64 sm:w-72 group/card-link">
+                      <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-2xl group/card">
+                        <div className="relative h-48">
+                          <img
+                            src={zonaObj.image}
+                            alt={`Propiedades en ${zonaObj.zona}`}
+                            className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent opacity-90 group-hover/card:opacity-100 transition-opacity duration-300"></div>
+                          <div className="absolute bottom-0 left-0 right-0 p-4">
+                            <h3 className="text-xl font-bold text-white truncate" title={zonaObj.zona}>
+                              {zonaObj.zona}
+                            </h3>
+                            <p className="text-sm text-gray-100 mt-1">
+                              {count} {count === 1 ? 'vivienda' : 'viviendas'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="h-1 bg-primary/0 group-hover/card:bg-primary transition-all duration-300"></div>
+                      </Card>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 sm:translate-x-6 z-10 rounded-full bg-white/80 hover:bg-white shadow-md backdrop-blur-sm"
+              onClick={() => scrollZonaCarrusel('right')}
+              aria-label="Scroll Right"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </div>
+          <div className="text-center mt-10">
+            <Button asChild variant="default" size="lg" className="group">
+              <Link to="/properties">
+                Ver Todas las Propiedades
+                <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
       <section className="py-16 sm:py-20">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl sm:text-4xl font-bold text-center mb-10 sm:mb-12 text-gray-800">
@@ -301,16 +454,39 @@ const HomePage = () => {
         </div>
       </section>
       <ComoFunciona />
-      <section id="contacto" className="py-16 sm:py-20 bg-gradient-to-r from-primary via-blue-600 to-sky-500 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">¿Listo para cambiar tu forma de veranear?</h2>
-          <p className="text-lg sm:text-xl mb-8 max-w-2xl mx-auto font-light">
-            Nuestro equipo de expertos está listo para resolver tus dudas y ayudarte a encontrar tu propiedad ideal.
-          </p>
-          <Button variant="secondary" size="lg" className="bg-white text-primary hover:bg-gray-100 rounded-full px-8 py-3 text-base font-semibold shadow-lg transform transition hover:scale-105">
-             Hablar con un Asesor
-             <Phone className="ml-2 h-5 w-5" />
-          </Button>
+      <section id="contacto" className="py-16 sm:py-20 bg-gradient-to-b from-slate-50 to-white">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">¿Listo para Empezar?</h2>
+              <p className="text-lg text-gray-600 mb-6">
+                Contacta con nosotros para descubrir cómo Quincenalia puede transformar tu forma de disfrutar y rentabilizar
+                tus vacaciones. Nuestro equipo está listo para asesorarte.
+              </p>
+              <div className="space-y-4">
+                <a href="tel:+34666777888" className="flex items-center text-gray-700 hover:text-primary transition-colors">
+                  <Phone className="w-5 h-5 mr-3 text-primary" />
+                  <span>+34 666 777 888</span>
+                </a>
+                <a href="mailto:info@quincenalia.com" className="flex items-center text-gray-700 hover:text-primary transition-colors">
+                  <Mail className="w-5 h-5 mr-3 text-primary" />
+                  <span>info@quincenalia.com</span>
+                </a>
+                <div className="flex items-center text-gray-700">
+                  <MapPin className="w-5 h-5 mr-3 text-primary flex-shrink-0" />
+                  <span>Oficinas en Madrid, Barcelona y Málaga (Visitas con cita previa)</span>
+                </div>
+              </div>
+            </div>
+            <Card className="bg-white shadow-xl p-6 sm:p-8 rounded-2xl">
+              <CardHeader className="p-0 mb-4">
+                <CardTitle className="text-2xl font-semibold text-gray-800">Envíanos un Mensaje</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <ContactForm />
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
       <section id="faq" className="py-16 sm:py-20 bg-slate-50">
@@ -318,30 +494,6 @@ const HomePage = () => {
           <h2 className="text-3xl sm:text-4xl font-bold text-center mb-10 sm:mb-12 text-gray-800">Resolvemos tus Dudas</h2>
           <div className="max-w-4xl mx-auto">
             <FAQAccordion />
-          </div>
-        </div>
-      </section>
-
-      {/* Formulario de contacto al final de la landing */}
-      <section id="form-contacto" className="py-16 sm:py-20 bg-white border-t">
-        <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl p-0 md:p-0 flex flex-col md:flex-row overflow-hidden border">
-            {/* Columna 1: Formulario */}
-            <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-gradient-to-br from-primary/10 to-sky-50">
-              <h2 className="text-3xl font-bold mb-4 text-primary">¿Quieres que te contactemos?</h2>
-              <p className="text-gray-600 mb-6">Déjanos tus datos y te responderemos lo antes posible. ¡Sin compromiso!</p>
-              <ContactForm />
-            </div>
-            {/* Columna 2: Datos de contacto y beneficios */}
-            <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white border-t md:border-t-0 md:border-l border-gray-100 text-center text-[16px]">
-              <h2 className="text-3xl font-bold mb-6 text-primary">Contacto</h2>
-              <p className="text-primary font-semibold text-3x1 mb-6">🌟 Propietario + Viajero + Inversor: Todo en uno. 🌟</p>
-              <ul className="space-y-4 mb-8">
-                <li className="flex flex-col items-center gap-2"><Mail className="w-6 h-6 text-primary mb-1"/> <a href="mailto:info@quincenalia.com" className="hover:underline">info@quincenalia.com</a></li>
-                <li className="flex flex-col items-center gap-2"><Phone className="w-6 h-6 text-primary mb-1"/> <a href="tel:+914156882" className="hover:underline">+34 914156882 </a></li>
-                <li className="flex flex-col items-center gap-2"><MapPin className="w-6 h-6 text-primary mb-1"/> Avenida de Burgos 155 , Madrid , 28036, España </li>
-              </ul>
-            </div>
           </div>
         </div>
       </section>

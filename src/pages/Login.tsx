@@ -45,10 +45,10 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && !loading && user) {
-      navigate(getDashboardPath(user.role));
+    if (isAuthenticated && user) {
+      navigate(getDashboardPath(user.role), { replace: true });
     }
-  }, [isAuthenticated, loading, navigate, user]);
+  }, [isAuthenticated, user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
