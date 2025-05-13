@@ -82,7 +82,13 @@ const ContactForm: React.FC<ContactFormProps> = ({ agentId, propertyId, classNam
   };
 
   return (
-    <form onSubmit={handleSubmit} className={cn("space-y-4", className)}>
+    <form
+      onSubmit={handleSubmit}
+      className={cn(
+        "space-y-4 w-full max-w-lg mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-md",
+        className
+      )}
+    >
       <div>
         <Input
           type="text"

@@ -8,7 +8,11 @@ const ESTADOS = [
   { value: 'pagada', label: 'Pagada' },
 ];
 
-const ComisionesPanel: React.FC = () => {
+interface ComisionesPanelProps {
+  agentId?: string;
+}
+
+const ComisionesPanel: React.FC<ComisionesPanelProps> = ({ agentId }) => {
   const [comisiones, setComisiones] = useState<any[]>([]);
   const [agents, setAgents] = useState<any[]>([]);
   const [properties, setProperties] = useState<any[]>([]);
@@ -26,13 +30,17 @@ const ComisionesPanel: React.FC = () => {
   useEffect(() => {
     fetchComisiones();
     // eslint-disable-next-line
-  }, [filter]);
+  }, [filter, agentId]);
 
   const fetchComisiones = async () => {
     setLoading(true);
     let query = supabase.from('commissions').select('*').order('created_at', { ascending: false });
     if (filter.estado) query = query.eq('status', filter.estado);
-    if (filter.agente) query = query.eq('agent_id', filter.agente);
+    if (agentId) {
+      query = query.eq('agent_id', agentId);
+    } else if (filter.agente) {
+      query = query.eq('agent_id', filter.agente);
+    }
     if (filter.propiedad) query = query.eq('property_id', filter.propiedad);
     const { data } = await query;
     setComisiones(data || []);
@@ -80,10 +88,12 @@ const ComisionesPanel: React.FC = () => {
           <option value="">Todos los estados</option>
           {ESTADOS.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}
         </select>
-        <select className="border rounded px-3 py-2 text-sm" value={filter.agente} onChange={e => setFilter(f => ({ ...f, agente: e.target.value }))}>
-          <option value="">Todos los agentes</option>
-          {agents.map(a => <option key={a.id} value={a.id}>{a.first_name} {a.last_name}</option>)}
-        </select>
+        {!agentId && (
+          <select className="border rounded px-3 py-2 text-sm" value={filter.agente} onChange={e => setFilter(f => ({ ...f, agente: e.target.value }))}>
+            <option value="">Todos los agentes</option>
+            {agents.map(a => <option key={a.id} value={a.id}>{a.first_name} {a.last_name}</option>)}
+          </select>
+        )}
         <select className="border rounded px-3 py-2 text-sm" value={filter.propiedad} onChange={e => setFilter(f => ({ ...f, propiedad: e.target.value }))}>
           <option value="">Todas las propiedades</option>
           {properties.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
@@ -101,50 +111,83 @@ const ComisionesPanel: React.FC = () => {
           ) : comisiones.length === 0 ? (
             <p className="text-center text-gray-500 py-8">No hay comisiones para mostrar.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border text-sm">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="p-2">Propiedad</th>
-                    <th className="p-2">Agente</th>
-                    <th className="p-2">Porcentaje</th>
-                    <th className="p-2">Importe</th>
-                    <th className="p-2">Estado</th>
-                    <th className="p-2">Creada</th>
-                    <th className="p-2">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {comisiones.map(com => (
-                    <tr key={com.id} className="border-t hover:bg-gray-50 transition">
-                      <td className="p-2">{properties.find(p => p.id === com.property_id)?.title || '-'}</td>
-                      <td className="p-2">{agents.find(a => a.id === com.agent_id) ? `${agents.find(a => a.id === com.agent_id).first_name} ${agents.find(a => a.id === com.agent_id).last_name}` : '-'}</td>
-                      <td className="p-2">{com.percentage}%</td>
-                      <td className="p-2">{Number(com.amount).toFixed(2)} €</td>
-                      <td className="p-2">
-                        <select
-                          value={com.status}
-                          onChange={e => handleEstadoChange(com.id, e.target.value)}
-                          className="border rounded px-2 py-1 text-xs"
-                        >
-                          {ESTADOS.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}
-                        </select>
-                      </td>
-                      <td className="p-2">{new Date(com.created_at).toLocaleDateString()}</td>
-                      <td className="p-2">
-                        <button
-                          className="text-blue-600 underline text-xs"
-                          onClick={() => { setDetalle(com); setEdit(false); }}
-                          title="Ver detalles"
-                        >
-                          Ver detalles
-                        </button>
-                      </td>
+            <>
+              {/* Tabla solo visible en md+ */}
+              <div className="overflow-x-auto hidden md:block">
+                <table className="w-full border text-sm">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="p-2">Propiedad</th>
+                      <th className="p-2">Agente</th>
+                      <th className="p-2">Porcentaje</th>
+                      <th className="p-2">Importe</th>
+                      <th className="p-2">Estado</th>
+                      <th className="p-2">Creada</th>
+                      <th className="p-2">Acciones</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {comisiones.map(com => (
+                      <tr key={com.id} className="border-t hover:bg-gray-50 transition">
+                        <td className="p-2">{properties.find(p => p.id === com.property_id)?.title || '-'}</td>
+                        <td className="p-2">{agents.find(a => a.id === com.agent_id) ? `${agents.find(a => a.id === com.agent_id).first_name} ${agents.find(a => a.id === com.agent_id).last_name}` : '-'}</td>
+                        <td className="p-2">{com.percentage}%</td>
+                        <td className="p-2">{Number(com.amount).toFixed(2)} €</td>
+                        <td className="p-2">
+                          <select
+                            value={com.status}
+                            onChange={e => handleEstadoChange(com.id, e.target.value)}
+                            className="border rounded px-2 py-1 text-xs"
+                          >
+                            {ESTADOS.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}
+                          </select>
+                        </td>
+                        <td className="p-2">{new Date(com.created_at).toLocaleDateString()}</td>
+                        <td className="p-2">
+                          <button
+                            className="text-blue-600 underline text-xs"
+                            onClick={() => { setDetalle(com); setEdit(false); }}
+                            title="Ver detalles"
+                          >
+                            Ver detalles
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {/* Vista móvil tipo tarjeta */}
+              <div className="md:hidden space-y-4">
+                {comisiones.map(com => (
+                  <div key={com.id} className="border rounded-lg p-4 bg-white shadow-sm">
+                    <div className="font-semibold mb-1">{properties.find(p => p.id === com.property_id)?.title || '-'}</div>
+                    <div className="text-sm text-gray-600 mb-1">Agente: {agents.find(a => a.id === com.agent_id) ? `${agents.find(a => a.id === com.agent_id).first_name} ${agents.find(a => a.id === com.agent_id).last_name}` : '-'}</div>
+                    <div className="text-sm text-gray-600 mb-1">Porcentaje: {com.percentage}%</div>
+                    <div className="text-sm text-gray-600 mb-1">Importe: {Number(com.amount).toFixed(2)} €</div>
+                    <div className="text-sm text-gray-600 mb-1">Estado:
+                      <select
+                        value={com.status}
+                        onChange={e => handleEstadoChange(com.id, e.target.value)}
+                        className="border rounded px-2 py-1 text-xs w-full mt-1"
+                      >
+                        {ESTADOS.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}
+                      </select>
+                    </div>
+                    <div className="text-xs text-gray-400 mt-2">Creada: {new Date(com.created_at).toLocaleDateString()}</div>
+                    <div className="mt-2">
+                      <button
+                        className="text-blue-600 underline text-xs mr-2"
+                        onClick={() => { setDetalle(com); setEdit(false); }}
+                        title="Ver detalles"
+                      >
+                        Ver detalles
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
         {/* Detalle/edición */}

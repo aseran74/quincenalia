@@ -45,6 +45,11 @@ import OwnerSoldProperties from './pages/dashboard/owner/OwnerSoldProperties';
 import CoPropertiesCalendar from './pages/dashboard/owner/CoPropertiesCalendar';
 import ExploreExchangeProperties from './pages/dashboard/owner/ExploreExchangeProperties';
 import AddProperty2 from './pages/dashboard/AddProperty2';
+import AgentDashboardLayout from './pages/dashboard/agents';
+import ContactRequestsTable from '@/components/ContactRequestsTable';
+import AgentErpPage from './pages/dashboard/agents/erp';
+import AgentComisionesPage from './pages/dashboard/agents/comisiones';
+import AgentProfilePage from './pages/dashboard/agents/profile';
 
 const Profile = () => (
   <div style={{ padding: 32 }}>
@@ -136,6 +141,14 @@ function App() {
             <Route path="agents/:id" element={<AgentDetail />} />
             <Route path="agents/:id/edit" element={<AgentForm isEditing />} />
             <Route path="contact-requests" element={<AgentRequests />} />
+          </Route>
+
+          {/* Dashboard de Agentes */}
+          <Route path="/dashboard/agents" element={<ProtectedRoute><AgentDashboardLayout /></ProtectedRoute>}>
+            <Route index element={<ContactRequestsTable />} />
+            <Route path="erp" element={<AgentErpPage />} />
+            <Route path="comisiones" element={<AgentComisionesPage />} />
+            <Route path="profile" element={<AgentProfilePage />} />
           </Route>
         </Routes>
       </AuthProvider>

@@ -1,0 +1,222 @@
+[33mcommit 8c206c6950fbe8dfc8fcf324814f426e4e0bdbe9[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Sun May 11 22:38:15 2025 +0200
+
+    Mejoras galería detalle: bordes internos, swipe, modal carrusel, alineación imágenes
+
+[33mcommit 7fd2f8b6cc1fc9d470263df482746dfe04f8bd0d[m
+Merge: 6a7deca 603dbdc
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Sun May 11 15:52:41 2025 +0200
+
+    Merge branch 'main' of https://github.com/aseran74/lovable2
+
+[33mcommit 6a7deca4e907d70e3b47a9066a8d3475a488035f[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Sun May 11 15:35:37 2025 +0200
+
+    feat: reordenar imágenes y marcar destacada en alta y edición de propiedades. Fix validaciones y UX admin
+
+[33mcommit 603dbdcc16aeab97313f742809f89f3664b9346b[m
+Author: aseran74 <40388196+aseran74@users.noreply.github.com>
+Date:   Sun May 11 00:20:57 2025 +0200
+
+    Update README.md
+
+[33mcommit 0f5b24b676267be355c2c25d514bca25a6698d06[m
+Author: aseran74 <40388196+aseran74@users.noreply.github.com>
+Date:   Sun May 11 00:16:08 2025 +0200
+
+    Update README.md
+
+[33mcommit 7be125e3f3c7c38889602760341712bb4366a479[m
+Author: aseran74 <40388196+aseran74@users.noreply.github.com>
+Date:   Sun May 11 00:08:12 2025 +0200
+
+    Update README.md
+
+[33mcommit ffa9a704fe16154d504cbee61e43cdc0a2fea400[m
+Author: aseran74 <40388196+aseran74@users.noreply.github.com>
+Date:   Sun May 11 00:06:49 2025 +0200
+
+    Update README.md
+
+[33mcommit 6d834eb5bbcfeb30b22172c68dc6fe2d52c14618[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Sat May 10 22:24:07 2025 +0200
+
+    Mejoras en exploración y solicitud de intercambio: paso de fechas y propiedad, sidebar, filtros y bugfixes
+
+[33mcommit 5d5e06935f0545f0eebd8e9be9a4d87719d560e5[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Sat May 10 16:32:10 2025 +0200
+
+    Lógica inversa en paneles de reservas e intercambio para owners: solo puede reservar en sus propiedades o en ajenas según el modo
+
+[33mcommit c71a6158b97c9dae471f37f6bd825c7f6516d2d7[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Sat May 10 11:29:44 2025 +0200
+
+    Mejoras en vista de propiedades vendidas/intercambio: cards más anchas, calendario acordeón, botón reservar con fechas del filtro, UX responsive y lógica de filtros optimizada
+
+[33mcommit ca27ac8bb829cd4aaec371717c434da76dcbb75b[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Wed May 7 23:01:44 2025 +0200
+
+    feat: centrar título, dirección e iconos en el footer de las cards de propiedades
+
+[33mcommit f679ea04ba20caf8c0aa9789a6b80b54f7859576[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Wed May 7 22:38:45 2025 +0200
+
+    fix: iconos y textos blancos en cards de propiedades destacadas en home
+
+[33mcommit aa00ae33123ae0934f977e1f0ab551d962b6f77a[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Wed May 7 20:49:40 2025 +0200
+
+    fix: enlaces del mapa ahora son absolutos usando window.location.origin
+
+[33mcommit f49681d419d0a836f5c230588e0096aeb8e7c09d[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Wed May 7 19:27:07 2025 +0200
+
+    chore: añadir vercel.json para soporte SPA y rutas amigables
+
+[33mcommit 43ad128b6174a9de4c78a0668f83277c14138073[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Wed May 7 19:23:30 2025 +0200
+
+    Fix: enlaces de FeaturedProperties ahora usan /propiedades/:id (sin 404)
+
+[33mcommit 1fe84753096b85071d1eb9ce25ea6b67c69990e6[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Wed May 7 19:20:09 2025 +0200
+
+    Fix: icono de marcador del mapa apunta a map-marker-svgrepo-com.svg (sin error 404)
+
+[33mcommit 3be701de67d053939cd3e0c2e173e29a0322dc10[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Wed May 7 19:17:04 2025 +0200
+
+    Fix: enlaces del mapa ahora apuntan a /propiedades/:id y no dan error 404
+
+[33mcommit 4dc14dff72f38ad2173b0dfd3d9ce587d1cc7f82[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Wed May 7 19:12:21 2025 +0200
+
+    Mejoras en cards, filtros de propiedades, scroll de fotos y búsqueda por ubicación con Google Places
+
+[33mcommit 51afc412380ffb8b2fca66955bb83db701685f57[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Wed May 7 19:06:46 2025 +0200
+
+    Añadido vercel.json para compatibilidad de rutas SPA en Vercel y mejoras de filtros
+
+[33mcommit 06b5261a506557ac51c4a1c150cbcf5a0c8528b9[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Wed May 7 19:03:47 2025 +0200
+
+    Filtro de ubicación con Google Places Autocomplete en propiedades y mejoras de UI
+
+[33mcommit 787fe91042875ef284b40e9a70c8573aaf40e7b1[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Wed May 7 18:52:04 2025 +0200
+
+    Mejoras en cards de la home: overlay compacto, efecto zoom hero y estilos de info sobre imagen
+
+[33mcommit 8197c551ba38ba2112c4945681d413a3016f9baa[m
+Author: aseran74 <40388196+aseran74@users.noreply.github.com>
+Date:   Wed May 7 00:24:20 2025 +0200
+
+    README.md
+
+[33mcommit 430a6e86743852d2fe5dbf6f03e79092dcc8a8e0[m
+Author: aseran74 <40388196+aseran74@users.noreply.github.com>
+Date:   Wed May 7 00:22:59 2025 +0200
+
+    Update
+    
+    Quincenalia primera plataforma copropiedad
+
+[33mcommit c1d61e5acc292f3f0793fdc31c9f1d0da1e9ae68[m
+Author: aseran74 <40388196+aseran74@users.noreply.github.com>
+Date:   Wed May 7 00:20:18 2025 +0200
+
+    Readme
+
+[33mcommit dd3d989efd280979a6c01614418991774a4fd0cf[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Tue May 6 23:43:15 2025 +0200
+
+    Efecto zoom in/out de la imagen hero más suave (scale 1.025). Mejor experiencia visual.
+
+[33mcommit 33e5c79ae1b8ca17884d4a426d8c3e1b7a1c3c60[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Tue May 6 23:31:02 2025 +0200
+
+    Actualizados datos de contacto en sección y footer: email, teléfono y dirección reales. Unificación visual.
+
+[33mcommit 0bedaa98180e2a000ff1fdc206e56a0b67bc78d3[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Tue May 6 23:04:03 2025 +0200
+
+    Cards de propiedades destacadas en dos columnas en tablet y PC, mejoras visuales y bugfixes
+
+[33mcommit 275332476289e3230a330ca2633f440e022a656e[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Tue May 6 19:34:20 2025 +0200
+
+    feat: migración completa a Google Maps, carrusel en InfoWindow, icono personalizado pendiente
+
+[33mcommit 3aa129b163932b9aaa456e9e849bc35effa0834b[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Tue May 6 08:14:38 2025 +0200
+
+    fix: debug imagen popup mapa y enlaces, mejoras de estabilidad y UX
+
+[33mcommit c95ee0b2dbf14d28ecb9a004134c482e9cc79dea[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Mon May 5 22:52:28 2025 +0200
+
+    version definitiva beta 3: reservas solo en cards en móvil, sin mensajes innecesarios
+
+[33mcommit a5140e84a072aa5d5381adcb8865394acf647dd5[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Mon May 5 22:37:37 2025 +0200
+
+    Reservas funcionando correctamente y mensajes de usuario mejorados
+
+[33mcommit 65c0a441fe0dc498221cab628c23e88f2854325c[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Mon May 5 18:12:28 2025 +0200
+
+    feat: reservas fijas automáticas para copropietarios durante 5 años
+
+[33mcommit d01fbae8ced9cd6a90a796c59df991c317fa9c08[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Mon May 5 17:41:53 2025 +0200
+
+    feat: minicard en mapa de propiedades, buscador responsive y formulario de contacto en landing
+
+[33mcommit fc7aca817646806c37d995839166a58e5806e3d0[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Sun May 4 23:22:29 2025 +0200
+
+    fix: eliminación de reservas con confirmación nativa y actualización reactiva del estado
+
+[33mcommit 000bbdcebeec43d2a07523d07bc0708a189bdc91[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Sun May 4 15:18:10 2025 +0200
+
+    Refactor: sidebar responsive, lógica de owners y paneles de owner y admin unificados
+
+[33mcommit 652efa6cf55fa4b3e0f2a2ba0588f15d1cde8a4f[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Sun May 4 02:03:02 2025 +0200
+
+    Navbar: enlaces con scroll suave a secciones de la home y limpieza de menú
+
+[33mcommit b03fa053284407de1629e7b896475f078649399e[m
+Author: aseran74 <alvaroserr@gmail.com>
+Date:   Sun May 4 01

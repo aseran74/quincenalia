@@ -196,31 +196,38 @@ const PropertyDetail = () => {
   }, [id]);
 
   const fetchProperty = async () => {
+    setLoading(true); // Asegúrate de poner loading a true al inicio
     try {
+      console.log(`[Vercel Debug] Fetching property with ID: ${id}`);
       const { data: propertyData, error: propertyError } = await supabase
         .from('properties')
-        .select(`
-          *,
-          agent:profiles(*)
-        `)
+        .select('*, agent:profiles(*)') // Simplifica el select si solo necesitas depurar esto
         .eq('id', id)
         .single();
 
-      if (propertyError) throw propertyError;
+      console.log('[Vercel Debug] Raw propertyData from Supabase:', JSON.stringify(propertyData, null, 2));
+      console.log('[Vercel Debug] Supabase error:', JSON.stringify(propertyError, null, 2));
+
+      if (propertyError) {
+        console.error('[Vercel Debug] Supabase fetch error:', propertyError);
+        throw propertyError;
+      }
 
       if (propertyData) {
+        console.log('[Vercel Debug] Features received:', JSON.stringify(propertyData.features, null, 2));
+        console.log('[Vercel Debug] Features_extra received:', JSON.stringify(propertyData.features_extra, null, 2));
         setProperty(propertyData);
         if (propertyData.agent) {
-          setAgent({
-            ...propertyData.agent,
-          });
+          setAgent(propertyData.agent);
         }
+      } else {
+        console.log('[Vercel Debug] No propertyData received from Supabase.');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('[Vercel Debug] Catch block error in fetchProperty:', error);
       toast({
         title: 'Error',
-        description: 'Error al cargar la propiedad',
+        description: 'Error al cargar la propiedad (revisar logs de Vercel)',
         variant: 'destructive',
       });
     } finally {

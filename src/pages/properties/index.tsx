@@ -7,12 +7,14 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   LayoutGrid, MapPin, Home, Bed, Bath, Building, TreePalm, SquareArrowUp, Building2, Warehouse, UserCheck, Waves, Sparkles, ParkingCircle, Wind, SlidersHorizontal, ChevronDown, ChevronUp, Filter, X, Plus, Minus, Check, Search, Trash2, ArrowLeft, Info, ChevronLeft, ChevronRight, X as XIcon
 } from 'lucide-react';
-import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker, InfoWindow, useLoadScript, Autocomplete } from '@react-google-maps/api';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { Property } from '@/types/property';
+import { Input as ShadInput } from '@/components/ui/input';
+import type { Libraries } from '@react-google-maps/api';
 
 // --- Tipos y Constantes ---
 type Filters = {
@@ -114,6 +116,9 @@ const getMarkerIcon = () => {
   return undefined;
 };
 
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+const AUTOCOMPLETE_LIBRARIES: Libraries = ['places'];
+
 export const PropertiesPage = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,6 +131,12 @@ export const PropertiesPage = () => {
   const [selectedMapProperty, setSelectedMapProperty] = useState<Property | null>(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [mapsLoaded, setMapsLoaded] = useState(false);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const locationInputRef = useRef<HTMLInputElement | null>(null);
+  const { isLoaded: isAutocompleteLoaded, loadError: autocompleteLoadError } = useLoadScript({
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: AUTOCOMPLETE_LIBRARIES,
+  });
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -294,206 +305,262 @@ export const PropertiesPage = () => {
     );
   };
 
-  const FilterSection = () => (
-    <Card className="mb-6 bg-card border shadow-sm rounded-lg">
-      <CardContent className="p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-          {/* ¿Dónde buscas? */}
-          <div>
-            <label htmlFor="filterLocation" className="block text-xs font-medium text-muted-foreground mb-1">¿Dónde buscas?</label>
-            <input
-              id="filterLocation"
-              type="text"
-              value={filters.location}
-              onChange={e => setFilters({ ...filters, location: e.target.value })}
-              placeholder="Ciudad, zona, playa..."
-              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-          {/* Tipo de Vivienda */}
-          <div className="relative w-full sm:w-auto sm:min-w-[200px]" ref={typeChecklistRef}>
-            <label htmlFor="filterTypeButton" className="block text-xs font-medium text-muted-foreground mb-1">Tipo de Vivienda</label>
-            <Button
-                id="filterTypeButton"
-                type="button"
-                variant="outline"
-                className="w-full justify-between text-sm h-9 font-normal"
-                onClick={() => setShowTypeChecklist(v => !v)}
-                aria-expanded={showTypeChecklist}
-            >
-                <span className="truncate pr-2">
-                    {filters.propertyTypes.length === 0
-                    ? 'Cualquiera'
-                    : filters.propertyTypes.length === 1
-                    ? propertyTypesWithIcons.find(t => t.value === filters.propertyTypes[0])?.label || 'Seleccionado'
-                    : `${filters.propertyTypes.length} tipos seleccionados`
-                    }
-                </span>
-                <ChevronDown className={`ml-2 h-4 w-4 transition-transform flex-shrink-0 ${showTypeChecklist ? 'rotate-180' : ''}`} />
-            </Button>
-            {showTypeChecklist && (
-                <div className="absolute z-20 mt-1 w-full max-h-60 overflow-y-auto bg-popover border border-border rounded-md shadow-lg p-2 space-y-1">
-                {propertyTypesWithIcons
-                    .map(type => (
-                    <div key={type.value} className="flex items-center space-x-2 hover:bg-accent rounded p-1.5">
-                         <Checkbox
-                            id={`type-${type.value}`}
-                            checked={filters.propertyTypes.includes(type.value)}
-                            onCheckedChange={(checked) => {
-                            setFilters(f => ({
-                                ...f,
-                                propertyTypes: checked
-                                ? [...f.propertyTypes, type.value]
-                                : f.propertyTypes.filter(v => v !== type.value)
-                            }));
-                            }}
-                            className="h-4 w-4"
-                         />
-                         <label
-                            htmlFor={`type-${type.value}`}
-                            className="text-sm font-medium leading-none flex items-center gap-2 cursor-pointer w-full"
-                         >
-                            {type.icon}
-                            {type.label}
-                         </label>
-                    </div>
-                ))}
-                </div>
-            )}
-          </div>
-          {/* Precio Min */}
-          <div>
-             <label htmlFor="filterMinPrice" className="block text-xs font-medium text-muted-foreground mb-1">Precio Mín.</label>
-             <Select
-                value={String(filters.minPrice)}
-                onValueChange={value => setFilters({ ...filters, minPrice: value === 'any' ? 'any' : Number(value) })}
-             >
-                <SelectTrigger id="filterMinPrice" className="text-sm h-9">
-                    <SelectValue placeholder="Mínimo" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
-                    {priceOptions.map(opt => (
-                       (filters.maxPrice === 'any' || opt.value < Number(filters.maxPrice)) &&
-                       <SelectItem key={`min-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
-                    ))}
-                </SelectContent>
-             </Select>
-          </div>
-          {/* Precio Max */}
-          <div>
-             <label htmlFor="filterMaxPrice" className="block text-xs font-medium text-muted-foreground mb-1">Precio Máx.</label>
-             <Select
-                value={String(filters.maxPrice)}
-                onValueChange={value => setFilters({ ...filters, maxPrice: value === 'any' ? 'any' : Number(value) })}
-             >
-                <SelectTrigger id="filterMaxPrice" className="text-sm h-9">
-                    <SelectValue placeholder="Máximo" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
-                    {priceOptions.map(opt => (
-                        (filters.minPrice === 'any' || opt.value > Number(filters.minPrice)) &&
-                        <SelectItem key={`max-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
-                    ))}
-                     {priceOptions[priceOptions.length - 1].value < Infinity && (
-                           <SelectItem value={String(Infinity)} className="text-sm">1.000.000€+</SelectItem>
-                     )}
-                </SelectContent>
-             </Select>
-          </div>
-          {/* Habitaciones */}
-          <div>
-             <label htmlFor="filterBedrooms" className="block text-xs font-medium text-muted-foreground mb-1">Habitaciones (mín.)</label>
-             <Select
-                value={String(filters.bedrooms)}
-                onValueChange={value => setFilters({ ...filters, bedrooms: value === 'any' ? 'any' : Number(value) })}
-             >
-                <SelectTrigger id="filterBedrooms" className="text-sm h-9">
-                    <SelectValue placeholder="Hab." />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
-                    {roomOptions.map(opt => (
-                        <SelectItem key={`bed-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
-                    ))}
-                </SelectContent>
-             </Select>
-          </div>
-          {/* Baños */}
-          <div>
-             <label htmlFor="filterBathrooms" className="block text-xs font-medium text-muted-foreground mb-1">Baños (mín.)</label>
-             <Select
-                value={String(filters.bathrooms)}
-                onValueChange={value => setFilters({ ...filters, bathrooms: value === 'any' ? 'any' : Number(value) })}
-             >
-                <SelectTrigger id="filterBathrooms" className="text-sm h-9">
-                    <SelectValue placeholder="Baños" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
-                    {roomOptions.map(opt => (
-                        <SelectItem key={`bath-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
-                    ))}
-                </SelectContent>
-             </Select>
-          </div>
-        </div>
-        {/* Fila para Tipo y Botón Avanzados */}
-        <div className="mt-4 pt-4 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-           {/* Botón Avanzados y Reset */}
-           <div className="flex flex-col sm:flex-row gap-2 items-center pt-2 sm:pt-0">
-               <Button
-                  variant="ghost"
-                  className="text-[16px] px-3 h-10 flex items-center text-primary hover:bg-transparent gap-2 font-semibold"
-                  onClick={() => setShowAdvancedFilters(v => !v)}
-                >
-                  <SlidersHorizontal className="w-5 h-5 mr-1" />
-                  {showAdvancedFilters ? 'Menos filtros' : 'Más filtros'}
-                  {showAdvancedFilters ? <ChevronUp className="w-5 h-5 ml-1" /> : <ChevronDown className="w-5 h-5 ml-1" />}
-                </Button>
-                {numActiveFilters > 0 && (
-                    <Button variant="ghost" size="sm" onClick={resetFilters} className="text-xs text-muted-foreground h-9">
-                        <Trash2 className="w-3.5 h-3.5 mr-1" /> Limpiar ({numActiveFilters})
-                    </Button>
-                )}
-           </div>
-        </div>
-        {/* Características Adicionales (condicional) */}
-        {showAdvancedFilters && (
-          <div className="mt-4 pt-4 border-t border-border animate-fade-in">
-            <label className="block text-sm font-medium text-foreground mb-3">Características</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-2">
-              {FEATURES_LIST.map(feature => (
-                <div key={feature.key} className="flex items-center space-x-2">
-                   <Checkbox
-                      id={`feature-${feature.key}`}
-                      checked={filters.features.includes(feature.key)}
-                      onCheckedChange={(checked) => {
-                         setFilters(prevFilters => ({
-                            ...prevFilters,
-                            features: checked
-                            ? [...prevFilters.features, feature.key]
-                            : prevFilters.features.filter(f => f !== feature.key),
-                         }));
-                      }}
-                      className="h-4 w-4"
-                   />
-                   <label
-                      htmlFor={`feature-${feature.key}`}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-1.5"
-                   >
-                      <span className="flex-shrink-0">{feature.icon}</span>
-                      {feature.label}
-                   </label>
-                </div>
-              ))}
+  const FilterSection = () => {
+    const handlePlaceSelected = () => {
+      if (autocompleteRef.current) {
+        const place = autocompleteRef.current.getPlace();
+        if (place && place.formatted_address) {
+          setFilters(prevFilters => ({ ...prevFilters, location: place.formatted_address }));
+        } else if (locationInputRef.current && locationInputRef.current.value === '') {
+          setFilters(prevFilters => ({ ...prevFilters, location: '' }));
+        }
+      }
+    };
+    const clearLocationFilter = () => {
+      if (locationInputRef.current) {
+        locationInputRef.current.value = '';
+      }
+      setFilters(prevFilters => ({ ...prevFilters, location: '' }));
+    };
+    return (
+      <Card className="mb-6 bg-card border shadow-sm rounded-lg">
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            {/* ¿Dónde buscas? */}
+            <div className="relative">
+              <label htmlFor="filterLocation" className="block text-xs font-medium text-muted-foreground mb-1">¿Dónde buscas?</label>
+              {isAutocompleteLoaded ? (
+                <>
+                  <Autocomplete
+                    onLoad={(ref) => autocompleteRef.current = ref}
+                    onPlaceChanged={handlePlaceSelected}
+                    options={{
+                      fields: ['formatted_address', 'geometry', 'name']
+                    }}
+                  >
+                    <ShadInput
+                      id="filterLocation"
+                      ref={locationInputRef}
+                      type="text"
+                      placeholder="Ciudad, zona, playa..."
+                      className="w-full text-sm pr-8"
+                    />
+                  </Autocomplete>
+                  {filters.location && locationInputRef.current?.value && (
+                     <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-[26px] h-7 w-7 p-0"
+                      onClick={clearLocationFilter}
+                      aria-label="Limpiar ubicación"
+                     >
+                       <XIcon className="h-4 w-4 text-muted-foreground"/>
+                     </Button>
+                  )}
+                </>
+              ) : autocompleteLoadError ? (
+                 <ShadInput
+                    id="filterLocation"
+                    type="text"
+                    placeholder="Error cargando búsqueda..."
+                    className="w-full text-sm"
+                    disabled
+                  />
+              ) : (
+                <ShadInput
+                  id="filterLocation"
+                  type="text"
+                  placeholder="Cargando búsqueda..."
+                  className="w-full text-sm"
+                  disabled
+                />
+              )}
+            </div>
+            {/* Tipo de Vivienda */}
+            <div className="relative w-full sm:w-auto sm:min-w-[200px]" ref={typeChecklistRef}>
+              <label htmlFor="filterTypeButton" className="block text-xs font-medium text-muted-foreground mb-1">Tipo de Vivienda</label>
+              <Button
+                  id="filterTypeButton"
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-between text-sm h-9 font-normal"
+                  onClick={() => setShowTypeChecklist(v => !v)}
+                  aria-expanded={showTypeChecklist}
+              >
+                  <span className="truncate pr-2">
+                      {filters.propertyTypes.length === 0
+                      ? 'Cualquiera'
+                      : filters.propertyTypes.length === 1
+                      ? propertyTypesWithIcons.find(t => t.value === filters.propertyTypes[0])?.label || 'Seleccionado'
+                      : `${filters.propertyTypes.length} tipos seleccionados`
+                      }
+                  </span>
+                  <ChevronDown className={`ml-2 h-4 w-4 transition-transform flex-shrink-0 ${showTypeChecklist ? 'rotate-180' : ''}`} />
+              </Button>
+              {showTypeChecklist && (
+                  <div className="absolute z-20 mt-1 w-full max-h-60 overflow-y-auto bg-popover border border-border rounded-md shadow-lg p-2 space-y-1">
+                  {propertyTypesWithIcons
+                      .map(type => (
+                      <div key={type.value} className="flex items-center space-x-2 hover:bg-accent rounded p-1.5">
+                           <Checkbox
+                              id={`type-${type.value}`}
+                              checked={filters.propertyTypes.includes(type.value)}
+                              onCheckedChange={(checked) => {
+                              setFilters(f => ({
+                                  ...f,
+                                  propertyTypes: checked
+                                  ? [...f.propertyTypes, type.value]
+                                  : f.propertyTypes.filter(v => v !== type.value)
+                              }));
+                              }}
+                              className="h-4 w-4"
+                           />
+                           <label
+                              htmlFor={`type-${type.value}`}
+                              className="text-sm font-medium leading-none flex items-center gap-2 cursor-pointer w-full"
+                           >
+                              {type.icon}
+                              {type.label}
+                           </label>
+                      </div>
+                  ))}
+                  </div>
+              )}
+            </div>
+            {/* Precio Min */}
+            <div>
+               <label htmlFor="filterMinPrice" className="block text-xs font-medium text-muted-foreground mb-1">Precio Mín.</label>
+               <Select
+                  value={String(filters.minPrice)}
+                  onValueChange={value => setFilters({ ...filters, minPrice: value === 'any' ? 'any' : Number(value) })}
+               >
+                  <SelectTrigger id="filterMinPrice" className="text-sm h-9">
+                      <SelectValue placeholder="Mínimo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
+                      {priceOptions.map(opt => (
+                         (filters.maxPrice === 'any' || opt.value < Number(filters.maxPrice)) &&
+                         <SelectItem key={`min-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
+                      ))}
+                  </SelectContent>
+               </Select>
+            </div>
+            {/* Precio Max */}
+            <div>
+               <label htmlFor="filterMaxPrice" className="block text-xs font-medium text-muted-foreground mb-1">Precio Máx.</label>
+               <Select
+                  value={String(filters.maxPrice)}
+                  onValueChange={value => setFilters({ ...filters, maxPrice: value === 'any' ? 'any' : Number(value) })}
+               >
+                  <SelectTrigger id="filterMaxPrice" className="text-sm h-9">
+                      <SelectValue placeholder="Máximo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
+                      {priceOptions.map(opt => (
+                          (filters.minPrice === 'any' || opt.value > Number(filters.minPrice)) &&
+                          <SelectItem key={`max-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
+                      ))}
+                       {priceOptions[priceOptions.length - 1].value < Infinity && (
+                             <SelectItem value={String(Infinity)} className="text-sm">1.000.000€+</SelectItem>
+                       )}
+                  </SelectContent>
+               </Select>
+            </div>
+            {/* Habitaciones */}
+            <div>
+               <label htmlFor="filterBedrooms" className="block text-xs font-medium text-muted-foreground mb-1">Habitaciones (mín.)</label>
+               <Select
+                  value={String(filters.bedrooms)}
+                  onValueChange={value => setFilters({ ...filters, bedrooms: value === 'any' ? 'any' : Number(value) })}
+               >
+                  <SelectTrigger id="filterBedrooms" className="text-sm h-9">
+                      <SelectValue placeholder="Hab." />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
+                      {roomOptions.map(opt => (
+                          <SelectItem key={`bed-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
+                      ))}
+                  </SelectContent>
+               </Select>
+            </div>
+            {/* Baños */}
+            <div>
+               <label htmlFor="filterBathrooms" className="block text-xs font-medium text-muted-foreground mb-1">Baños (mín.)</label>
+               <Select
+                  value={String(filters.bathrooms)}
+                  onValueChange={value => setFilters({ ...filters, bathrooms: value === 'any' ? 'any' : Number(value) })}
+               >
+                  <SelectTrigger id="filterBathrooms" className="text-sm h-9">
+                      <SelectValue placeholder="Baños" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
+                      {roomOptions.map(opt => (
+                          <SelectItem key={`bath-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
+                      ))}
+                  </SelectContent>
+               </Select>
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+          {/* Fila para Tipo y Botón Avanzados */}
+          <div className="mt-4 pt-4 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+             {/* Botón Avanzados y Reset */}
+             <div className="flex flex-col sm:flex-row gap-2 items-center pt-2 sm:pt-0">
+                 <Button
+                    variant="ghost"
+                    className="text-[16px] px-3 h-10 flex items-center text-primary hover:bg-transparent gap-2 font-semibold"
+                    onClick={() => setShowAdvancedFilters(v => !v)}
+                  >
+                    <SlidersHorizontal className="w-5 h-5 mr-1" />
+                    {showAdvancedFilters ? 'Menos filtros' : 'Más filtros'}
+                    {showAdvancedFilters ? <ChevronUp className="w-5 h-5 ml-1" /> : <ChevronDown className="w-5 h-5 ml-1" />}
+                  </Button>
+                  {numActiveFilters > 0 && (
+                      <Button variant="ghost" size="sm" onClick={resetFilters} className="text-xs text-muted-foreground h-9">
+                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Limpiar ({numActiveFilters})
+                      </Button>
+                  )}
+             </div>
+          </div>
+          {/* Características Adicionales (condicional) */}
+          {showAdvancedFilters && (
+            <div className="mt-4 pt-4 border-t border-border animate-fade-in">
+              <label className="block text-sm font-medium text-foreground mb-3">Características</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-2">
+                {FEATURES_LIST.map(feature => (
+                  <div key={feature.key} className="flex items-center space-x-2">
+                     <Checkbox
+                        id={`feature-${feature.key}`}
+                        checked={filters.features.includes(feature.key)}
+                        onCheckedChange={(checked) => {
+                           setFilters(prevFilters => ({
+                              ...prevFilters,
+                              features: checked
+                              ? [...prevFilters.features, feature.key]
+                              : prevFilters.features.filter(f => f !== feature.key),
+                           }));
+                        }}
+                        className="h-4 w-4"
+                     />
+                     <label
+                        htmlFor={`feature-${feature.key}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-1.5"
+                     >
+                        <span className="flex-shrink-0">{feature.icon}</span>
+                        {feature.label}
+                     </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
 
   // Carrusel automático
   useEffect(() => {

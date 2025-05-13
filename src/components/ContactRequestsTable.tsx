@@ -114,7 +114,8 @@ const ContactRequestsTable = () => {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">Solicitudes de contacto</h2>
-      <Table>
+      {/* Tabla solo visible en md+ */}
+      <Table className="hidden md:table">
         <TableHeader>
           <TableRow>
             <TableHead>Fecha</TableHead>
@@ -156,6 +157,37 @@ const ContactRequestsTable = () => {
           ))}
         </TableBody>
       </Table>
+      {/* Vista móvil tipo tarjeta */}
+      <div className="md:hidden space-y-4">
+        {requests.map((request) => (
+          <div key={request.id} className="border rounded-lg p-4 bg-white shadow-sm">
+            <div className="text-xs text-gray-400 mb-1">
+              {format(new Date(request.created_at), 'dd/MM/yyyy HH:mm', { locale: es })}
+            </div>
+            <div className="font-semibold">{request.name}</div>
+            <div className="text-sm text-gray-600">{request.email}</div>
+            <div className="text-sm text-gray-600">{request.phone || '-'}</div>
+            <div className="text-gray-800 mt-2 whitespace-pre-line">{request.message || '-'}</div>
+            <div className="mt-2">
+              <Select
+                value={request.status}
+                onValueChange={(value) => handleStatusChange(request.id, value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccionar estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
