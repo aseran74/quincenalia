@@ -59,7 +59,7 @@ const PropertyCard = ({ property }: { property: any }) => {
             <div className="flex justify-between items-start w-full">
               {minShare && (
                 <span className="bg-primary text-primary-foreground text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full shadow">
-                  Desde {formatPriceSimple(minShare)}
+                  {formatPriceSimple(minShare)}
                 </span>
               )}
               {/* Mostrar precio/mes en lugar de precio total */}

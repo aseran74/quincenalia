@@ -11,7 +11,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-    PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin, ChevronLeft
+    PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin, ChevronLeft, HelpCircle, FileText, Cookie
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ContactForm from '@/components/ContactForm';
@@ -184,7 +184,33 @@ function ComoFunciona() {
   return (
     <section id="reinventada" className="py-16 sm:py-20 bg-gradient-to-b from-white to-slate-50">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4 text-gray-800">Tu Segunda Residencia, Reinventada</h2>
+        <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4 text-gray-800">
+          Tu Segunda Residencia,{' '}
+          <span className="relative inline-block">
+            <span className="text-gray-800 font-bold">Reinventada</span>
+            <svg
+              viewBox="0 0 180 12"
+              width="180"
+              height="12"
+              className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[180px]"
+              aria-hidden="true"
+            >
+              <linearGradient id="linea-reinventada" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#22d3ee" />
+                <stop offset="0.5" stopColor="#0ea5e9" />
+                <stop offset="1" stopColor="#2563eb" />
+              </linearGradient>
+              <path
+                d="M 0 10 Q 90 0, 180 10"
+                fill="none"
+                stroke="url(#linea-reinventada)"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+            </svg>
+            <span className="text-primary text-4xl align-middle ml-1">.</span>
+          </span>
+        </h2>
         <p className="text-lg text-center text-gray-600 mb-10 sm:mb-12 max-w-3xl mx-auto">Descubre cómo Quincenalia combina propiedad, disfrute y rentabilidad de forma única.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
           {steps.map((step, index) => (
@@ -286,12 +312,12 @@ const ZONAS_DESTACADAS = [
   },
   {
     zona: 'Murcia',
-    image: '/placeholder.svg',
+    image: '/murcia.jpg',
     link: '/properties?zona=Murcia',
   },
   {
     zona: 'Zonas de interior.',
-    image: '/placeholder.svg',
+    image: '/interior.jpg',
     link: '/properties?zona=Zonas%20de%20interior.',
   },
 ];
@@ -380,55 +406,148 @@ const HomePage = () => {
       </section>
       <section id="zonas-destacadas" className="py-16 sm:py-20 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-3 text-gray-800">Explora por Zonas</h2>
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-3 text-gray-800">
+            Explora por{' '}
+            <span className="relative inline-block">
+              <span className="text-gray-800 font-bold">zonas</span>
+              <svg
+                viewBox="0 0 180 12"
+                width="180"
+                height="12"
+                className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[180px]"
+                aria-hidden="true"
+              >
+                <linearGradient id="linea-zonas" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#22d3ee" />
+                  <stop offset="0.5" stopColor="#0ea5e9" />
+                  <stop offset="1" stopColor="#2563eb" />
+                </linearGradient>
+                <path
+                  d="M 0 10 Q 90 0, 180 10"
+                  fill="none"
+                  stroke="url(#linea-zonas)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className="text-primary text-4xl align-middle ml-1">.</span>
+            </span>
+          </h2>
           <p className="text-lg text-center text-gray-600 mb-10 sm:mb-12 max-w-2xl mx-auto">
             Encuentra tu refugio perfecto en las regiones más deseadas.
           </p>
           <div className="relative">
+            {/* Botones de scroll solo visibles en móvil */}
             <Button
               variant="outline"
               size="icon"
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 sm:-translate-x-6 z-10 rounded-full bg-white/80 hover:bg-white shadow-md backdrop-blur-sm"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 sm:-translate-x-6 z-10 rounded-full bg-white/80 hover:bg-white shadow-md backdrop-blur-sm block md:hidden"
               onClick={() => scrollZonaCarrusel('left')}
               aria-label="Scroll Left"
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
             <div className="px-2 py-6">
-              <div ref={scrollContainerRef} className="flex space-x-4 md:space-x-6 overflow-x-auto pb-4 scrollbar-hide">
+              {/* Carrusel horizontal en móvil, dos cards apiladas en escritorio */}
+              <div
+                ref={scrollContainerRef}
+                className="flex md:hidden space-x-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+              >
                 {ZONAS_DESTACADAS.map((zonaObj, index) => {
                   const normalizedCurrentZona = normalizaZona(zonaObj.zona);
                   const count = viviendasPorZona[normalizedCurrentZona] || 0;
                   return (
-                    <Link to={zonaObj.link} key={index} className="flex-shrink-0 w-64 sm:w-72 group/card-link">
-                      <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-2xl group/card">
-                        <div className="relative h-48">
+                    <Link
+                      to={zonaObj.link}
+                      key={index}
+                      className="flex-shrink-0 w-[80vw] max-w-xs h-48 sm:h-56 group/card-link flex items-center justify-center snap-center px-2"
+                    >
+                      <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-full h-48 sm:h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
+                        <div className="relative w-full h-full flex items-center justify-center">
                           <img
                             src={zonaObj.image}
                             alt={`Propiedades en ${zonaObj.zona}`}
-                            className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110"
+                            className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-full"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent opacity-90 group-hover/card:opacity-100 transition-opacity duration-300"></div>
-                          <div className="absolute bottom-0 left-0 right-0 p-4">
-                            <h3 className="text-xl font-bold text-white truncate" title={zonaObj.zona}>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-80 group-hover/card:opacity-100 transition-opacity duration-300 rounded-full"></div>
+                          <div className="absolute bottom-3 left-0 right-0 px-2 text-center">
+                            <h3 className="text-lg font-bold text-white truncate" title={zonaObj.zona}>
                               {zonaObj.zona}
                             </h3>
-                            <p className="text-sm text-gray-100 mt-1">
+                            <p className="text-xs text-gray-100 mt-0.5">
                               {count} {count === 1 ? 'vivienda' : 'viviendas'}
                             </p>
                           </div>
                         </div>
-                        <div className="h-1 bg-primary/0 group-hover/card:bg-primary transition-all duration-300"></div>
                       </Card>
                     </Link>
                   );
                 })}
               </div>
+              {/* En escritorio: cinco cards arriba y el resto abajo, ambas filas centradas */}
+              <div className="hidden md:flex flex-col items-center gap-10">
+                <div className="flex flex-row justify-center gap-8 mb-8">
+                  {ZONAS_DESTACADAS.slice(0,5).map((zonaObj, index) => {
+                    const normalizedCurrentZona = normalizaZona(zonaObj.zona);
+                    const count = viviendasPorZona[normalizedCurrentZona] || 0;
+                    return (
+                      <Link to={zonaObj.link} key={index} className="w-56 h-56 group/card-link flex items-center justify-center">
+                        <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-56 h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
+                          <div className="relative w-full h-full flex items-center justify-center">
+                            <img
+                              src={zonaObj.image}
+                              alt={`Propiedades en ${zonaObj.zona}`}
+                              className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-full"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-80 group-hover/card:opacity-100 transition-opacity duration-300 rounded-full"></div>
+                            <div className="absolute bottom-6 left-0 right-0 px-4 text-center">
+                              <h3 className="text-xl font-bold text-white truncate" title={zonaObj.zona}>
+                                {zonaObj.zona}
+                              </h3>
+                              <p className="text-sm text-gray-100 mt-1">
+                                {count} {count === 1 ? 'vivienda' : 'viviendas'}
+                              </p>
+                            </div>
+                          </div>
+                        </Card>
+                      </Link>
+                    );
+                  })}
+                </div>
+                <div className="flex flex-row justify-center gap-8">
+                  {ZONAS_DESTACADAS.slice(5).map((zonaObj, index) => {
+                    const normalizedCurrentZona = normalizaZona(zonaObj.zona);
+                    const count = viviendasPorZona[normalizedCurrentZona] || 0;
+                    return (
+                      <Link to={zonaObj.link} key={index+5} className="w-56 h-56 group/card-link flex items-center justify-center">
+                        <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-56 h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
+                          <div className="relative w-full h-full flex items-center justify-center">
+                            <img
+                              src={zonaObj.image}
+                              alt={`Propiedades en ${zonaObj.zona}`}
+                              className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-full"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-80 group-hover/card:opacity-100 transition-opacity duration-300 rounded-full"></div>
+                            <div className="absolute bottom-6 left-0 right-0 px-4 text-center">
+                              <h3 className="text-xl font-bold text-white truncate" title={zonaObj.zona}>
+                                {zonaObj.zona}
+                              </h3>
+                              <p className="text-sm text-gray-100 mt-1">
+                                {count} {count === 1 ? 'vivienda' : 'viviendas'}
+                              </p>
+                            </div>
+                          </div>
+                        </Card>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
             <Button
               variant="outline"
               size="icon"
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 sm:translate-x-6 z-10 rounded-full bg-white/80 hover:bg-white shadow-md backdrop-blur-sm"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 sm:translate-x-6 z-10 rounded-full bg-white/80 hover:bg-white shadow-md backdrop-blur-sm block md:hidden"
               onClick={() => scrollZonaCarrusel('right')}
               aria-label="Scroll Right"
             >
@@ -448,7 +567,31 @@ const HomePage = () => {
       <section className="py-16 sm:py-20">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl sm:text-4xl font-bold text-center mb-10 sm:mb-12 text-gray-800">
-            Oportunidades Exclusivas
+            Oportunidades{' '}
+            <span className="relative inline-block">
+              <span className="text-gray-800 font-bold">exclusivas</span>
+              <svg
+                viewBox="0 0 180 12"
+                width="180"
+                height="12"
+                className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[180px]"
+                aria-hidden="true"
+              >
+                <linearGradient id="linea-exclusivas" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#22d3ee" />
+                  <stop offset="0.5" stopColor="#0ea5e9" />
+                  <stop offset="1" stopColor="#2563eb" />
+                </linearGradient>
+                <path
+                  d="M 0 10 Q 90 0, 180 10"
+                  fill="none"
+                  stroke="url(#linea-exclusivas)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className="text-primary text-4xl align-middle ml-1">.</span>
+            </span>
           </h2>
           <FeaturedProperties />
         </div>
@@ -458,7 +601,33 @@ const HomePage = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">¿Listo para Empezar?</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
+                ¿Listo para{' '}
+                <span className="relative inline-block">
+                  <span className="text-gray-800 font-bold">Empezar</span>
+                  <svg
+                    viewBox="0 0 180 12"
+                    width="180"
+                    height="12"
+                    className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[180px]"
+                    aria-hidden="true"
+                  >
+                    <linearGradient id="linea-empezar" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#22d3ee" />
+                      <stop offset="0.5" stopColor="#0ea5e9" />
+                      <stop offset="1" stopColor="#2563eb" />
+                    </linearGradient>
+                    <path
+                      d="M 0 10 Q 90 0, 180 10"
+                      fill="none"
+                      stroke="url(#linea-empezar)"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="text-primary text-4xl align-middle ml-1">.</span>
+                </span>
+              </h2>
               <p className="text-lg text-gray-600 mb-6">
                 Contacta con nosotros para descubrir cómo Quincenalia puede transformar tu forma de disfrutar y rentabilizar
                 tus vacaciones. Nuestro equipo está listo para asesorarte.
@@ -491,7 +660,32 @@ const HomePage = () => {
       </section>
       <section id="faq" className="py-16 sm:py-20 bg-slate-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-10 sm:mb-12 text-gray-800">Resolvemos tus Dudas</h2>
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-10 sm:mb-12 text-gray-800 relative inline-block">
+            <span className="relative inline-block">
+              Resolvemos tus Dudas
+              <svg
+                viewBox="0 0 220 12"
+                width="220"
+                height="12"
+                className="absolute left-[60%] -translate-x-1/2 top-full mt-0.5 w-[220px]"
+                aria-hidden="true"
+              >
+                <linearGradient id="linea-dudas" x1="0" y1="0" x2="220" y2="0" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#22d3ee" />
+                  <stop offset="0.5" stopColor="#0ea5e9" />
+                  <stop offset="1" stopColor="#2563eb" />
+                </linearGradient>
+                <path
+                  d="M 0 10 Q 110 0, 220 10"
+                  fill="none"
+                  stroke="url(#linea-dudas)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className="text-primary text-4xl align-middle ml-1">.</span>
+            </span>
+          </h2>
           <div className="max-w-4xl mx-auto">
             <FAQAccordion />
           </div>
@@ -508,39 +702,29 @@ const HomePage = () => {
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-gray-100 uppercase tracking-wide">Explorar</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-primary transition-colors">Propiedades</a></li>
-                <li><a href="#como-funciona" className="hover:text-primary transition-colors">Cómo Funciona</a></li>
-                <li><a href="#faq" className="hover:text-primary transition-colors">Preguntas Frecuentes</a></li>
-                <li><a href="#contacto" className="hover:text-primary transition-colors">Contacto</a></li>
-              </ul>
-            </div>
-            <div>
               <h4 className="font-semibold mb-4 text-gray-100 uppercase tracking-wide">Legal</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-primary transition-colors">Términos de Servicio</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Política de Privacidad</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Política de Cookies</a></li>
+                <li className="flex items-center gap-2">
+                  <HelpCircle className="w-4 h-4 text-white" />
+                  <a href="#faq" className="hover:text-primary transition-colors">Preguntas Frecuentes</a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-white" />
+                  <a href="#contacto" className="hover:text-primary transition-colors">Contacto</a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-white" />
+                  <a href="#" className="hover:text-primary transition-colors">Términos de Servicio</a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-white" />
+                  <a href="#" className="hover:text-primary transition-colors">Política de Privacidad</a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Cookie className="w-4 h-4 text-white" />
+                  <a href="#" className="hover:text-primary transition-colors">Política de Cookies</a>
+                </li>
               </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4 text-gray-100 uppercase tracking-wide">Contacto</h4>
-              <ul className="space-y-2 text-sm">
-                 <li className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-primary"/>
-                    <a href="mailto:info@quincenalia.com" className="hover:text-primary transition-colors">info@quincenalia.com</a>
-                 </li>
-                 <li className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-primary"/>
-                    <a href="tel:+914156882" className="hover:text-primary transition-colors">+34 914156882 </a></li>
-                 <li className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 text-primary mt-1"/>
-                    <span>Avenida de Burgos 155<br/>Madrid, 28036, España</span>
-                 </li>
-              </ul>
-              <div className="flex space-x-3 mt-4">
-              </div>
             </div>
           </div>
           <div className="border-t border-gray-700 pt-8 text-center text-xs text-gray-500">
