@@ -165,7 +165,7 @@ const ZONAS_OPTIONS = [
   'Canarias.',
   'Baleares.',
   'Costa Catalana',
-  'Anadalucia',
+  'Andalucia',
   'Euskadi.',
   'Asturias.',
   'Galicia',

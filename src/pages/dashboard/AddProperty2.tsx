@@ -73,19 +73,6 @@ const propertySchema = z.object({
 
 type PropertyFormValues = z.infer<typeof propertySchema>;
 
-const ZONAS_OPTIONS = [
-  'Costa de levante.',
-  'Canarias.',
-  'Baleares.',
-  'Costa Catalana',
-  'Anadalucia',
-  'Euskadi.',
-  'Asturias.',
-  'Galicia',
-  'Murcia',
-  'Zonas de interior.'
-];
-
 const TIPO_VIVIENDA_OPTIONS = [
   'Piso o apartamento.',
   'Atico.',
@@ -125,6 +112,20 @@ const FEATURES_OPTIONS = [
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 const GOOGLE_MAPS_LIBRARIES = ["places"] as ["places"];
 
+// Lista de zonas oficiales a partir de los nombres de las imágenes en /public
+const ZONAS_OFICIALES = [
+  'Costa de levante.',
+  'Canarias.',
+  'Baleares.',
+  'Costa Catalana',
+  'Andalucia',
+  'Euskadi.',
+  'Asturias.',
+  'Galicia',
+  'Murcia',
+  'Zonas de interior.'
+];
+
 const AddProperty2 = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -136,6 +137,7 @@ const AddProperty2 = () => {
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const autocompleteRef = useRef<any>(null);
   const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY, libraries: GOOGLE_MAPS_LIBRARIES });
+  const [zonasUnicas, setZonasUnicas] = useState<string[]>([]);
 
   // Cargar usuarios propietarios y agentes
   useEffect(() => {
@@ -274,8 +276,18 @@ const AddProperty2 = () => {
     return () => window.removeEventListener('storage', onStorage);
   }, [form, hydrated]);
 
-  // Renderizar solo cuando initialValues y hydrated están listos
-  if (!initialValues || !hydrated) return <div>Cargando...</div>;
+  // Obtener zonas únicas de la base de datos
+  useEffect(() => {
+    const fetchZonasUnicas = async () => {
+      const { data, error } = await supabase.from('properties').select('zona');
+      if (error) return;
+      const zonasDB = Array.from(new Set((data || []).map((p: any) => (p.zona || '').trim()))).filter(z => z);
+      // Unir zonas oficiales y de la base de datos, sin duplicados
+      const zonas = Array.from(new Set([...ZONAS_OFICIALES, ...zonasDB]));
+      setZonasUnicas(zonas);
+    };
+    fetchZonasUnicas();
+  }, []);
 
   // Añade esta función para obtener la URL pública de una imagen
   const getImageUrl = (img: string) => {
@@ -364,53 +376,68 @@ const AddProperty2 = () => {
     }
   };
 
+  useEffect(() => {
+    // Limpiar localStorage al entrar a la página de alta
+    localStorage.removeItem('add-property2-form');
+    setInitialValues({
+      title: '',
+      description: '',
+      price: 0,
+      location: '',
+      bedrooms: 0,
+      bathrooms: 0,
+      area: 0,
+      zona: '',
+      lavabos: 0,
+      url_externa_anuncio: '',
+      tipo_vivienda: '',
+      features: [],
+      features_extra: [],
+      images: [],
+      nearby_services: [],
+      latitude: undefined,
+      longitude: undefined,
+      destacada: false,
+      status: '',
+      agent_id: '',
+      share1_price: undefined,
+      share1_status: '',
+      share1_owner_id: '',
+      share2_price: undefined,
+      share2_status: '',
+      share2_owner_id: '',
+      share3_price: undefined,
+      share3_status: '',
+      share3_owner_id: '',
+      share4_price: undefined,
+      share4_status: '',
+      share4_owner_id: '',
+    });
+  }, []);
+
   return (
     <div className="container mx-auto py-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Agregar Nueva Propiedad (Avanzado)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Columna 1 */}
-                <div className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Título</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Título de la propiedad" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Descripción</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Descripción de la propiedad" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-2 gap-4">
+      {(!initialValues || !hydrated) ? (
+        <div>Cargando...</div>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Agregar Nueva Propiedad (Avanzado)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Columna 1 */}
+                  <div className="space-y-6">
                     <FormField
                       control={form.control}
-                      name="price"
+                      name="title"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Precio (€)</FormLabel>
+                          <FormLabel>Título</FormLabel>
                           <FormControl>
-                            <Input type="number" placeholder="Precio" {...field} />
+                            <Input placeholder="Título de la propiedad" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -418,438 +445,467 @@ const AddProperty2 = () => {
                     />
                     <FormField
                       control={form.control}
-                      name="area"
+                      name="description"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Área (m²)</FormLabel>
+                          <FormLabel>Descripción</FormLabel>
                           <FormControl>
-                            <Input type="number" placeholder="Área" {...field} />
+                            <Textarea placeholder="Descripción de la propiedad" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </div>
-                  {/* Dormitorios, baños y aseo en la misma fila */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="price"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Precio (€)</FormLabel>
+                            <FormControl>
+                              <Input type="number" placeholder="Precio" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="area"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Área (m²)</FormLabel>
+                            <FormControl>
+                              <Input type="number" placeholder="Área" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    {/* Dormitorios, baños y aseo en la misma fila */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="bedrooms"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-1"><Bed className="w-4 h-4" /> Dormitorios</FormLabel>
+                            <FormControl>
+                              <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
+                                <option value="">Dormitorios</option>
+                                {[...Array(7).keys()].map(n => (
+                                  <option key={n+1} value={n+1}>{n+1}</option>
+                                ))}
+                              </select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="bathrooms"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-1"><Bath className="w-4 h-4" /> Baños</FormLabel>
+                            <FormControl>
+                              <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
+                                <option value="">Baños</option>
+                                {[...Array(7).keys()].map(n => (
+                                  <option key={n+1} value={n+1}>{n+1}</option>
+                                ))}
+                              </select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="lavabos"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-1"><Toilet className="w-4 h-4" /> Aseo</FormLabel>
+                            <FormControl>
+                              <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
+                                <option value="">Aseo</option>
+                                {[...Array(7).keys()].map(n => (
+                                  <option key={n+1} value={n+1}>{n+1}</option>
+                                ))}
+                              </select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    {/* Ubicación con Google Places Autocomplete */}
                     <FormField
                       control={form.control}
-                      name="bedrooms"
+                      name="location"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-1"><Bed className="w-4 h-4" /> Dormitorios</FormLabel>
+                          <FormLabel>Ubicación</FormLabel>
                           <FormControl>
-                            <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
-                              <option value="">Dormitorios</option>
-                              {[...Array(7).keys()].map(n => (
-                                <option key={n+1} value={n+1}>{n+1}</option>
-                              ))}
-                            </select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="bathrooms"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="flex items-center gap-1"><Bath className="w-4 h-4" /> Baños</FormLabel>
-                          <FormControl>
-                            <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
-                              <option value="">Baños</option>
-                              {[...Array(7).keys()].map(n => (
-                                <option key={n+1} value={n+1}>{n+1}</option>
-                              ))}
-                            </select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="lavabos"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="flex items-center gap-1"><Toilet className="w-4 h-4" /> Aseo</FormLabel>
-                          <FormControl>
-                            <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
-                              <option value="">Aseo</option>
-                              {[...Array(7).keys()].map(n => (
-                                <option key={n+1} value={n+1}>{n+1}</option>
-                              ))}
-                            </select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  {/* Ubicación con Google Places Autocomplete */}
-                  <FormField
-                    control={form.control}
-                    name="location"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ubicación</FormLabel>
-                        <FormControl>
-                          {isLoaded ? (
-                            <Autocomplete
-                              onLoad={ref => (autocompleteRef.current = ref)}
-                              onPlaceChanged={handlePlaceSelect}
-                            >
+                            {isLoaded ? (
+                              <Autocomplete
+                                onLoad={ref => (autocompleteRef.current = ref)}
+                                onPlaceChanged={handlePlaceSelect}
+                              >
+                                <Input
+                                  {...field}
+                                  className="w-full border-2 border-blue-400 text-lg py-3 px-4 font-semibold bg-blue-50"
+                                  placeholder="Busca una dirección..."
+                                  autoComplete="off"
+                                />
+                              </Autocomplete>
+                            ) : (
                               <Input
                                 {...field}
                                 className="w-full border-2 border-blue-400 text-lg py-3 px-4 font-semibold bg-blue-50"
                                 placeholder="Busca una dirección..."
                                 autoComplete="off"
                               />
-                            </Autocomplete>
-                          ) : (
-                            <Input
-                              {...field}
-                              className="w-full border-2 border-blue-400 text-lg py-3 px-4 font-semibold bg-blue-50"
-                              placeholder="Busca una dirección..."
-                              autoComplete="off"
-                            />
-                          )}
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {/* Latitud/Longitud solo lectura */}
-                  {coordinates && (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs text-gray-500">Latitud</label>
-                        <Input value={coordinates.lat} readOnly className="bg-gray-100" />
+                            )}
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {/* Latitud/Longitud solo lectura */}
+                    {coordinates && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs text-gray-500">Latitud</label>
+                          <Input value={coordinates.lat} readOnly className="bg-gray-100" />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500">Longitud</label>
+                          <Input value={coordinates.lng} readOnly className="bg-gray-100" />
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-xs text-gray-500">Longitud</label>
-                        <Input value={coordinates.lng} readOnly className="bg-gray-100" />
-                      </div>
-                    </div>
-                  )}
-                  <FormField
-                    control={form.control}
-                    name="tipo_vivienda"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tipo de vivienda</FormLabel>
-                        <FormControl>
-                          <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
-                            <option value="">Selecciona un tipo</option>
-                            {TIPO_VIVIENDA_OPTIONS.map(opt => (
-                              <option key={opt} value={opt}>{opt}</option>
-                            ))}
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
                     )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="zona"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Zona</FormLabel>
-                        <FormControl>
-                          <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
-                            <option value="">Selecciona una zona</option>
-                            {ZONAS_OPTIONS.map(opt => (
-                              <option key={opt} value={opt}>{opt}</option>
-                            ))}
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="url_externa_anuncio"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>URL externa anuncio</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://..." type="url" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                {/* Columna 2 */}
-                <div className="space-y-6">
-                  {/* Subida de imágenes */}
-                  <FormField
-                    control={form.control}
-                    name="images"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Imágenes</FormLabel>
-                        <FormControl>
-                          <div>
-                            <input
-                              type="file"
-                              multiple
-                              accept="image/*"
-                              ref={fileInputRef}
-                              style={{ display: 'none' }}
-                              onChange={handleImageUpload}
-                            />
-                            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
-                              Subir imágenes
-                            </Button>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {field.value?.map((img, idx) => (
-                                <div key={idx} className="relative w-24 h-24 border rounded overflow-hidden flex flex-col items-center">
-                                  <img src={getImageUrl(img)} alt={`img-${idx}`} className="object-cover w-full h-full" />
-                                  <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1">
+                    <FormField
+                      control={form.control}
+                      name="tipo_vivienda"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tipo de vivienda</FormLabel>
+                          <FormControl>
+                            <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
+                              <option value="">Selecciona un tipo</option>
+                              {TIPO_VIVIENDA_OPTIONS.map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="zona"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Zona</FormLabel>
+                          <FormControl>
+                            <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
+                              <option value="">Selecciona una zona</option>
+                              {zonasUnicas.length === 0 && <option disabled value="">No hay zonas disponibles</option>}
+                              {zonasUnicas.map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="url_externa_anuncio"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>URL externa anuncio</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://..." type="url" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  {/* Columna 2 */}
+                  <div className="space-y-6">
+                    {/* Subida de imágenes */}
+                    <FormField
+                      control={form.control}
+                      name="images"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Imágenes</FormLabel>
+                          <FormControl>
+                            <div>
+                              <input
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                ref={fileInputRef}
+                                style={{ display: 'none' }}
+                                onChange={handleImageUpload}
+                              />
+                              <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                                Subir imágenes
+                              </Button>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {field.value?.map((img, idx) => (
+                                  <div key={idx} className="relative w-24 h-24 border rounded overflow-hidden flex flex-col items-center">
+                                    <img src={getImageUrl(img)} alt={`img-${idx}`} className="object-cover w-full h-full" />
+                                    <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1">
+                                      <Button
+                                        type="button"
+                                        size="icon"
+                                        variant="ghost"
+                                        disabled={idx === 0}
+                                        onClick={() => moveImage(idx, idx - 1)}
+                                      >⬅️</Button>
+                                      <Button
+                                        type="button"
+                                        size="icon"
+                                        variant="ghost"
+                                        disabled={idx === field.value.length - 1}
+                                        onClick={() => moveImage(idx, idx + 1)}
+                                      >➡️</Button>
+                                    </div>
                                     <Button
                                       type="button"
                                       size="icon"
-                                      variant="ghost"
-                                      disabled={idx === 0}
-                                      onClick={() => moveImage(idx, idx - 1)}
-                                    >⬅️</Button>
-                                    <Button
-                                      type="button"
-                                      size="icon"
-                                      variant="ghost"
-                                      disabled={idx === field.value.length - 1}
-                                      onClick={() => moveImage(idx, idx + 1)}
-                                    >➡️</Button>
+                                      variant="destructive"
+                                      className="absolute top-1 right-1"
+                                      onClick={() => {
+                                        const arr = [...field.value];
+                                        arr.splice(idx, 1);
+                                        field.onChange(arr);
+                                      }}
+                                    >
+                                      ×
+                                    </Button>
+                                    {idx === 0 && (
+                                      <span className="absolute top-1 left-1 bg-yellow-400 text-xs px-1 rounded">Destacada</span>
+                                    )}
                                   </div>
-                                  <Button
-                                    type="button"
-                                    size="icon"
-                                    variant="destructive"
-                                    className="absolute top-1 right-1"
-                                    onClick={() => {
-                                      const arr = [...field.value];
-                                      arr.splice(idx, 1);
-                                      field.onChange(arr);
+                                ))}
+                              </div>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {/* Características (checkboxes con iconos) */}
+                    <FormField
+                      control={form.control}
+                      name="features"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Características</FormLabel>
+                          <FormControl>
+                            <div className="flex flex-wrap gap-2">
+                              {FEATURES_OPTIONS.map(opt => (
+                                <label key={opt.value} className="flex items-center gap-1 cursor-pointer border rounded px-2 py-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={field.value?.includes(opt.value) || false}
+                                    onChange={e => {
+                                      if (e.target.checked) {
+                                        field.onChange([...(field.value || []), opt.value]);
+                                      } else {
+                                        field.onChange((field.value || []).filter(v => v !== opt.value));
+                                      }
                                     }}
-                                  >
-                                    ×
-                                  </Button>
-                                  {idx === 0 && (
-                                    <span className="absolute top-1 left-1 bg-yellow-400 text-xs px-1 rounded">Destacada</span>
-                                  )}
-                                </div>
+                                  />
+                                  <span>{opt.icon}</span>
+                                  <span>{opt.value}</span>
+                                </label>
                               ))}
                             </div>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {/* Características (checkboxes con iconos) */}
-                  <FormField
-                    control={form.control}
-                    name="features"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Características</FormLabel>
-                        <FormControl>
-                          <div className="flex flex-wrap gap-2">
-                            {FEATURES_OPTIONS.map(opt => (
-                              <label key={opt.value} className="flex items-center gap-1 cursor-pointer border rounded px-2 py-1">
-                                <input
-                                  type="checkbox"
-                                  checked={field.value?.includes(opt.value) || false}
-                                  onChange={e => {
-                                    if (e.target.checked) {
-                                      field.onChange([...(field.value || []), opt.value]);
-                                    } else {
-                                      field.onChange((field.value || []).filter(v => v !== opt.value));
-                                    }
-                                  }}
-                                />
-                                <span>{opt.icon}</span>
-                                <span>{opt.value}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {/* Servicios cercanos (checkboxes con iconos) */}
-                  <FormField
-                    control={form.control}
-                    name="nearby_services"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Servicios Cercanos</FormLabel>
-                        <FormControl>
-                          <div className="flex flex-wrap gap-2">
-                            {NEARBY_SERVICES_OPTIONS.map(opt => (
-                              <label key={opt.value} className="flex items-center gap-1 cursor-pointer border rounded px-2 py-1">
-                                <input
-                                  type="checkbox"
-                                  checked={field.value?.includes(opt.value) || false}
-                                  onChange={e => {
-                                    if (e.target.checked) {
-                                      field.onChange([...(field.value || []), opt.value]);
-                                    } else {
-                                      field.onChange((field.value || []).filter(v => v !== opt.value));
-                                    }
-                                  }}
-                                />
-                                <span>{opt.icon}</span>
-                                <span>{opt.label}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {/* Estado de la propiedad */}
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Estado</FormLabel>
-                        <FormControl>
-                          <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
-                            <option value="">Selecciona un estado</option>
-                            {STATUS_OPTIONS.map(opt => (
-                              <option key={opt} value={opt}>{opt}</option>
-                            ))}
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {/* Agente (select con búsqueda) */}
-                  <FormField
-                    control={form.control}
-                    name="agent_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Agente</FormLabel>
-                        <FormControl>
-                          <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
-                            <option value="">Selecciona un agente</option>
-                            {agents.length === 0 && <option disabled value="">No hay agentes disponibles</option>}
-                            {agents.map(agent => (
-                              <option key={agent.id} value={agent.id}>{agent.name ? agent.name : 'Sin nombre'}</option>
-                            ))}
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {/* Copropiedades (4 fijas, solo lectura, precio calculado) */}
-                  <div className="space-y-4">
-                    {[1,2,3,4].map(n => (
-                      <div key={n} className="border rounded p-2 bg-gray-50">
-                        <div className="font-semibold mb-2">Copropiedad {n}</div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                          <div>
-                            <label className="block text-xs text-gray-500">Precio</label>
-                            <Input value={form.getValues('price') ? (Number(form.getValues('price'))/4).toFixed(2) : ''} readOnly className="bg-gray-100" />
-                          </div>
-                          <FormField
-                            control={form.control}
-                            name={`share${n}_status` as any}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Estado</FormLabel>
-                                <FormControl>
-                                  <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
-                                    <option value="">Selecciona estado</option>
-                                    {SHARE_STATUS_OPTIONS.map(opt => (
-                                      <option key={opt} value={opt}>{opt}</option>
-                                    ))}
-                                  </select>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name={`share${n}_owner_id` as any}
-                            render={({ field }) => {
-                              // Deshabilitar si el estado es 'disponible'
-                              const status = form.getValues(`share${n}_status` as any);
-                              return (
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {/* Servicios cercanos (checkboxes con iconos) */}
+                    <FormField
+                      control={form.control}
+                      name="nearby_services"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Servicios Cercanos</FormLabel>
+                          <FormControl>
+                            <div className="flex flex-wrap gap-2">
+                              {NEARBY_SERVICES_OPTIONS.map(opt => (
+                                <label key={opt.value} className="flex items-center gap-1 cursor-pointer border rounded px-2 py-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={field.value?.includes(opt.value) || false}
+                                    onChange={e => {
+                                      if (e.target.checked) {
+                                        field.onChange([...(field.value || []), opt.value]);
+                                      } else {
+                                        field.onChange((field.value || []).filter(v => v !== opt.value));
+                                      }
+                                    }}
+                                  />
+                                  <span>{opt.icon}</span>
+                                  <span>{opt.label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {/* Estado de la propiedad */}
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Estado</FormLabel>
+                          <FormControl>
+                            <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
+                              <option value="">Selecciona un estado</option>
+                              {STATUS_OPTIONS.map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {/* Agente (select con búsqueda) */}
+                    <FormField
+                      control={form.control}
+                      name="agent_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Agente</FormLabel>
+                          <FormControl>
+                            <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
+                              <option value="">Selecciona un agente</option>
+                              {agents.length === 0 && <option disabled value="">No hay agentes disponibles</option>}
+                              {agents.map(agent => (
+                                <option key={agent.id} value={agent.id}>{agent.name ? agent.name : 'Sin nombre'}</option>
+                              ))}
+                            </select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {/* Copropiedades (4 fijas, solo lectura, precio calculado) */}
+                    <div className="space-y-4">
+                      {[1,2,3,4].map(n => (
+                        <div key={n} className="border rounded p-2 bg-gray-50">
+                          <div className="font-semibold mb-2">Copropiedad {n}</div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <div>
+                              <label className="block text-xs text-gray-500">Precio</label>
+                              <Input value={form.getValues('price') ? (Number(form.getValues('price'))/4).toFixed(2) : ''} readOnly className="bg-gray-100" />
+                            </div>
+                            <FormField
+                              control={form.control}
+                              name={`share${n}_status` as any}
+                              render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Propietario</FormLabel>
+                                  <FormLabel>Estado</FormLabel>
                                   <FormControl>
-                                    <select
-                                      {...field}
-                                      className="w-full border rounded px-3 py-2 text-sm h-10"
-                                      disabled={status === 'disponible'}
-                                      value={status === 'disponible' ? '' : field.value}
-                                      onChange={e => field.onChange(e.target.value)}
-                                    >
-                                      <option value="">Selecciona propietario</option>
-                                      {owners.map(owner => (
-                                        <option key={owner.id} value={owner.id}>{owner.name}</option>
+                                    <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
+                                      <option value="">Selecciona estado</option>
+                                      {SHARE_STATUS_OPTIONS.map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
                                       ))}
                                     </select>
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
-                              );
-                            }}
-                          />
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name={`share${n}_owner_id` as any}
+                              render={({ field }) => {
+                                // Deshabilitar si el estado es 'disponible'
+                                const status = form.getValues(`share${n}_status` as any);
+                                return (
+                                  <FormItem>
+                                    <FormLabel>Propietario</FormLabel>
+                                    <FormControl>
+                                      <select
+                                        {...field}
+                                        className="w-full border rounded px-3 py-2 text-sm h-10"
+                                        disabled={status === 'disponible'}
+                                        value={status === 'disponible' ? '' : field.value}
+                                        onChange={e => field.onChange(e.target.value)}
+                                      >
+                                        <option value="">Selecciona propietario</option>
+                                        {owners.map(owner => (
+                                          <option key={owner.id} value={owner.id}>{owner.name}</option>
+                                        ))}
+                                      </select>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                );
+                              }}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                    {/* Destacada */}
+                    <FormField
+                      control={form.control}
+                      name="destacada"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            <input
+                              type="checkbox"
+                              checked={field.value || false}
+                              onChange={e => field.onChange(e.target.checked)}
+                              className="mr-2"
+                            />
+                            Propiedad destacada
+                          </FormLabel>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                  {/* Destacada */}
-                  <FormField
-                    control={form.control}
-                    name="destacada"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          <input
-                            type="checkbox"
-                            checked={field.value || false}
-                            onChange={e => field.onChange(e.target.checked)}
-                            className="mr-2"
-                          />
-                          Propiedad destacada
-                        </FormLabel>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
-              </div>
-              <div className="flex justify-end space-x-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate('/dashboard/properties')}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? 'Guardando...' : 'Guardar Propiedad'}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                <div className="flex justify-end space-x-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate('/dashboard/properties')}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={form.formState.isSubmitting}>
+                    {form.formState.isSubmitting ? 'Guardando...' : 'Guardar Propiedad'}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

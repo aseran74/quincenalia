@@ -41,6 +41,7 @@ export interface Property {
   city?: string;
   type?: string;
   zona?: string;
+  tipo_vivienda?: string;
 }
 
 export interface DateRange {

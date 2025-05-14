@@ -12,37 +12,32 @@ const formatPriceSimple = (price: number) => {
   return price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 };
 
+// Helper para obtener el precio de copropiedad más bajo o el total/4 si no hay ninguno
 function getMinSharePrice(property: any): number | null {
   const shares = [property.share1_price, property.share2_price, property.share3_price, property.share4_price].filter((p: any): p is number => typeof p === 'number' && p > 0);
-  if (shares.length === 0) return null;
-  return Math.min(...shares);
+  if (shares.length > 0) return Math.min(...shares);
+  if (property.price && typeof property.price === 'number' && property.price > 0) {
+    return property.price / 4;
+  }
+  return null;
 }
 
-const calculateMonthlyPayment = (sharePrice: number): number => {
-  if (!sharePrice || sharePrice <= 0) return 0;
-  const downPayment = sharePrice * 0.3; // Ejemplo: 30% de entrada
-  const loanAmount = sharePrice - downPayment;
-  if (loanAmount <= 0) return 0; // No hay nada que financiar si la entrada cubre todo o más
-  const annualInterestRate = 2.1; // Tasa de interés anual (ej. 2.1%)
-  const interestRate = annualInterestRate / 100 / 12; // Tasa de interés mensual
-  const numberOfPayments = 20 * 12; // Plazo en meses (ej. 20 años)
-
-  // Si no hay interés o plazo, o el monto del préstamo es cero, el pago mensual es cero o indefinido.
-  if (loanAmount === 0) return 0;
-  if (interestRate === 0) return Math.round(loanAmount / numberOfPayments); // Préstamo sin interés
-
-  const monthlyPayment = loanAmount * interestRate * Math.pow(1 + interestRate, numberOfPayments) /
-    (Math.pow(1 + interestRate, numberOfPayments) - 1);
-
-  return isFinite(monthlyPayment) ? Math.round(monthlyPayment) : 0;
-};
-
+function getMonthlyPayment(price: number): number | null {
+  if (!price || price <= 0) return null;
+  // Hipoteca a 25 años, 3% interés, 80% financiación
+  const principal = price * 0.8;
+  const years = 25;
+  const interest = 0.03;
+  const n = years * 12;
+  const monthlyRate = interest / 12;
+  return principal * (monthlyRate * Math.pow(1 + monthlyRate, n)) / (Math.pow(1 + monthlyRate, n) - 1);
+}
 
 // --- COMPONENTE PropertyCard CON PRECIO/MES ---
 const PropertyCard = ({ property }: { property: any }) => {
   const imageUrl = property.images && property.images.length > 0 ? property.images[0] : '/placeholder-property.jpg';
   const minShare = getMinSharePrice(property);
-  const monthly = minShare && minShare > 0 ? calculateMonthlyPayment(minShare) : null; // Calcular solo si hay minShare > 0
+  const monthly = minShare && minShare > 0 ? getMonthlyPayment(minShare) : null;
 
   return (
     <Link to={`/properties/${property.id}`} className="group block h-full">
@@ -54,22 +49,28 @@ const PropertyCard = ({ property }: { property: any }) => {
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 z-0"
             onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
           />
-          <div className="absolute inset-0 z-10 flex flex-col justify-between bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 sm:p-3">
-            {/* Badges superiores */}
-            <div className="flex justify-between items-start w-full">
-              {minShare && (
-                <span className="bg-primary text-primary-foreground text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full shadow">
-                  {formatPriceSimple(minShare)}
-                </span>
-              )}
-              {/* Mostrar precio/mes en lugar de precio total */}
-              {monthly !== null && monthly > 0 && (
-                <span className="bg-secondary text-secondary-foreground text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full shadow ml-auto">
-                  {formatPriceSimple(monthly)}<span className="font-normal">/mes*</span>
-                </span>
-              )}
+          <div className="absolute inset-0 z-10 flex flex-col justify-between">
+            {/* Badges de copropiedad y precio/mes */}
+            <div className="flex justify-between items-start p-4 w-full">
+              {/* Badge copropiedad a la izquierda */}
+              <div>
+                {minShare && (
+                  <span className="bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow z-20">
+                    Desde {minShare.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
+                  </span>
+                )}
+              </div>
+              {/* Badge precio/mes a la derecha */}
+              <div>
+                {monthly && (
+                  <span className="bg-white text-gray-700 text-xs font-normal px-3 py-1 rounded-full shadow z-20 border border-gray-200">
+                    {monthly.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })} <span className="text-[10px] text-gray-400 font-normal">/mes*</span>
+                  </span>
+                )}
+              </div>
             </div>
-
+          </div>
+          <div className="absolute inset-0 z-10 flex flex-col justify-between bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 sm:p-3">
             {/* Contenido inferior sobre la imagen */}
             <div className="text-white mt-auto">
               <h3 className="text-sm sm:text-base font-bold mb-1 truncate" title={property.title}>

@@ -73,19 +73,6 @@ const propertySchema = z.object({
 
 type PropertyFormValues = z.infer<typeof propertySchema>;
 
-const ZONAS_OPTIONS = [
-  'Costa de levante.',
-  'Canarias.',
-  'Baleares.',
-  'Costa Catalana',
-  'Andalucia',
-  'Euskadi.',
-  'Asturias.',
-  'Galicia',
-  'Murcia',
-  'Zonas de interior.'
-];
-
 const TIPO_VIVIENDA_OPTIONS = [
   'Piso o apartamento.',
   'Atico.',
@@ -125,6 +112,20 @@ const FEATURES_OPTIONS = [
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 const GOOGLE_MAPS_LIBRARIES = ["places"] as ["places"];
 
+// Lista de zonas oficiales a partir de los nombres de las imágenes en /public
+const ZONAS_OFICIALES = [
+  'Costa de levante.',
+  'Canarias.',
+  'Baleares.',
+  'Costa Catalana',
+  'Andalucia',
+  'Euskadi.',
+  'Asturias.',
+  'Galicia',
+  'Murcia',
+  'Zonas de interior.'
+];
+
 const EditProperty = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -137,6 +138,7 @@ const EditProperty = () => {
   const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY, libraries: GOOGLE_MAPS_LIBRARIES });
   const [initialValues, setInitialValues] = useState<PropertyFormValues | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [zonasUnicas, setZonasUnicas] = useState<string[]>([]);
 
   // Cargar propietarios y agentes
   useEffect(() => {
@@ -184,6 +186,19 @@ const EditProperty = () => {
     };
       fetchProperty();
   }, [id, navigate, toast]);
+
+  // Obtener zonas únicas de la base de datos
+  useEffect(() => {
+    const fetchZonasUnicas = async () => {
+      const { data, error } = await supabase.from('properties').select('zona');
+      if (error) return;
+      const zonasDB = Array.from(new Set((data || []).map((p: any) => (p.zona || '').trim()))).filter(z => z);
+      // Unir zonas oficiales y de la base de datos, sin duplicados
+      const zonas = Array.from(new Set([...ZONAS_OFICIALES, ...zonasDB]));
+      setZonasUnicas(zonas);
+    };
+    fetchZonasUnicas();
+  }, []);
 
   // Inicializar el formulario solo cuando initialValues está listo
   const form = useForm<PropertyFormValues>({
@@ -478,7 +493,8 @@ const EditProperty = () => {
                         <FormControl>
                           <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
                             <option value="">Selecciona una zona</option>
-                            {ZONAS_OPTIONS.map(opt => (
+                            {zonasUnicas.length === 0 && <option disabled value="">No hay zonas disponibles</option>}
+                            {zonasUnicas.map(opt => (
                               <option key={opt} value={opt}>{opt}</option>
                             ))}
                           </select>

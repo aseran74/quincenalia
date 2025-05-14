@@ -256,6 +256,36 @@ const calculateMonthlyPayment = (totalPrice: number): number => {
   return isFinite(monthlyPayment) ? Math.round(monthlyPayment) : 0;
 };
 
+// Helper para obtener el precio de copropiedad más bajo o el total/4 si no hay ninguno
+function getMinSharePrice(property) {
+  const shares = [property.share1_price, property.share2_price, property.share3_price, property.share4_price].filter(p => typeof p === 'number' && p > 0);
+  if (shares.length > 0) return Math.min(...shares);
+  if (property.price && typeof property.price === 'number' && property.price > 0) {
+    return property.price / 4;
+  }
+  return null;
+}
+
+function getSharePrice(property, idx) {
+  const price = property[`share${idx+1}_price`];
+  if (typeof price === 'number' && price > 0) return price;
+  if (property.price && typeof property.price === 'number' && property.price > 0) {
+    return property.price / 4;
+  }
+  return null;
+}
+
+function getMonthlyPayment(price) {
+  if (!price || price <= 0) return null;
+  // Hipoteca a 25 años, 3% interés, 80% financiación
+  const principal = price * 0.8;
+  const years = 25;
+  const interest = 0.03;
+  const n = years * 12;
+  const monthlyRate = interest / 12;
+  return principal * (monthlyRate * Math.pow(1 + monthlyRate, n)) / (Math.pow(1 + monthlyRate, n) - 1);
+}
+
 export const PropertyDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -678,20 +708,14 @@ export const PropertyDetail = () => {
                     <div id="copropiedades" className="bg-gray-50 rounded-lg p-4 sm:p-6 scroll-mt-20">
                         <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Copropiedades Disponibles</h2>
                         <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-4">
-                            {PROPERTY_PERIODS.map(period => {
-                                const priceKey = `${period.key}_price` as keyof Property;
-                                const statusKey = `${period.key}_status` as keyof Property;
-
-                                const price = property[priceKey] as number | null | undefined;
-                                const status = property[statusKey] as string | null | undefined;
+                            {PROPERTY_PERIODS.map((period, idx) => {
+                                const price = getSharePrice(property, idx);
+                                const status = property[`${period.key}_status`] as string | null | undefined;
 
                                 // Calcular cuota mensual para ESTA copropiedad si tiene precio
                                 let monthlyPaymentForShare = 0;
                                 if (typeof price === 'number' && price > 0) {
-                                    // Asumimos que 'price' es el precio de la copropiedad.
-                                    // La calculadora de hipoteca espera el precio TOTAL de la propiedad.
-                                    // Si la copropiedad es 1/4, el precio total es price * 4.
-                                    monthlyPaymentForShare = calculateMonthlyPayment(price * 4);
+                                    monthlyPaymentForShare = getMonthlyPayment(price);
                                 }
 
                                 return (

@@ -269,58 +269,19 @@ const HeroParallax = () => {
   );
 };
 
-const ZONAS_DESTACADAS = [
-  {
-    zona: 'Costa de levante.',
-    image: '/LEvante.webp',
-    link: '/properties?zona=Costa%20de%20levante.',
-  },
-  {
-    zona: 'Canarias.',
-    image: '/Canarias.webp',
-    link: '/properties?zona=Canarias.',
-  },
-  {
-    zona: 'Baleares.',
-    image: '/Imagenes.webp',
-    link: '/properties?zona=Baleares.',
-  },
-  {
-    zona: 'Costa Catalana',
-    image: '/Costa catalana.webp',
-    link: '/properties?zona=Costa%20Catalana',
-  },
-  {
-    zona: 'Andalucia',
-    image: '/andalucia.jpg',
-    link: '/properties?zona=Andalucia',
-  },
-  {
-    zona: 'Euskadi.',
-    image: '/Euskadi.webp',
-    link: '/properties?zona=Euskadi.',
-  },
-  {
-    zona: 'Asturias.',
-    image: '/Asturias.webp',
-    link: '/properties?zona=Asturias.',
-  },
-  {
-    zona: 'Galicia',
-    image: '/Galicia.webp',
-    link: '/properties?zona=Galicia',
-  },
-  {
-    zona: 'Murcia',
-    image: '/murcia.jpg',
-    link: '/properties?zona=Murcia',
-  },
-  {
-    zona: 'Zonas de interior.',
-    image: '/interior.jpg',
-    link: '/properties?zona=Zonas%20de%20interior.',
-  },
-];
+// Diccionario de imágenes por zona
+const IMAGENES_ZONA: Record<string, string> = {
+  'Costa de levante.': 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+  'Canarias.': 'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80',
+  'Baleares.': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+  'Costa Catalana': 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad?auto=format&fit=crop&w=800&q=80',
+  'Andalucia': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80',
+  'Euskadi.': 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=800&q=80',
+  'Asturias.': 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=800&q=80',
+  'Galicia': 'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80',
+  'Murcia': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80',
+  'Zonas de interior.': 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=800&q=80',
+};
 
 // Función para normalizar zonas (sin tildes y en minúsculas)
 function normalizaZona(z: string) {
@@ -329,6 +290,7 @@ function normalizaZona(z: string) {
 
 const HomePage = () => {
   const [viviendasPorZona, setViviendasPorZona] = useState<{ [key: string]: number }>({});
+  const [zonasUnicas, setZonasUnicas] = useState<string[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -344,6 +306,14 @@ const HomePage = () => {
       setViviendasPorZona(counts);
     };
     fetchViviendasPorZona();
+    // Obtener zonas únicas de la base de datos
+    const fetchZonasUnicas = async () => {
+      const { data, error } = await supabase.from('properties').select('zona');
+      if (error) return;
+      const zonas = Array.from(new Set((data || []).map((p: any) => (p.zona || '').trim()))).filter(z => z);
+      setZonasUnicas(zonas);
+    };
+    fetchZonasUnicas();
   }, []);
 
   // Renombrar la función scroll
@@ -453,26 +423,26 @@ const HomePage = () => {
                 ref={scrollContainerRef}
                 className="flex md:hidden space-x-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
               >
-                {ZONAS_DESTACADAS.map((zonaObj, index) => {
-                  const normalizedCurrentZona = normalizaZona(zonaObj.zona);
+                {zonasUnicas.map((zona, index) => {
+                  const normalizedCurrentZona = normalizaZona(zona);
                   const count = viviendasPorZona[normalizedCurrentZona] || 0;
                   return (
                     <Link
-                      to={zonaObj.link}
+                      to={`/properties?zona=${encodeURIComponent(zona)}`}
                       key={index}
                       className="flex-shrink-0 w-[80vw] max-w-xs h-48 sm:h-56 group/card-link flex items-center justify-center snap-center px-2"
                     >
                       <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-full h-48 sm:h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
                         <div className="relative w-full h-full flex items-center justify-center">
                           <img
-                            src={zonaObj.image}
-                            alt={`Propiedades en ${zonaObj.zona}`}
+                            src={IMAGENES_ZONA[zona] || '/placeholder-property.jpg'}
+                            alt={`Propiedades en ${zona}`}
                             className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-full"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-80 group-hover/card:opacity-100 transition-opacity duration-300 rounded-full"></div>
                           <div className="absolute bottom-3 left-0 right-0 px-2 text-center">
-                            <h3 className="text-lg font-bold text-white truncate" title={zonaObj.zona}>
-                              {zonaObj.zona}
+                            <h3 className="text-lg font-bold text-white truncate" title={zona}>
+                              {zona}
                             </h3>
                             <p className="text-xs text-gray-100 mt-0.5">
                               {count} {count === 1 ? 'vivienda' : 'viviendas'}
@@ -487,22 +457,22 @@ const HomePage = () => {
               {/* En escritorio: cinco cards arriba y el resto abajo, ambas filas centradas */}
               <div className="hidden md:flex flex-col items-center gap-10">
                 <div className="flex flex-row justify-center gap-8 mb-8">
-                  {ZONAS_DESTACADAS.slice(0,5).map((zonaObj, index) => {
-                    const normalizedCurrentZona = normalizaZona(zonaObj.zona);
+                  {zonasUnicas.slice(0,5).map((zona, index) => {
+                    const normalizedCurrentZona = normalizaZona(zona);
                     const count = viviendasPorZona[normalizedCurrentZona] || 0;
                     return (
-                      <Link to={zonaObj.link} key={index} className="w-56 h-56 group/card-link flex items-center justify-center">
+                      <Link to={`/properties?zona=${encodeURIComponent(zona)}`} key={index} className="w-56 h-56 group/card-link flex items-center justify-center">
                         <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-56 h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
                           <div className="relative w-full h-full flex items-center justify-center">
                             <img
-                              src={zonaObj.image}
-                              alt={`Propiedades en ${zonaObj.zona}`}
+                              src={IMAGENES_ZONA[zona] || '/placeholder-property.jpg'}
+                              alt={`Propiedades en ${zona}`}
                               className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-full"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-80 group-hover/card:opacity-100 transition-opacity duration-300 rounded-full"></div>
                             <div className="absolute bottom-6 left-0 right-0 px-4 text-center">
-                              <h3 className="text-xl font-bold text-white truncate" title={zonaObj.zona}>
-                                {zonaObj.zona}
+                              <h3 className="text-xl font-bold text-white truncate" title={zona}>
+                                {zona}
                               </h3>
                               <p className="text-sm text-gray-100 mt-1">
                                 {count} {count === 1 ? 'vivienda' : 'viviendas'}
@@ -515,22 +485,22 @@ const HomePage = () => {
                   })}
                 </div>
                 <div className="flex flex-row justify-center gap-8">
-                  {ZONAS_DESTACADAS.slice(5).map((zonaObj, index) => {
-                    const normalizedCurrentZona = normalizaZona(zonaObj.zona);
+                  {zonasUnicas.slice(5).map((zona, index) => {
+                    const normalizedCurrentZona = normalizaZona(zona);
                     const count = viviendasPorZona[normalizedCurrentZona] || 0;
                     return (
-                      <Link to={zonaObj.link} key={index+5} className="w-56 h-56 group/card-link flex items-center justify-center">
+                      <Link to={`/properties?zona=${encodeURIComponent(zona)}`} key={index+5} className="w-56 h-56 group/card-link flex items-center justify-center">
                         <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-56 h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
                           <div className="relative w-full h-full flex items-center justify-center">
                             <img
-                              src={zonaObj.image}
-                              alt={`Propiedades en ${zonaObj.zona}`}
+                              src={IMAGENES_ZONA[zona] || '/placeholder-property.jpg'}
+                              alt={`Propiedades en ${zona}`}
                               className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-full"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-80 group-hover/card:opacity-100 transition-opacity duration-300 rounded-full"></div>
                             <div className="absolute bottom-6 left-0 right-0 px-4 text-center">
-                              <h3 className="text-xl font-bold text-white truncate" title={zonaObj.zona}>
-                                {zonaObj.zona}
+                              <h3 className="text-xl font-bold text-white truncate" title={zona}>
+                                {zona}
                               </h3>
                               <p className="text-sm text-gray-100 mt-1">
                                 {count} {count === 1 ? 'vivienda' : 'viviendas'}
@@ -602,9 +572,8 @@ const HomePage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
-                ¿Listo para{' '}
-                <span className="relative inline-block">
-                  <span className="text-gray-800 font-bold">Empezar</span>
+                <span className="text-black text-4xl align-middle mr-1">¿</span>
+                Listo para <span className="relative inline-block"><span className="text-gray-800 font-bold">Empezar</span>
                   <svg
                     viewBox="0 0 180 12"
                     width="180"
@@ -625,7 +594,7 @@ const HomePage = () => {
                       strokeLinecap="round"
                     />
                   </svg>
-                  <span className="text-primary text-4xl align-middle ml-1">.</span>
+                  <span className="text-black text-4xl align-middle ml-1">?</span>
                 </span>
               </h2>
               <p className="text-lg text-gray-600 mb-6">

@@ -10,49 +10,96 @@ import {
   DollarSign,
   Plus
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 const AdminHome = () => {
   const navigate = useNavigate();
 
+  // Estados para los KPIs
+  const [ownersCount, setOwnersCount] = useState<number>(0);
+  const [propertiesCount, setPropertiesCount] = useState<number>(0);
+  const [invoicesCount, setInvoicesCount] = useState<number>(0);
+  const [incidentsCount, setIncidentsCount] = useState<number>(0);
+  const [messagesCount, setMessagesCount] = useState<number>(0);
+  const [commissionsSum, setCommissionsSum] = useState<number>(0);
+
+  useEffect(() => {
+    // Propietarios con copropiedad asignada (IDs únicos en los campos shareX_owner_id)
+    supabase
+      .from('properties')
+      .select('share1_owner_id, share2_owner_id, share3_owner_id, share4_owner_id')
+      .then(({ data }) => {
+        if (data && Array.isArray(data)) {
+          const ownerIds = new Set();
+          data.forEach((row) => {
+            ['share1_owner_id', 'share2_owner_id', 'share3_owner_id', 'share4_owner_id'].forEach((field) => {
+              if (row[field]) ownerIds.add(row[field]);
+            });
+          });
+          setOwnersCount(ownerIds.size);
+        } else {
+          setOwnersCount(0);
+        }
+      });
+    // Propiedades
+    supabase.from('properties').select('id', { count: 'exact', head: true }).then(({ count }) => setPropertiesCount(count || 0));
+    // Facturas
+    supabase.from('invoices').select('id', { count: 'exact', head: true }).then(({ count }) => setInvoicesCount(count || 0));
+    // Incidencias
+    supabase.from('incidents').select('id', { count: 'exact', head: true }).then(({ count }) => setIncidentsCount(count || 0));
+    // Mensajes
+    supabase.from('messages').select('id', { count: 'exact', head: true }).then(({ count }) => setMessagesCount(count || 0));
+    // Comisiones (suma total)
+    supabase.from('commissions').select('amount').then(({ data }) => {
+      if (data && Array.isArray(data)) {
+        const sum = data.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+        setCommissionsSum(sum);
+      } else {
+        setCommissionsSum(0);
+      }
+    });
+  }, []);
+
   const stats = [
     {
       title: "Propietarios",
-      value: "24",
+      value: ownersCount,
       icon: <Users className="h-8 w-8" />,
       path: "/dashboard/admin/owners",
       color: "bg-blue-500"
     },
     {
       title: "Propiedades",
-      value: "12",
+      value: propertiesCount,
       icon: <Building className="h-8 w-8" />,
       path: "/dashboard/admin/properties",
       color: "bg-green-500"
     },
     {
       title: "Facturas",
-      value: "8",
+      value: invoicesCount,
       icon: <FileText className="h-8 w-8" />,
       path: "/dashboard/admin/invoices",
       color: "bg-yellow-500"
     },
     {
       title: "Incidencias",
-      value: "5",
+      value: incidentsCount,
       icon: <AlertTriangle className="h-8 w-8" />,
       path: "/dashboard/admin/incidents",
       color: "bg-red-500"
     },
     {
       title: "Mensajes",
-      value: "3",
+      value: messagesCount,
       icon: <MessageSquare className="h-8 w-8" />,
       path: "/dashboard/admin/messages",
       color: "bg-purple-500"
     },
     {
       title: "Comisiones",
-      value: "€2,450",
+      value: commissionsSum.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }),
       icon: <DollarSign className="h-8 w-8" />,
       path: "/dashboard/admin/commissions",
       color: "bg-indigo-500"
