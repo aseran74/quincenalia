@@ -47,7 +47,7 @@ const priceOptions = [
     { value: 300000, label: '300.000€' },
     { value: 500000, label: '500.000€' },
     { value: 750000, label: '750.000€' },
-    { value: 1000000, label: '1.000.000€+' }, // Este último puede ser 'any' o un valor muy alto
+    { value: 1000000, label: '1.000.000€+' },
 ];
 
 const roomOptions = [
@@ -120,11 +120,10 @@ const getMarkerIcon = () => {
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 const AUTOCOMPLETE_LIBRARIES: Libraries = ['places'];
 
-const ZONAS_OPTIONS = [ // Esto es un ejemplo, se carga dinámicamente ahora
+const ZONAS_OPTIONS = [ 
   'Costa de levante.',
   'Canarias.',
   'Baleares.',
-  // ...
 ];
 
 function normalizaZonaFiltro(z?: string | null): string {
@@ -143,7 +142,7 @@ export const PropertiesPage = () => {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showTypeChecklist, setShowTypeChecklist] = useState(false);
   const typeChecklistRef = useRef<HTMLDivElement>(null);
-  const [showFilters, setShowFilters] = useState(false); // Para el toggle de filtros en móvil
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedMapProperty, setSelectedMapProperty] = useState<Property | null>(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
@@ -186,7 +185,7 @@ export const PropertiesPage = () => {
       const maxPriceFilter = filters.maxPrice === 'any' ? Infinity : Number(filters.maxPrice);
 
       if ((filters.minPrice !== 'any' || filters.maxPrice !== 'any')) {
-        if (minShare === null || minShare < 0) return false; // Si hay filtro de precio, debe tener minShare
+        if (minShare === null || minShare < 0) return false; 
         if (minShare < minPriceFilter || minShare > maxPriceFilter) return false;
       }
       
@@ -210,7 +209,7 @@ export const PropertiesPage = () => {
     setFilters(initialFilters);
     setShowAdvancedFilters(false);
     setShowTypeChecklist(false);
-    if (locationInputRef.current) locationInputRef.current.value = ''; // Limpiar input de autocompletar
+    if (locationInputRef.current) locationInputRef.current.value = ''; 
   };
 
   useEffect(() => {
@@ -338,7 +337,8 @@ export const PropertiesPage = () => {
     return (
       <Card className="bg-card border shadow-sm rounded-lg">
         <CardContent className="p-4 md:p-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-6 items-end">
+          {/* MODIFIED: Adjusted grid for better responsiveness */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6 items-end">
             {/* 1. ¿Dónde buscas? */}
             <div className="relative">
               <label htmlFor="filterLocation" className="block text-xs font-medium text-muted-foreground mb-1.5">¿Dónde buscas?</label>
@@ -353,10 +353,10 @@ export const PropertiesPage = () => {
                     ref={locationInputRef}
                     type="text"
                     placeholder="Ciudad, zona, playa..."
-                    className="w-full text-sm pr-8"
+                    className="w-full text-sm pr-8 h-10" // MODIFIED: Ensure h-10
                     defaultValue={filters.location}
                     onBlur={e => {
-                      if (!autocompleteRef.current?.getPlace()) { // Solo actualiza si no se seleccionó un lugar
+                      if (!autocompleteRef.current?.getPlace()) { 
                         setFilters(prev => ({ ...prev, location: e.target.value }));
                       }
                     }}
@@ -368,7 +368,7 @@ export const PropertiesPage = () => {
                   ref={locationInputRef}
                   type="text"
                   placeholder="Cargando autocompletado..."
-                  className="w-full text-sm pr-8"
+                  className="w-full text-sm pr-8 h-10" // MODIFIED: Ensure h-10
                   value={filters.location}
                   onChange={e => setFilters(prev => ({ ...prev, location: e.target.value }))}
                   disabled={!isAutocompleteLoaded}
@@ -420,7 +420,7 @@ export const PropertiesPage = () => {
                   className="absolute z-30 mt-1 w-full min-w-[250px] max-w-[350px] bg-popover border border-border rounded-md shadow-lg p-2"
                   style={{ maxHeight: '240px', overflowY: 'auto' }}
                 >
-                  <div className="grid grid-cols-1 gap-1"> {/* Siempre una columna para mejor lectura */}
+                  <div className="grid grid-cols-1 gap-1">
                     {TIPO_VIVIENDA_OPTIONS.map(type => (
                       <div key={type} className="flex items-center space-x-2 hover:bg-accent rounded p-1.5">
                         <Checkbox
@@ -459,76 +459,80 @@ export const PropertiesPage = () => {
               </Select>
             </div>
             
-            {/* 5. Precio Mín., Precio Máx., Baños y Más filtros */}
-            <div className="flex flex-col sm:flex-row gap-2 items-stretch w-full justify-center">
-              <div className="w-full sm:w-auto">
-                <label htmlFor="filterMinPrice" className="block text-xs font-medium text-muted-foreground mb-1">Precio Mín.</label>
-                <Select
-                  value={String(filters.minPrice)}
-                  onValueChange={value => setFilters({ ...filters, minPrice: value === 'any' ? 'any' : Number(value) })}
-                >
-                  <SelectTrigger id="filterMinPrice" className="text-sm h-9 w-full">
-                    <SelectValue placeholder="Mínimo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
-                    {priceOptions.map(opt => (
-                      (filters.maxPrice === 'any' || opt.value < Number(filters.maxPrice)) &&
-                      <SelectItem key={`min-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="w-full sm:w-auto">
-                <label htmlFor="filterMaxPrice" className="block text-xs font-medium text-muted-foreground mb-1">Precio Máx.</label>
-                <Select
-                  value={String(filters.maxPrice)}
-                  onValueChange={value => setFilters({ ...filters, maxPrice: value === 'any' ? 'any' : Number(value) })}
-                >
-                  <SelectTrigger id="filterMaxPrice" className="text-sm h-9 w-full">
-                    <SelectValue placeholder="Máximo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
-                    {priceOptions.map(opt => (
-                      (filters.minPrice === 'any' || opt.value > Number(filters.minPrice)) &&
-                      <SelectItem key={`max-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
-                    ))}
-                    {priceOptions[priceOptions.length - 1].value < Infinity && (
-                      <SelectItem value={String(Infinity)} className="text-sm">1.000.000€+</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="w-full sm:w-auto">
-                <label htmlFor="filterBathrooms" className="block text-xs font-medium text-muted-foreground mb-1">Baños (mín.)</label>
-                <Select
-                  value={String(filters.bathrooms)}
-                  onValueChange={value => setFilters({ ...filters, bathrooms: value === 'any' ? 'any' : Number(value) })}
-                >
-                  <SelectTrigger id="filterBathrooms" className="text-sm h-9 w-full">
-                    <SelectValue placeholder="Baños" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
-                    {roomOptions.map(opt => (
-                      <SelectItem key={`bath-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="w-full sm:w-auto flex items-end">
-                <Button
-                  variant="ghost"
-                  className="text-[16px] px-3 h-10 flex items-center text-primary hover:bg-transparent gap-2 font-semibold w-full sm:w-auto"
-                  onClick={() => setShowAdvancedFilters(v => !v)}
-                >
-                  <SlidersHorizontal className="w-5 h-5 mr-1" />
-                  {showAdvancedFilters ? 'Menos filtros' : 'Más filtros'}
-                  {showAdvancedFilters ? <ChevronUp className="w-5 h-5 ml-1" /> : <ChevronDown className="w-5 h-5 ml-1" />}
-                </Button>
-              </div>
+            {/* --- START REORDERED AND RESTRUCTURED SECTION --- */}
+            {/* 5. Baños (mín.) - Moved and reordered */}
+            <div>
+              <label htmlFor="filterBathrooms" className="block text-xs font-medium text-muted-foreground mb-1.5">Baños (mín.)</label>
+              <Select
+                value={String(filters.bathrooms)}
+                onValueChange={value => setFilters({ ...filters, bathrooms: value === 'any' ? 'any' : Number(value) })}
+              >
+                <SelectTrigger id="filterBathrooms" className="text-sm h-10 w-full"> {/* MODIFIED: h-10 */}
+                  <SelectValue placeholder="Cualquiera" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
+                  {roomOptions.map(opt => (
+                    <SelectItem key={`bath-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            {/* 6. Precio Mín. - Reordered */}
+            <div>
+              <label htmlFor="filterMinPrice" className="block text-xs font-medium text-muted-foreground mb-1.5">Precio Mín.</label> {/* MODIFIED: mb-1.5 */}
+              <Select
+                value={String(filters.minPrice)}
+                onValueChange={value => setFilters({ ...filters, minPrice: value === 'any' ? 'any' : Number(value) })}
+              >
+                <SelectTrigger id="filterMinPrice" className="text-sm h-10 w-full"> {/* MODIFIED: h-10 */}
+                  <SelectValue placeholder="Cualquiera" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
+                  {priceOptions.map(opt => (
+                    (filters.maxPrice === 'any' || opt.value < Number(filters.maxPrice)) &&
+                    <SelectItem key={`min-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 7. Precio Máx. - Reordered */}
+            <div>
+              <label htmlFor="filterMaxPrice" className="block text-xs font-medium text-muted-foreground mb-1.5">Precio Máx.</label> {/* MODIFIED: mb-1.5 */}
+              <Select
+                value={String(filters.maxPrice)}
+                onValueChange={value => setFilters({ ...filters, maxPrice: value === 'any' ? 'any' : Number(value) })}
+              >
+                <SelectTrigger id="filterMaxPrice" className="text-sm h-10 w-full"> {/* MODIFIED: h-10 */}
+                  <SelectValue placeholder="Cualquiera" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
+                  {priceOptions.map(opt => (
+                    (filters.minPrice === 'any' || opt.value > Number(filters.minPrice)) &&
+                    <SelectItem key={`max-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
+                  ))}
+                  {/* Removed String(Infinity) option as 'any' or last option "1.000.000€+" covers it effectively */}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* 8. Más filtros Button - Reordered */}
+            <div className="w-full sm:w-auto flex items-end"> {/* This wrapper helps align the button correctly */}
+              <Button
+                variant="ghost"
+                className="text-sm px-3 h-10 flex items-center text-primary hover:bg-primary/90 hover:text-primary-foreground gap-2 font-semibold w-full" // MODIFIED: hover styles, text-sm
+                onClick={() => setShowAdvancedFilters(v => !v)}
+              >
+                <SlidersHorizontal className="w-4 h-4 mr-1" /> {/* MODIFIED: slightly smaller icon */}
+                {showAdvancedFilters ? 'Menos filtros' : 'Más filtros'}
+                {showAdvancedFilters ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+              </Button>
+            </div>
+            {/* --- END REORDERED AND RESTRUCTURED SECTION --- */}
           </div>
 
           {/* Características Adicionales (condicional) */}
@@ -608,7 +612,6 @@ export const PropertiesPage = () => {
           </Tabs>
         </div>
 
-        {/* Botón de Filtros para Móvil */}
         <div className="block sm:hidden mb-4">
           <Button
             className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
@@ -624,7 +627,6 @@ export const PropertiesPage = () => {
           </Button>
         </div>
 
-        {/* Sección de Filtros (controlada por showFilters en móvil) */}
         <div 
           id="filtros-busqueda" 
           className={`transition-all duration-300 ease-in-out ${showFilters ? 'max-h-[2000px] opacity-100 mb-6' : 'max-h-0 opacity-0 mb-0'} overflow-hidden sm:max-h-none sm:opacity-100 sm:mb-6`}
@@ -653,13 +655,13 @@ export const PropertiesPage = () => {
             )}
           </div>
         ) : (
-          isAutocompleteLoaded && ( // Asegurar que Google Maps API esté cargada para el mapa
+          isAutocompleteLoaded && ( 
             <div className="w-full h-[400px] md:h-[500px] rounded-lg overflow-hidden border shadow-sm relative bg-muted">
               <GoogleMap
                 mapContainerStyle={{ width: '100%', height: '100%' }}
-                center={{ lat: 40.4637, lng: -3.7492 }} // Centro de España
+                center={{ lat: 40.4637, lng: -3.7492 }} 
                 zoom={5}
-                options={{ mapTypeControl: false, streetViewControl: false, fullscreenControl: false, styles: [ /* Opcional: estilos de mapa */ ] }}
+                options={{ mapTypeControl: false, streetViewControl: false, fullscreenControl: false, styles: [ ] }}
                 onClick={() => setSelectedMapProperty(null)}
               >
                 {filteredProperties
@@ -677,7 +679,7 @@ export const PropertiesPage = () => {
                   <InfoWindow
                     position={{ lat: Number(selectedMapProperty.latitude), lng: Number(selectedMapProperty.longitude) }}
                     onCloseClick={() => setSelectedMapProperty(null)}
-                    options={{ pixelOffset: typeof window !== "undefined" && window.google ? new window.google.maps.Size(0, -40) : undefined }} // Ajustar offset para el marcador personalizado
+                    options={{ pixelOffset: typeof window !== "undefined" && window.google ? new window.google.maps.Size(0, -40) : undefined }} 
                   >
                     <div className="relative w-[240px] h-[210px] bg-card rounded-md shadow-xl overflow-hidden font-sans">
                       <a
@@ -702,7 +704,7 @@ export const PropertiesPage = () => {
                           href={`${window.location.origin}/properties/${selectedMapProperty.id}`}
                           className="font-semibold text-sm block hover:underline truncate text-card-foreground"
                           target="_blank" rel="noopener noreferrer"
-                          onClick={(e) => { e.stopPropagation(); /* Permite click en InfoWindow sin cerrar */ }}
+                          onClick={(e) => { e.stopPropagation(); }}
                         >
                           {selectedMapProperty.title}
                         </a>
