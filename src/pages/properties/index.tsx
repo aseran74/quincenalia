@@ -459,82 +459,75 @@ export const PropertiesPage = () => {
               </Select>
             </div>
             
-            {/* 5. Precio Mín. */}
-            <div>
-              <label htmlFor="filterMinPrice" className="block text-xs font-medium text-muted-foreground mb-1.5">Precio Mín.</label>
-              <Select
-                value={String(filters.minPrice)}
-                onValueChange={value => setFilters({ ...filters, minPrice: value === 'any' ? 'any' : Number(value) })}
-              >
-                <SelectTrigger id="filterMinPrice" className="text-sm h-10 w-full">
-                  <SelectValue placeholder="Cualquiera" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
-                  {priceOptions.map(opt => (
-                    (filters.maxPrice === 'any' || opt.value < Number(filters.maxPrice)) &&
-                    <SelectItem key={`min-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* 6. Precio Máx. */}
-            <div>
-              <label htmlFor="filterMaxPrice" className="block text-xs font-medium text-muted-foreground mb-1.5">Precio Máx.</label>
-              <Select
-                value={String(filters.maxPrice)}
-                onValueChange={value => setFilters({ ...filters, maxPrice: value === 'any' ? 'any' : Number(value) })}
-              >
-                <SelectTrigger id="filterMaxPrice" className="text-sm h-10 w-full">
-                  <SelectValue placeholder="Cualquiera" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
-                  {priceOptions.map(opt => (
-                    (filters.minPrice === 'any' || opt.value > Number(filters.minPrice)) &&
-                    <SelectItem key={`max-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
-                  ))}
-                  {/* Permitir "sin límite" si el último option es menor que un valor máximo teórico */}
-                  { filters.minPrice !== 'any' && priceOptions[priceOptions.length -1].value === Number(filters.minPrice) && (priceOptions[priceOptions.length - 1].value < Infinity) &&
-                     <SelectItem value="any" className="text-sm">Sin límite</SelectItem>
-                  }
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* 7. Baños (mín.) */}
-            <div>
-              <label htmlFor="filterBathrooms" className="block text-xs font-medium text-muted-foreground mb-1.5">Baños (mín.)</label>
-              <Select
-                value={String(filters.bathrooms)}
-                onValueChange={value => setFilters({ ...filters, bathrooms: value === 'any' ? 'any' : Number(value) })}
-              >
-                <SelectTrigger id="filterBathrooms" className="text-sm h-10 w-full">
-                  <SelectValue placeholder="Cualquiera" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
-                  {roomOptions.map(opt => (
-                    <SelectItem key={`bath-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* 8. Botón Más opciones */}
-            <div className="w-full"> {/* Contenedor para asegurar que el botón tome el ancho y se alinee con items-end */}
-                <Button
-                  variant="outline" // Cambiado para ser menos prominente
-                  className="w-full text-sm h-10 flex items-center gap-2 font-medium justify-center"
-                  onClick={() => setShowAdvancedFilters(v => !v)}
-                  aria-expanded={showAdvancedFilters}
-                  aria-controls="advanced-features-filter"
+            {/* 5. Precio Mín., Precio Máx., Baños y Más filtros */}
+            <div className="flex flex-col sm:flex-row gap-2 items-stretch w-full justify-center">
+              <div className="w-full sm:w-auto">
+                <label htmlFor="filterMinPrice" className="block text-xs font-medium text-muted-foreground mb-1">Precio Mín.</label>
+                <Select
+                  value={String(filters.minPrice)}
+                  onValueChange={value => setFilters({ ...filters, minPrice: value === 'any' ? 'any' : Number(value) })}
                 >
-                  <SlidersHorizontal className="w-4 h-4" />
-                  {showAdvancedFilters ? 'Menos opciones' : 'Más opciones'}
-                  {showAdvancedFilters ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+                  <SelectTrigger id="filterMinPrice" className="text-sm h-9 w-full">
+                    <SelectValue placeholder="Mínimo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
+                    {priceOptions.map(opt => (
+                      (filters.maxPrice === 'any' || opt.value < Number(filters.maxPrice)) &&
+                      <SelectItem key={`min-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="w-full sm:w-auto">
+                <label htmlFor="filterMaxPrice" className="block text-xs font-medium text-muted-foreground mb-1">Precio Máx.</label>
+                <Select
+                  value={String(filters.maxPrice)}
+                  onValueChange={value => setFilters({ ...filters, maxPrice: value === 'any' ? 'any' : Number(value) })}
+                >
+                  <SelectTrigger id="filterMaxPrice" className="text-sm h-9 w-full">
+                    <SelectValue placeholder="Máximo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
+                    {priceOptions.map(opt => (
+                      (filters.minPrice === 'any' || opt.value > Number(filters.minPrice)) &&
+                      <SelectItem key={`max-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
+                    ))}
+                    {priceOptions[priceOptions.length - 1].value < Infinity && (
+                      <SelectItem value={String(Infinity)} className="text-sm">1.000.000€+</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="w-full sm:w-auto">
+                <label htmlFor="filterBathrooms" className="block text-xs font-medium text-muted-foreground mb-1">Baños (mín.)</label>
+                <Select
+                  value={String(filters.bathrooms)}
+                  onValueChange={value => setFilters({ ...filters, bathrooms: value === 'any' ? 'any' : Number(value) })}
+                >
+                  <SelectTrigger id="filterBathrooms" className="text-sm h-9 w-full">
+                    <SelectValue placeholder="Baños" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
+                    {roomOptions.map(opt => (
+                      <SelectItem key={`bath-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="w-full sm:w-auto flex items-end">
+                <Button
+                  variant="ghost"
+                  className="text-[16px] px-3 h-10 flex items-center text-primary hover:bg-transparent gap-2 font-semibold w-full sm:w-auto"
+                  onClick={() => setShowAdvancedFilters(v => !v)}
+                >
+                  <SlidersHorizontal className="w-5 h-5 mr-1" />
+                  {showAdvancedFilters ? 'Menos filtros' : 'Más filtros'}
+                  {showAdvancedFilters ? <ChevronUp className="w-5 h-5 ml-1" /> : <ChevronDown className="w-5 h-5 ml-1" />}
                 </Button>
+              </div>
             </div>
           </div>
 

@@ -51,23 +51,19 @@ const PropertyCard = ({ property }: { property: any }) => {
           />
           <div className="absolute inset-0 z-10 flex flex-col justify-between">
             {/* Badges de copropiedad y precio/mes */}
-            <div className="flex justify-between items-start p-4 w-full">
+            <div className="flex flex-col xs:flex-row xs:justify-between items-start gap-2 p-2 sm:p-4 w-full">
               {/* Badge copropiedad a la izquierda */}
-              <div>
-                {minShare && (
-                  <span className="bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full shadow z-20">
-                    Desde {minShare.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
-                  </span>
-                )}
-              </div>
+              {minShare && (
+                <span className="bg-primary text-white text-[11px] xs:text-xs font-semibold px-2.5 py-1 rounded-full shadow z-20 max-w-[90vw] xs:max-w-[60%] truncate">
+                  Desde {minShare.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
+                </span>
+              )}
               {/* Badge precio/mes a la derecha */}
-              <div>
-                {monthly && (
-                  <span className="bg-white text-gray-700 text-xs font-normal px-3 py-1 rounded-full shadow z-20 border border-gray-200">
-                    {monthly.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })} <span className="text-[10px] text-gray-400 font-normal">/mes*</span>
-                  </span>
-                )}
-              </div>
+              {monthly && (
+                <span className="bg-white text-gray-700 text-[11px] xs:text-xs font-normal px-2.5 py-1 rounded-full shadow z-20 border border-gray-200 max-w-[90vw] xs:max-w-[60%] truncate">
+                  {monthly.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })} <span className="text-[10px] text-gray-400 font-normal">/mes*</span>
+                </span>
+              )}
             </div>
           </div>
           <div className="absolute inset-0 z-10 flex flex-col justify-between bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 sm:p-3">

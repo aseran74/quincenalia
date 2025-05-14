@@ -292,6 +292,21 @@ const HomePage = () => {
   const [viviendasPorZona, setViviendasPorZona] = useState<{ [key: string]: number }>({});
   const [zonasUnicas, setZonasUnicas] = useState<string[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [faqExpandido, setFaqExpandido] = useState(false);
+
+  // Expandido por defecto en escritorio/tablet, colapsado en móvil
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setFaqExpandido(true);
+      } else {
+        setFaqExpandido(false);
+      }
+    };
+    handleResize(); // Llamada inicial
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchViviendasPorZona = async () => {
@@ -655,9 +670,23 @@ const HomePage = () => {
               <span className="text-primary text-4xl align-middle ml-1">.</span>
             </span>
           </h2>
-          <div className="max-w-4xl mx-auto">
-            <FAQAccordion />
+          <div className={`transition-all duration-500 ease-in-out overflow-hidden ${faqExpandido ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className="max-w-4xl mx-auto">
+              <FAQAccordion />
+              <div className="text-center mt-6">
+                <Button variant="outline" onClick={() => setFaqExpandido(false)} className="group transition-all duration-300">
+                  Ocultar FAQ
+                </Button>
+              </div>
+            </div>
           </div>
+          {!faqExpandido && (
+            <div className="text-center mt-6">
+              <Button variant="outline" onClick={() => setFaqExpandido(true)} className="group transition-all duration-300">
+                Mostrar FAQ
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -701,6 +730,20 @@ const HomePage = () => {
           </div>
         </div>
       </footer>
+      <button
+        className="fixed bottom-6 right-6 z-50 bg-primary text-white rounded-full shadow-lg w-14 h-14 flex items-center justify-center hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/60"
+        style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}
+        onClick={() => {
+          setFaqExpandido(true);
+          setTimeout(() => {
+            const faq = document.getElementById('faq');
+            if (faq) faq.scrollIntoView({ behavior: 'smooth' });
+          }, 100);
+        }}
+        aria-label="Ir a preguntas frecuentes"
+      >
+        <HelpCircle className="w-7 h-7" />
+      </button>
     </div>
   );
 };
