@@ -476,6 +476,14 @@ const HomePage = () => {
           <p className="text-lg text-center text-gray-600 mb-10 sm:mb-12 max-w-2xl mx-auto">
             Encuentra tu refugio perfecto en las regiones más deseadas.
           </p>
+          <div className="text-center mb-8">
+            <Button asChild variant="default" size="lg" className="group">
+              <Link to="/properties">
+                Ver Todas las Propiedades
+                <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+            </Button>
+          </div>
           <div className="relative">
             <Button
               variant="outline"
@@ -489,7 +497,7 @@ const HomePage = () => {
             <div className="px-2 py-6">
               <div
                 ref={scrollContainerRef}
-                className="flex md:hidden space-x-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+                className="flex lg:hidden space-x-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
               >
                 {zonasUnicas.map((zona, index) => {
                   // Buscar el contador usando la zona normalizada
@@ -526,9 +534,9 @@ const HomePage = () => {
                   );
                 })}
               </div>
-              <div className="hidden md:flex flex-col items-center gap-10">
+              <div className="hidden lg:flex flex-col items-center gap-10">
                 <div className="flex flex-row flex-wrap justify-center gap-8 mb-8">
-                  {zonasUnicas.slice(0,5).map((zona, index) => {
+                  {zonasUnicas.slice(0, 5).map((zona, index) => {
                     const zonaKey = Object.keys(viviendasPorZona).find(
                       key => normalizaZona(key) === normalizaZona(zona)
                     );
@@ -558,39 +566,37 @@ const HomePage = () => {
                     );
                   })}
                 </div>
-                {zonasUnicas.length > 5 && (
-                    <div className="flex flex-row flex-wrap justify-center gap-8">
-                    {zonasUnicas.slice(5).map((zona, index) => {
-                        const zonaKey = Object.keys(viviendasPorZona).find(
-                          key => normalizaZona(key) === normalizaZona(zona)
-                        );
-                        const countZonaRest = zonaKey ? viviendasPorZona[zonaKey] : 0;
-                        return (
-                        <Link to={`/properties?zona=${encodeURIComponent(zona)}`} key={index+5} className="w-56 h-56 group/card-link flex items-center justify-center">
-                            <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-56 h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
-                            <div className="relative w-full h-full flex items-center justify-center">
-                                <img
-                                src={getZonaImage(zona)}
-                                alt={`Propiedades en ${zona}`}
-                                className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-full"
-                                onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-80 group-hover/card:opacity-100 transition-opacity duration-300 rounded-full"></div>
-                                <div className="absolute bottom-6 left-0 right-0 px-4 text-center">
-                                <h3 className="text-xl font-bold text-white truncate" title={zona}>
-                                    {zona}
-                                </h3>
-                                <p className="text-sm text-gray-100 mt-1">
-                                    {countZonaRest} {countZonaRest === 1 ? 'vivienda' : 'viviendas'}
-                                </p>
-                                </div>
+                <div className="flex flex-row flex-wrap justify-center gap-8">
+                  {zonasUnicas.slice(5, 10).map((zona, index) => {
+                    const zonaKey = Object.keys(viviendasPorZona).find(
+                      key => normalizaZona(key) === normalizaZona(zona)
+                    );
+                    const countZonaRest = zonaKey ? viviendasPorZona[zonaKey] : 0;
+                    return (
+                      <Link to={`/properties?zona=${encodeURIComponent(zona)}`} key={index+5} className="w-56 h-56 group/card-link flex items-center justify-center">
+                        <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-56 h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
+                          <div className="relative w-full h-full flex items-center justify-center">
+                            <img
+                              src={getZonaImage(zona)}
+                              alt={`Propiedades en ${zona}`}
+                              className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-full"
+                              onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-80 group-hover/card:opacity-100 transition-opacity duration-300 rounded-full"></div>
+                            <div className="absolute bottom-6 left-0 right-0 px-4 text-center">
+                              <h3 className="text-xl font-bold text-white truncate" title={zona}>
+                                {zona}
+                              </h3>
+                              <p className="text-sm text-gray-100 mt-1">
+                                {countZonaRest} {countZonaRest === 1 ? 'vivienda' : 'viviendas'}
+                              </p>
                             </div>
-                            </Card>
-                        </Link>
-                        );
-                    })}
-                    </div>
-                )}
+                          </div>
+                        </Card>
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
             </div>
             <Button
@@ -601,14 +607,6 @@ const HomePage = () => {
               aria-label="Scroll Right"
             >
               <ChevronRight className="h-5 w-5" />
-            </Button>
-          </div>
-          <div className="text-center mt-10">
-            <Button asChild variant="default" size="lg" className="group">
-              <Link to="/properties">
-                Ver Todas las Propiedades
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
             </Button>
           </div>
         </div>
@@ -808,7 +806,7 @@ const HomePage = () => {
               <h4 className="font-semibold mb-4 text-gray-100 uppercase tracking-wide text-xs">Síguenos</h4>
                 <div className="flex space-x-4">
                     <a href="#" aria-label="Facebook" className="text-gray-400 hover:text-primary transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/></svg></a>
-                    <a href="#" aria-label="Instagram" className="text-gray-400 hover:text-primary transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.272.058 2.166.296 2.913.588.764.302 1.33.696 1.902 1.27.574.572.97 1.138 1.27 1.903.293.747.53 1.64.588 2.912.058 1.267.07 1.647.07 4.85s-.012 3.583-.07 4.85c-.058 1.272-.295 2.166-.588 2.913-.302.764-.696 1.33-1.27 1.902-.572.574-1.138.97-1.903 1.27-.747.293-1.64.53-2.912.588-1.267.058-1.647.07-4.85.07s-3.583-.012-4.85-.07c-1.272-.058-2.166-.295-2.913-.588-.764-.302-1.33-.696-1.902-1.27-.574-.572-.97-1.138-1.27-1.903-.293-.747-.53-1.64-.588-2.912-.058-1.267-.07-1.647-.07-4.85s.012-3.583.07-4.85c.058-1.272.295-2.187.613-2.966.302-.793.72-1.41 1.32-2.01.602-.602 1.218-1.012 2.01-1.32.78-.308 1.687-.555 2.967-.613 1.279-.058 1.687-.072 4.946-.072zm0-2.163c-3.259 0-3.667.014-4.947.072-1.28.058-2.187.305-2.966.613-.793.308-1.41.72-2.01 1.32-.602.602-1.012 1.218-1.32 2.01-.308.78-.555 1.687-.613 2.967-.058 1.279-.072 1.687-.072 4.946s.014 3.667.072 4.947c.058 1.28.305 2.187.613 2.966.308.793.72 1.41 1.32 2.01.602.602 1.218 1.012 2.01 1.32.78.308 1.687.555 2.967.613 1.279.058 1.687.072 4.946.072s3.667-.014 4.947-.072c1.28-.058 2.187-.305 2.966-.613.793-.308 1.41-.72 2.01-1.32.602.602 1.012-1.218 1.32-2.01.308-.78.555-1.687.613-2.967.058-1.279.072-1.687-.072-4.946s-.014-3.667-.072-4.947c-.058-1.28-.305-2.187-.613-2.966-.308-.793-.72-1.41-1.32-2.01-.602-.602-1.218-1.012-2.01-1.32-.78-.308-1.687-.555-2.967-.613-1.279-.058-1.687-.072-4.946-.072zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.441 1.441 1.441 1.441-.645 1.441-1.441-.645-1.44-1.441-1.44z"/></svg></a>
+                    <a href="#" aria-label="Instagram" className="text-gray-400 hover:text-primary transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.272.058 2.166.296 2.913.588.764.302 1.33.696 1.902 1.27.574.572.97 1.138 1.27 1.903.293.747.53 1.64.588 2.912.058 1.267.07 1.647.07 4.85s-.012 3.583-.07 4.85c-.058 1.272-.295 2.166-.588 2.913-.302.764-.696 1.33-1.27 1.902-.572.574-1.138.97-1.903 1.27-.747.293-1.64.53-2.912.588-1.267.058-1.647.07-4.85.07s-3.583-.012-4.85-.07c-1.272-.058-2.187-.295-2.966-.613-2.966-.302 0-.602.308-1.218.613-1.818.308-.78.555-1.687.613-2.967.058-1.279.072-1.687-.072-4.946-.072zm0-2.163c-3.259 0-3.667.014-4.947.072-1.28.058-2.187.305-2.966.613-.793.308-1.41.72-2.01 1.32-.602.602-1.012 1.218-1.32 2.01-.308.78-.555 1.687-.613 2.967-.058 1.279-.072 1.687-.072 4.946s.014 3.667.072 4.947c.058 1.28.305 2.187.613 2.966.308.793.72 1.41 1.32 2.01.602.602 1.218 1.012 2.01 1.32.78.308 1.687.555 2.967.613 1.279.058 1.687.072 4.946.072s3.667-.014 4.947-.072c1.28-.058 2.187-.305 2.966-.613.793-.308 1.41-.72 2.01-1.32.602.602 1.012-1.218 1.32-2.01.308-.78.555-1.687.613-2.967.058-1.279.072-1.687-.072-4.946s-.014-3.667-.072-4.947c-.058-1.28-.305-2.187-.613-2.966-.308-.793-.72-1.41-1.32-2.01-.602-.602-1.218-1.012-2.01-1.32-.78-.308-1.687-.555-2.967-.613-1.279-.058-1.687-.072-4.946-.072zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.441 1.441 1.441 1.441-.645 1.441-1.441-.645-1.44-1.441-1.44z"/></svg></a>
                     <a href="#" aria-label="LinkedIn" className="text-gray-400 hover:text-primary transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg></a>
                 </div>
             </div>
