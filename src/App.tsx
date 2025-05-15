@@ -50,6 +50,8 @@ import ContactRequestsTable from '@/components/ContactRequestsTable';
 import AgentErpPage from './pages/dashboard/agents/erp';
 import AgentComisionesPage from './pages/dashboard/agents/comisiones';
 import AgentProfilePage from './pages/dashboard/agents/profile';
+import ProteccionDatos from './pages/ProteccionDatos';
+import PoliticaPrivacidad from './pages/PoliticaPrivacidad';
 
 const Profile = () => (
   <div style={{ padding: 32 }}>
@@ -78,6 +80,9 @@ function App() {
           <Route path="/propiedades" element={<Navigate to="/properties" replace />} />
           {/* Redirección de /propiedades/:id a /properties/:id */}
           <Route path="/propiedades/:id" element={<RedirectToProperties />} />
+          {/* Páginas legales */}
+          <Route path="/proteccion-datos" element={<ProteccionDatos />} />
+          <Route path="/politica-privacidad" element={<PoliticaPrivacidad />} />
           
           {/* Ruta por defecto del dashboard que redirige según el rol */}
           <Route 

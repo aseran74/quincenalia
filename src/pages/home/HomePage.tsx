@@ -13,7 +13,7 @@ import {
 import {
     PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin, ChevronLeft, HelpCircle, FileText, Cookie
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ContactForm from '@/components/ContactForm';
 import './HomePage.css';
 import { supabase } from '@/lib/supabase';
@@ -293,6 +293,10 @@ const HomePage = () => {
   const [zonasUnicas, setZonasUnicas] = useState<string[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [faqExpandido, setFaqExpandido] = useState(false);
+  const [showLegalPopup, setShowLegalPopup] = useState(false);
+  const [aceptaCondiciones, setAceptaCondiciones] = useState(false);
+  const navigate = useNavigate();
+  const [showCookieBanner, setShowCookieBanner] = useState(false);
 
   // Expandido por defecto en escritorio/tablet, colapsado en móvil
   useEffect(() => {
@@ -330,6 +334,17 @@ const HomePage = () => {
     };
     fetchZonasUnicas();
   }, []);
+
+  useEffect(() => {
+    if (!localStorage.getItem('cookies_accepted')) {
+      setShowCookieBanner(true);
+    }
+  }, []);
+
+  const aceptarCookies = () => {
+    localStorage.setItem('cookies_accepted', 'true');
+    setShowCookieBanner(false);
+  };
 
   // Renombrar la función scroll
   const scrollZonaCarrusel = (direction: 'left' | 'right') => {
@@ -730,20 +745,49 @@ const HomePage = () => {
           </div>
         </div>
       </footer>
-      <button
-        className="fixed bottom-6 right-6 z-50 bg-primary text-white rounded-full shadow-lg w-14 h-14 flex items-center justify-center hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/60"
-        style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}
-        onClick={() => {
-          setFaqExpandido(true);
-          setTimeout(() => {
-            const faq = document.getElementById('faq');
-            if (faq) faq.scrollIntoView({ behavior: 'smooth' });
-          }, 100);
-        }}
-        aria-label="Ir a preguntas frecuentes"
-      >
-        <HelpCircle className="w-7 h-7" />
-      </button>
+      <div>
+        <button
+          className="fixed bottom-6 right-6 z-50 bg-primary text-white rounded-full shadow-lg w-14 h-14 flex items-center justify-center hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/60"
+          style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}
+          onClick={() => setShowLegalPopup(v => !v)}
+          aria-label="Ayuda y legal"
+        >
+          <HelpCircle className="w-7 h-7" />
+        </button>
+        {showLegalPopup && (
+          <div className="fixed bottom-24 right-6 z-50 bg-white border border-gray-200 rounded-xl shadow-xl p-4 w-72 animate-fade-in">
+            <h4 className="font-semibold text-lg mb-2 flex items-center gap-2"><HelpCircle className="w-5 h-5 text-primary" />Ayuda y Legal</h4>
+            <ul className="space-y-2 mb-3">
+              <li>
+                <button className="flex items-center gap-2 text-primary hover:underline" onClick={() => { setFaqExpandido(true); setShowLegalPopup(false); setTimeout(() => { const faq = document.getElementById('faq'); if (faq) faq.scrollIntoView({ behavior: 'smooth' }); }, 100); }}>
+                  <HelpCircle className="w-4 h-4" /> FAQ
+                </button>
+              </li>
+              <li>
+                <button className="flex items-center gap-2 text-primary hover:underline disabled:text-gray-400" disabled={!aceptaCondiciones} onClick={() => { setShowLegalPopup(false); navigate('/proteccion-datos'); }}>
+                  <ShieldCheck className="w-4 h-4" /> Protección de datos
+                </button>
+              </li>
+              <li>
+                <button className="flex items-center gap-2 text-primary hover:underline disabled:text-gray-400" disabled={!aceptaCondiciones} onClick={() => { setShowLegalPopup(false); navigate('/politica-privacidad'); }}>
+                  <FileText className="w-4 h-4" /> Política de privacidad
+                </button>
+              </li>
+            </ul>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="acepta-condiciones" checked={aceptaCondiciones} onChange={e => setAceptaCondiciones(e.target.checked)} className="accent-primary" />
+              <label htmlFor="acepta-condiciones" className="text-xs text-gray-700">He leído y acepto las condiciones legales</label>
+            </div>
+          </div>
+        )}
+      </div>
+      {/* Banner de cookies */}
+      {showCookieBanner && (
+        <div className="fixed bottom-0 left-0 w-full z-50 bg-slate-900 text-white px-4 py-4 flex flex-col sm:flex-row items-center justify-center gap-3 shadow-lg animate-fade-in">
+          <span className="text-sm">Usamos cookies para mejorar tu experiencia. Consulta nuestra <a href="/politica-privacidad" className="underline text-primary">Política de Privacidad</a>.</span>
+          <button onClick={aceptarCookies} className="ml-0 sm:ml-4 mt-2 sm:mt-0 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary/90 transition">Aceptar</button>
+        </div>
+      )}
     </div>
   );
 };
