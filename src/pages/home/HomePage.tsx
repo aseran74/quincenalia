@@ -293,15 +293,15 @@ const HeroParallax = () => {
 };
 
 const IMAGENES_ZONA: Record<string, string> = {
-  'Costa de levante.': '/levante.webp',
+  'Costa de levante.': '/Levante.webp',
   'Canarias.': '/Canarias.webp',
-  'Baleares.': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
-  'Costa Catalana': 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad?auto=format&fit=crop&w=800&q=80',
+  'Baleares.': '/baleares.webp',
+  'Costa Catalana': 'Costacatalana.webp',
   'Andalucia': '/andalucia.jpg',
   'Euskadi.': '/Euskadi.webp',
   'Asturias.': '/Asturias.webp',
   'Galicia': '/Galicia.webp', // Imagen diferente para Galicia
-  'Murcia': 'https://images.unsplash.com/photo-1604263807411-8765f99bae49?auto=format&fit=crop&w=800&q=80',   // Imagen diferente para Murcia
+  'Murcia': '/murcia.jpg',   // Imagen diferente para Murcia
   'Zonas de interior.': 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=800&q=80',
 };
 
