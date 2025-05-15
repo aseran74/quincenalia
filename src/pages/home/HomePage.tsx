@@ -11,11 +11,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-    PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin, ChevronLeft, HelpCircle, FileText, Cookie
-} from 'lucide-react';
+    PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin, ChevronLeft, HelpCircle, FileText, Cookie, Star, Users // Asegúrate de que CheckCircle y ShieldAlert estén aquí si los usas
+} from 'lucide-react'; // Iconos usados y potencialmente nuevos
 import { Link, useNavigate } from 'react-router-dom';
 import ContactForm from '@/components/ContactForm';
-import './HomePage.css';
+import './HomePage.css'; // Asegúrate de que este archivo exista y no cause conflictos
 import { supabase } from '@/lib/supabase';
 
 const FAQS = [
@@ -137,10 +137,10 @@ function FAQAccordion() {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
       <Accordion type="single" collapsible className="w-full space-y-3">
         {leftFAQs.map((faq) => (
-          <AccordionItem value={faq.id} key={faq.id} className="border border-border rounded-lg bg-background shadow-sm transition-shadow hover:shadow-md">
-            <AccordionTrigger className="px-4 py-3 text-sm sm:text-base font-medium text-left hover:no-underline [&[data-state=open]>svg]:rotate-90">
+          <AccordionItem value={faq.id} key={faq.id} className="border border-border rounded-lg bg-background shadow-sm transition-shadow hover:shadow-lg">
+            <AccordionTrigger className="group px-4 py-3 text-sm sm:text-base font-medium text-left hover:no-underline [&[data-state=open]>svg]:rotate-90">
               <div className="flex items-center gap-3">
-                <faq.icon className="w-5 h-5 text-primary flex-shrink-0" />
+                <faq.icon className="w-5 h-5 text-primary flex-shrink-0 transition-transform duration-300 ease-in-out group-hover:scale-125 group-hover:-rotate-12" />
                 <span>{faq.question}</span>
               </div>
             </AccordionTrigger>
@@ -152,10 +152,10 @@ function FAQAccordion() {
       </Accordion>
       <Accordion type="single" collapsible className="w-full space-y-3">
         {rightFAQs.map((faq) => (
-          <AccordionItem value={faq.id} key={faq.id} className="border border-border rounded-lg bg-background shadow-sm transition-shadow hover:shadow-md">
-            <AccordionTrigger className="px-4 py-3 text-sm sm:text-base font-medium text-left hover:no-underline [&[data-state=open]>svg]:rotate-90">
+          <AccordionItem value={faq.id} key={faq.id} className="border border-border rounded-lg bg-background shadow-sm transition-shadow hover:shadow-lg">
+            <AccordionTrigger className="group px-4 py-3 text-sm sm:text-base font-medium text-left hover:no-underline [&[data-state=open]>svg]:rotate-90">
                <div className="flex items-center gap-3">
-                <faq.icon className="w-5 h-5 text-primary flex-shrink-0" />
+                <faq.icon className="w-5 h-5 text-primary flex-shrink-0 transition-transform duration-300 ease-in-out group-hover:scale-125 group-hover:-rotate-12" />
                 <span>{faq.question}</span>
               </div>
             </AccordionTrigger>
@@ -179,6 +179,14 @@ function ComoFunciona() {
     { icon: Briefcase, title: "Gestión Integral", text: "Nos encargamos de TODO: limpieza, mantenimiento, facturas, impuestos... Tú solo disfruta." },
     { icon: Banknote, title: "Rentabilidad Extra", text: "Alquilamos tu propiedad en las semanas que no usas a través de las mejores plataformas (Airbnb, Booking...). ¡Ingresos pasivos!" },
     { icon: Globe, title: "Viaja por el Mundo", text: "Intercambia tus semanas flexibles por estancias en otras propiedades exclusivas globalmente con nuestro sistema de puntos." }
+  ];
+
+  const beneficiosClave = [
+    { icon: ShieldCheck, text: "Propiedad legal y segura (25% o 50% proindiviso)." },
+    { icon: FileText, text: "Contrato claro: fechas fijas garantizadas + semanas flexibles." },
+    { icon: Users, text: "Gestión profesional: olvídate de preocupaciones." },
+    { icon: PiggyBank, text: "Potencial de ingresos por alquiler pasivo." },
+    { icon: Globe, text: "Acceso a red global de intercambio de viviendas." },
   ];
 
   return (
@@ -214,10 +222,13 @@ function ComoFunciona() {
         <p className="text-lg text-center text-gray-600 mb-10 sm:mb-12 max-w-3xl mx-auto">Descubre cómo Quincenalia combina propiedad, disfrute y rentabilidad de forma única.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
           {steps.map((step, index) => (
-            <Card key={index} className="bg-white/80 backdrop-blur-sm border border-gray-100 shadow-sm hover:shadow-lg transition-shadow duration-300">
+            <Card 
+              key={index} 
+              className="group bg-white/80 backdrop-blur-sm border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 ease-in-out"
+            >
               <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                  <div className="bg-primary/10 p-2 rounded-full">
-                      <step.icon className="w-6 h-6 text-primary" />
+                  <div className="bg-primary/10 p-2.5 rounded-full group-hover:bg-primary/20 transition-all duration-300">
+                      <step.icon className="w-7 h-7 text-primary transition-transform duration-300 ease-in-out group-hover:scale-125 group-hover:-rotate-12" />
                   </div>
                   <CardTitle className="text-lg font-semibold">{step.title}</CardTitle>
               </CardHeader>
@@ -227,20 +238,33 @@ function ComoFunciona() {
             </Card>
           ))}
         </div>
-        <div className={`transition-all duration-500 ease-in-out overflow-hidden ${expandido ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-           <div className="text-center text-sm sm:text-base text-gray-700 max-w-3xl mx-auto space-y-4">
-                 <p><strong>¿Por qué conformarte con alquilar cuando puedes ser propietario?</strong> Inspirados en soluciones inteligentes, hemos creado un modelo que te da lo mejor de todos los mundos.</p>
-                 <div className="text-left inline-block bg-white p-4 rounded-lg border shadow-sm">
-                    <p className="font-semibold text-primary mb-2">Beneficios Clave:</p>
-                    <ul className="list-disc list-inside space-y-1">
-                        <li>Propiedad legal y segura (25% o 50% proindiviso).</li>
-                        <li>Contrato claro: fechas fijas garantizadas + semanas flexibles.</li>
-                        <li>Gestión profesional: olvídate de preocupaciones.</li>
-                        <li>Potencial de ingresos por alquiler pasivo.</li>
-                        <li>Acceso a red global de intercambio de viviendas.</li>
+        
+        <div className={`transition-all duration-700 ease-in-out overflow-hidden ${expandido ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+           <div className="bg-slate-100/70 p-6 sm:p-8 rounded-xl shadow-inner border border-slate-200 max-w-3xl mx-auto space-y-6">
+                 <h3 className="text-xl font-semibold text-center text-gray-700 mb-2">
+                    ¿Por qué conformarte con alquilar cuando puedes <span className="text-primary">ser propietario</span>?
+                 </h3>
+                 <p className="text-center text-gray-600 text-sm sm:text-base leading-relaxed">
+                    Inspirados en soluciones inteligentes, hemos creado un modelo que te ofrece lo mejor de todos los mundos, sin las complicaciones de la propiedad tradicional.
+                 </p>
+                 
+                 <div className="mt-6">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4 text-center sm:text-left">Beneficios Clave de Nuestro Modelo:</h4>
+                    <ul className="space-y-3">
+                        {beneficiosClave.map((beneficio, idx) => (
+                            <li key={idx} className="flex items-start gap-3 p-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-primary/30 transition-colors">
+                                <beneficio.icon className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
+                                <span className="text-sm text-gray-700">{beneficio.text}</span>
+                            </li>
+                        ))}
                     </ul>
                  </div>
-                 <p className="font-semibold text-primary mt-4">🌟 Propietario + Viajero + Inversor: Todo en uno. 🌟</p>
+
+                 <p className="text-center font-semibold text-primary mt-8 text-lg">
+                    <Star className="inline-block w-5 h-5 mb-1 mr-1.5 text-amber-500" />
+                    Propietario + Viajero + Inversor: Todo en uno.
+                    <Star className="inline-block w-5 h-5 mb-1 ml-1.5 text-amber-500" />
+                 </p>
             </div>
         </div>
         <div className="text-center mt-8">
@@ -249,7 +273,7 @@ function ComoFunciona() {
             onClick={() => setExpandido(!expandido)}
             className="group transition-all duration-300"
           >
-            {expandido ? 'Mostrar Menos' : 'Descubrir Más Detalles'}
+            {expandido ? 'Mostrar Menos Detalles' : 'Descubrir Más Detalles'}
             <ChevronRight className={`ml-2 h-4 w-4 transition-transform duration-300 ${expandido ? 'rotate-90' : ''} group-hover:translate-x-1`} />
           </Button>
         </div>
@@ -258,34 +282,41 @@ function ComoFunciona() {
   );
 }
 
-// Hero con efecto zoom animado (sin parallax)
 const HeroParallax = () => {
   return (
     <img
       src="/hero.jpg"
       alt="Villa vacacional de lujo con piscina y vistas al mar"
-      className="w-full h-full object-cover hero-image"
+      className="w-full h-full object-cover hero-image" // Asegúrate que .hero-image tiene los estilos CSS para el efecto
     />
   );
 };
 
-// Diccionario de imágenes por zona
 const IMAGENES_ZONA: Record<string, string> = {
-  'Costa de levante.': 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
-  'Canarias.': 'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80',
+  'Costa de levante.': '/levante.webp',
+  'Canarias.': '/Canarias.webp',
   'Baleares.': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
   'Costa Catalana': 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad?auto=format&fit=crop&w=800&q=80',
-  'Andalucia': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80',
-  'Euskadi.': 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=800&q=80',
-  'Asturias.': 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=800&q=80',
-  'Galicia': 'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80',
-  'Murcia': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80',
+  'Andalucia': '/andalucia.jpg',
+  'Euskadi.': '/Euskadi.webp',
+  'Asturias.': '/Asturias.webp',
+  'Galicia': '/Galicia.webp', // Imagen diferente para Galicia
+  'Murcia': 'https://images.unsplash.com/photo-1604263807411-8765f99bae49?auto=format&fit=crop&w=800&q=80',   // Imagen diferente para Murcia
   'Zonas de interior.': 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=800&q=80',
 };
 
-// Función para normalizar zonas (sin tildes y en minúsculas)
+// Función para obtener la ruta de la imagen de la zona
+function getZonaImage(zona: string) {
+  return IMAGENES_ZONA[zona] || '/placeholder.svg';
+}
+
+// Función para normalizar nombres de zona (quita tildes, puntos, espacios y pasa a minúsculas)
 function normalizaZona(z: string) {
-  return z.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  return (z || '')
+    .normalize('NFD').replace(/\[\u0300-\u036f\]/g, '')
+    .replace(/\./g, '')
+    .replace(/\s+/g, '')
+    .toLowerCase();
 }
 
 const HomePage = () => {
@@ -298,7 +329,6 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [showCookieBanner, setShowCookieBanner] = useState(false);
 
-  // Expandido por defecto en escritorio/tablet, colapsado en móvil
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
@@ -307,7 +337,7 @@ const HomePage = () => {
         setFaqExpandido(false);
       }
     };
-    handleResize(); // Llamada inicial
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -315,44 +345,54 @@ const HomePage = () => {
   useEffect(() => {
     const fetchViviendasPorZona = async () => {
       const { data, error } = await supabase.rpc('viviendas_por_zona');
-      if (error) return;
+      if (error) {
+        console.error("Error fetching viviendas_por_zona:", error);
+        return;
+      }
       const counts: { [key: string]: number } = {};
       (data || []).forEach((row: any) => {
         if (row.zona) {
-          counts[row.zona] = Number(row.total);
+          counts[row.zona] = Number(row.total); 
         }
       });
       setViviendasPorZona(counts);
     };
     fetchViviendasPorZona();
-    // Obtener zonas únicas de la base de datos
+    
     const fetchZonasUnicas = async () => {
       const { data, error } = await supabase.from('properties').select('zona');
-      if (error) return;
-      const zonas = Array.from(new Set((data || []).map((p: any) => (p.zona || '').trim()))).filter(z => z);
+      if (error) {
+        console.error("Error fetching zonas unicas:", error);
+        return;
+      }
+      const zonas = Array.from(new Set((data || []).map((p: any) => (p.zona || '').trim()))).filter(z => z).sort();
       setZonasUnicas(zonas);
     };
     fetchZonasUnicas();
   }, []);
 
   useEffect(() => {
-    if (!localStorage.getItem('cookies_accepted')) {
+    if (typeof window !== 'undefined' && !localStorage.getItem('cookies_accepted')) {
       setShowCookieBanner(true);
     }
   }, []);
 
   const aceptarCookies = () => {
-    localStorage.setItem('cookies_accepted', 'true');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cookies_accepted', 'true');
+    }
     setShowCookieBanner(false);
   };
 
-  // Renombrar la función scroll
   const scrollZonaCarrusel = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
-      const scrollAmount = direction === 'left' ? -500 : 500;
+      const scrollAmount = direction === 'left' ? -300 : 300; 
       scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
   };
+
+  // Debug: mostrar el contenido real de viviendasPorZona antes de renderizar las cards de zona
+  console.log('viviendasPorZona:', viviendasPorZona);
 
   return (
     <div className="min-h-screen bg-background font-poppins">
@@ -437,7 +477,6 @@ const HomePage = () => {
             Encuentra tu refugio perfecto en las regiones más deseadas.
           </p>
           <div className="relative">
-            {/* Botones de scroll solo visibles en móvil */}
             <Button
               variant="outline"
               size="icon"
@@ -448,14 +487,16 @@ const HomePage = () => {
               <ChevronLeft className="h-5 w-5" />
             </Button>
             <div className="px-2 py-6">
-              {/* Carrusel horizontal en móvil, dos cards apiladas en escritorio */}
               <div
                 ref={scrollContainerRef}
                 className="flex md:hidden space-x-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
               >
                 {zonasUnicas.map((zona, index) => {
-                  const normalizedCurrentZona = normalizaZona(zona);
-                  const count = viviendasPorZona[normalizedCurrentZona] || 0;
+                  // Buscar el contador usando la zona normalizada
+                  const zonaKey = Object.keys(viviendasPorZona).find(
+                    key => normalizaZona(key) === normalizaZona(zona)
+                  );
+                  const countZona = zonaKey ? viviendasPorZona[zonaKey] : 0;
                   return (
                     <Link
                       to={`/properties?zona=${encodeURIComponent(zona)}`}
@@ -465,9 +506,10 @@ const HomePage = () => {
                       <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-full h-48 sm:h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
                         <div className="relative w-full h-full flex items-center justify-center">
                           <img
-                            src={IMAGENES_ZONA[zona] || '/placeholder-property.jpg'}
+                            src={getZonaImage(zona)}
                             alt={`Propiedades en ${zona}`}
                             className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-full"
+                            onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-80 group-hover/card:opacity-100 transition-opacity duration-300 rounded-full"></div>
                           <div className="absolute bottom-3 left-0 right-0 px-2 text-center">
@@ -475,7 +517,7 @@ const HomePage = () => {
                               {zona}
                             </h3>
                             <p className="text-xs text-gray-100 mt-0.5">
-                              {count} {count === 1 ? 'vivienda' : 'viviendas'}
+                              {countZona} {countZona === 1 ? 'vivienda' : 'viviendas'}
                             </p>
                           </div>
                         </div>
@@ -484,20 +526,22 @@ const HomePage = () => {
                   );
                 })}
               </div>
-              {/* En escritorio: cinco cards arriba y el resto abajo, ambas filas centradas */}
               <div className="hidden md:flex flex-col items-center gap-10">
-                <div className="flex flex-row justify-center gap-8 mb-8">
+                <div className="flex flex-row flex-wrap justify-center gap-8 mb-8">
                   {zonasUnicas.slice(0,5).map((zona, index) => {
-                    const normalizedCurrentZona = normalizaZona(zona);
-                    const count = viviendasPorZona[normalizedCurrentZona] || 0;
+                    const zonaKey = Object.keys(viviendasPorZona).find(
+                      key => normalizaZona(key) === normalizaZona(zona)
+                    );
+                    const countZonaTop = zonaKey ? viviendasPorZona[zonaKey] : 0;
                     return (
                       <Link to={`/properties?zona=${encodeURIComponent(zona)}`} key={index} className="w-56 h-56 group/card-link flex items-center justify-center">
                         <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-56 h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
                           <div className="relative w-full h-full flex items-center justify-center">
                             <img
-                              src={IMAGENES_ZONA[zona] || '/placeholder-property.jpg'}
+                              src={getZonaImage(zona)}
                               alt={`Propiedades en ${zona}`}
                               className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-full"
+                              onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-80 group-hover/card:opacity-100 transition-opacity duration-300 rounded-full"></div>
                             <div className="absolute bottom-6 left-0 right-0 px-4 text-center">
@@ -505,7 +549,7 @@ const HomePage = () => {
                                 {zona}
                               </h3>
                               <p className="text-sm text-gray-100 mt-1">
-                                {count} {count === 1 ? 'vivienda' : 'viviendas'}
+                                {countZonaTop} {countZonaTop === 1 ? 'vivienda' : 'viviendas'}
                               </p>
                             </div>
                           </div>
@@ -514,34 +558,39 @@ const HomePage = () => {
                     );
                   })}
                 </div>
-                <div className="flex flex-row justify-center gap-8">
-                  {zonasUnicas.slice(5).map((zona, index) => {
-                    const normalizedCurrentZona = normalizaZona(zona);
-                    const count = viviendasPorZona[normalizedCurrentZona] || 0;
-                    return (
-                      <Link to={`/properties?zona=${encodeURIComponent(zona)}`} key={index+5} className="w-56 h-56 group/card-link flex items-center justify-center">
-                        <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-56 h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
-                          <div className="relative w-full h-full flex items-center justify-center">
-                            <img
-                              src={IMAGENES_ZONA[zona] || '/placeholder-property.jpg'}
-                              alt={`Propiedades en ${zona}`}
-                              className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-full"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-80 group-hover/card:opacity-100 transition-opacity duration-300 rounded-full"></div>
-                            <div className="absolute bottom-6 left-0 right-0 px-4 text-center">
-                              <h3 className="text-xl font-bold text-white truncate" title={zona}>
-                                {zona}
-                              </h3>
-                              <p className="text-sm text-gray-100 mt-1">
-                                {count} {count === 1 ? 'vivienda' : 'viviendas'}
-                              </p>
+                {zonasUnicas.length > 5 && (
+                    <div className="flex flex-row flex-wrap justify-center gap-8">
+                    {zonasUnicas.slice(5).map((zona, index) => {
+                        const zonaKey = Object.keys(viviendasPorZona).find(
+                          key => normalizaZona(key) === normalizaZona(zona)
+                        );
+                        const countZonaRest = zonaKey ? viviendasPorZona[zonaKey] : 0;
+                        return (
+                        <Link to={`/properties?zona=${encodeURIComponent(zona)}`} key={index+5} className="w-56 h-56 group/card-link flex items-center justify-center">
+                            <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-56 h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
+                            <div className="relative w-full h-full flex items-center justify-center">
+                                <img
+                                src={getZonaImage(zona)}
+                                alt={`Propiedades en ${zona}`}
+                                className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-full"
+                                onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-80 group-hover/card:opacity-100 transition-opacity duration-300 rounded-full"></div>
+                                <div className="absolute bottom-6 left-0 right-0 px-4 text-center">
+                                <h3 className="text-xl font-bold text-white truncate" title={zona}>
+                                    {zona}
+                                </h3>
+                                <p className="text-sm text-gray-100 mt-1">
+                                    {countZonaRest} {countZonaRest === 1 ? 'vivienda' : 'viviendas'}
+                                </p>
+                                </div>
                             </div>
-                          </div>
-                        </Card>
-                      </Link>
-                    );
-                  })}
-                </div>
+                            </Card>
+                        </Link>
+                        );
+                    })}
+                    </div>
+                )}
               </div>
             </div>
             <Button
@@ -599,7 +648,7 @@ const HomePage = () => {
       <ComoFunciona />
       <section id="contacto" className="py-16 sm:py-20 bg-gradient-to-b from-slate-50 to-white">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
             <div>
               <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
                 <span className="text-black text-4xl align-middle mr-1">¿</span>
@@ -627,28 +676,51 @@ const HomePage = () => {
                   <span className="text-black text-4xl align-middle ml-1">?</span>
                 </span>
               </h2>
-              <p className="text-lg text-gray-600 mb-6">
+              <p className="text-lg text-gray-600 mb-8">
                 Contacta con nosotros para descubrir cómo Quincenalia puede transformar tu forma de disfrutar y rentabilizar
                 tus vacaciones. Nuestro equipo está listo para asesorarte.
               </p>
-              <div className="space-y-4">
-                <a href="tel:+34666777888" className="flex items-center text-gray-700 hover:text-primary transition-colors">
-                  <Phone className="w-5 h-5 mr-3 text-primary" />
-                  <span>+34 666 777 888</span>
+              <div className="space-y-6">
+                <a 
+                  href="tel:+34666777888" 
+                  className="group flex items-center p-4 rounded-xl hover:bg-primary/5 transition-all duration-300 ease-in-out transform hover:shadow-lg border border-transparent hover:border-primary/20"
+                >
+                  <div className="bg-primary/10 p-3 rounded-full mr-4 group-hover:bg-primary/20 transition-all duration-300">
+                    <Phone className="w-6 h-6 text-primary transition-transform duration-300 ease-in-out group-hover:scale-125 group-hover:-rotate-12" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-800 text-sm">Llámanos</p>
+                    <p className="text-gray-700 group-hover:text-primary text-base transition-colors">+34 666 777 888</p>
+                  </div>
                 </a>
-                <a href="mailto:info@quincenalia.com" className="flex items-center text-gray-700 hover:text-primary transition-colors">
-                  <Mail className="w-5 h-5 mr-3 text-primary" />
-                  <span>info@quincenalia.com</span>
+                <a 
+                  href="mailto:info@quincenalia.com" 
+                  className="group flex items-center p-4 rounded-xl hover:bg-primary/5 transition-all duration-300 ease-in-out transform hover:shadow-lg border border-transparent hover:border-primary/20"
+                >
+                  <div className="bg-primary/10 p-3 rounded-full mr-4 group-hover:bg-primary/20 transition-all duration-300">
+                    <Mail className="w-6 h-6 text-primary transition-transform duration-300 ease-in-out group-hover:scale-125 group-hover:-rotate-12" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-800 text-sm">Escríbenos</p>
+                    <p className="text-gray-700 group-hover:text-primary text-base transition-colors">info@quincenalia.com</p>
+                  </div>
                 </a>
-                <div className="flex items-center text-gray-700">
-                  <MapPin className="w-5 h-5 mr-3 text-primary flex-shrink-0" />
-                  <span>Oficinas en Madrid, Barcelona y Málaga (Visitas con cita previa)</span>
+                <div className="group flex items-start p-4 rounded-xl hover:bg-primary/5 transition-all duration-300 ease-in-out transform hover:shadow-lg border border-transparent hover:border-primary/20">
+                  <div className="bg-primary/10 p-3 rounded-full mr-4 group-hover:bg-primary/20 transition-all duration-300 mt-1">
+                    <MapPin className="w-6 h-6 text-primary flex-shrink-0 transition-transform duration-300 ease-in-out group-hover:scale-125 group-hover:-rotate-12" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-800 text-sm">Visítanos (con cita)</p>
+                    <p className="text-gray-700 text-base">Oficinas en Madrid, Barcelona y Málaga.</p>
+                    <p className="text-xs text-gray-500">(Visitas con cita previa)</p>
+                  </div>
                 </div>
               </div>
             </div>
-            <Card className="bg-white shadow-xl p-6 sm:p-8 rounded-2xl">
-              <CardHeader className="p-0 mb-4">
+            <Card className="bg-white shadow-xl p-6 sm:p-8 rounded-2xl border border-slate-100">
+              <CardHeader className="p-0 mb-6">
                 <CardTitle className="text-2xl font-semibold text-gray-800">Envíanos un Mensaje</CardTitle>
+                <p className="text-sm text-gray-500 mt-1">Te responderemos lo antes posible.</p>
               </CardHeader>
               <CardContent className="p-0">
                 <ContactForm />
@@ -705,39 +777,40 @@ const HomePage = () => {
         </div>
       </section>
 
-      <footer className="bg-slate-900 text-gray-300 py-12 sm:py-16 text-[16px] font-normal">
+      <footer className="bg-slate-900 text-gray-300 py-12 sm:py-16 text-sm font-normal"> {/* Ajustado text-sm */}
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div className="md:col-span-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+            <div className="md:col-span-2 lg:col-span-1">
               <h3 className="text-2xl font-bold mb-3 text-white">Quincenalia</h3>
-              <p className="text-sm text-gray-400 leading-relaxed">
+              <p className="text-gray-400 leading-relaxed">
                 La forma inteligente de poseer, disfrutar y rentabilizar tu segunda residencia.
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-gray-100 uppercase tracking-wide">Legal</h4>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center gap-2">
-                  <HelpCircle className="w-4 h-4 text-white" />
-                  <a href="#faq" className="hover:text-primary transition-colors">Preguntas Frecuentes</a>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-white" />
-                  <a href="#contacto" className="hover:text-primary transition-colors">Contacto</a>
-                </li>
-                <li className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-white" />
-                  <a href="#" className="hover:text-primary transition-colors">Términos de Servicio</a>
-                </li>
-                <li className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-white" />
-                  <a href="#" className="hover:text-primary transition-colors">Política de Privacidad</a>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Cookie className="w-4 h-4 text-white" />
-                  <a href="#" className="hover:text-primary transition-colors">Política de Cookies</a>
-                </li>
+              <h4 className="font-semibold mb-4 text-gray-100 uppercase tracking-wide text-xs">Navegación</h4>
+              <ul className="space-y-2.5">
+                  <li><Link to="/propiedades" className="hover:text-primary transition-colors">Propiedades</Link></li>
+                  <li><a href="#zonas-destacadas" className="hover:text-primary transition-colors">Zonas Destacadas</a></li>
+                  <li><a href="#reinventada" className="hover:text-primary transition-colors">Cómo Funciona</a></li>
+                  <li><a href="#contacto" className="hover:text-primary transition-colors">Contacto</a></li>
+                  <li><a href="#faq" className="hover:text-primary transition-colors">FAQ</a></li>
               </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4 text-gray-100 uppercase tracking-wide text-xs">Legal</h4>
+              <ul className="space-y-2.5">
+                <li><Link to="/terminos-servicio" className="hover:text-primary transition-colors flex items-center gap-1.5"><FileText className="w-4 h-4 text-gray-500" /> Términos de Servicio</Link></li>
+                <li><Link to="/politica-privacidad" className="hover:text-primary transition-colors flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-gray-500" /> Política de Privacidad</Link></li>
+                <li><Link to="/politica-cookies" className="hover:text-primary transition-colors flex items-center gap-1.5"><Cookie className="w-4 h-4 text-gray-500" /> Política de Cookies</Link></li>
+              </ul>
+            </div>
+             <div className="md:col-span-2 lg:col-span-1">
+              <h4 className="font-semibold mb-4 text-gray-100 uppercase tracking-wide text-xs">Síguenos</h4>
+                <div className="flex space-x-4">
+                    <a href="#" aria-label="Facebook" className="text-gray-400 hover:text-primary transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/></svg></a>
+                    <a href="#" aria-label="Instagram" className="text-gray-400 hover:text-primary transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.272.058 2.166.296 2.913.588.764.302 1.33.696 1.902 1.27.574.572.97 1.138 1.27 1.903.293.747.53 1.64.588 2.912.058 1.267.07 1.647.07 4.85s-.012 3.583-.07 4.85c-.058 1.272-.295 2.166-.588 2.913-.302.764-.696 1.33-1.27 1.902-.572.574-1.138.97-1.903 1.27-.747.293-1.64.53-2.912.588-1.267.058-1.647.07-4.85.07s-3.583-.012-4.85-.07c-1.272-.058-2.166-.295-2.913-.588-.764-.302-1.33-.696-1.902-1.27-.574-.572-.97-1.138-1.27-1.903-.293-.747-.53-1.64-.588-2.912-.058-1.267-.07-1.647-.07-4.85s.012-3.583.07-4.85c.058-1.272.295-2.187.613-2.966.302-.793.72-1.41 1.32-2.01.602-.602 1.218-1.012 2.01-1.32.78-.308 1.687-.555 2.967-.613 1.279-.058 1.687-.072 4.946-.072zm0-2.163c-3.259 0-3.667.014-4.947.072-1.28.058-2.187.305-2.966.613-.793.308-1.41.72-2.01 1.32-.602.602-1.012 1.218-1.32 2.01-.308.78-.555 1.687-.613 2.967-.058 1.279-.072 1.687-.072 4.946s.014 3.667.072 4.947c.058 1.28.305 2.187.613 2.966.308.793.72 1.41 1.32 2.01.602.602 1.218 1.012 2.01 1.32.78.308 1.687.555 2.967.613 1.279.058 1.687.072 4.946.072s3.667-.014 4.947-.072c1.28-.058 2.187-.305 2.966-.613.793-.308 1.41-.72 2.01-1.32.602.602 1.012-1.218 1.32-2.01.308-.78.555-1.687.613-2.967.058-1.279.072-1.687-.072-4.946s-.014-3.667-.072-4.947c-.058-1.28-.305-2.187-.613-2.966-.308-.793-.72-1.41-1.32-2.01-.602-.602-1.218-1.012-2.01-1.32-.78-.308-1.687-.555-2.967-.613-1.279-.058-1.687-.072-4.946-.072zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.441 1.441 1.441 1.441-.645 1.441-1.441-.645-1.44-1.441-1.44z"/></svg></a>
+                    <a href="#" aria-label="LinkedIn" className="text-gray-400 hover:text-primary transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg></a>
+                </div>
             </div>
           </div>
           <div className="border-t border-gray-700 pt-8 text-center text-xs text-gray-500">
@@ -781,10 +854,9 @@ const HomePage = () => {
           </div>
         )}
       </div>
-      {/* Banner de cookies */}
       {showCookieBanner && (
         <div className="fixed bottom-0 left-0 w-full z-50 bg-slate-900 text-white px-4 py-4 flex flex-col sm:flex-row items-center justify-center gap-3 shadow-lg animate-fade-in">
-          <span className="text-sm">Usamos cookies para mejorar tu experiencia. Consulta nuestra <a href="/politica-privacidad" className="underline text-primary">Política de Privacidad</a>.</span>
+          <span className="text-sm">Usamos cookies para mejorar tu experiencia. Consulta nuestra <Link to="/politica-privacidad" className="underline text-primary">Política de Privacidad</Link>.</span>
           <button onClick={aceptarCookies} className="ml-0 sm:ml-4 mt-2 sm:mt-0 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary/90 transition">Aceptar</button>
         </div>
       )}
@@ -792,4 +864,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage; 
+export default HomePage;
