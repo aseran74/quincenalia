@@ -91,7 +91,8 @@ export default function NewPropertyPage() {
               <Textarea
                 id="description"
                 placeholder="Ingrese una descripción detallada de la propiedad"
-                rows={5}
+                rows={8}
+                className="min-h-[180px]"
               />
             </div>
 

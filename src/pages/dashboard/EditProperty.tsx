@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
 import { Autocomplete, useLoadScript } from '@react-google-maps/api';
-import { Bed, Bath, Toilet } from 'lucide-react';
+import { Bed, Bath, Toilet, Building2 } from 'lucide-react';
 
 const propertySchema = z.object({
   title: z.string().min(1, 'El título es requerido'),
@@ -329,7 +329,7 @@ const EditProperty = () => {
                   <FormItem>
                     <FormLabel>Descripción</FormLabel>
                     <FormControl>
-                          <Textarea placeholder="Descripción de la propiedad" {...field} />
+                          <Textarea placeholder="Descripción de la propiedad" {...field} rows={8} className="min-h-[180px]" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -749,24 +749,49 @@ const EditProperty = () => {
                     ))}
                   </div>
                   {/* Destacada */}
-                  <FormField
-                    control={form.control}
-                    name="destacada"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          <input
-                            type="checkbox"
-                            checked={field.value || false}
-                            onChange={e => field.onChange(e.target.checked)}
-                            className="mr-2"
-                          />
-                          Propiedad destacada
-                        </FormLabel>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="flex items-center gap-6">
+                    <FormField
+                      control={form.control}
+                      name="destacada"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            <input
+                              type="checkbox"
+                              checked={field.value || false}
+                              onChange={e => field.onChange(e.target.checked)}
+                              className="mr-2"
+                            />
+                            Propiedad destacada
+                          </FormLabel>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="features"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={field.value?.includes('Obra nueva') || false}
+                              onChange={e => {
+                                if (e.target.checked) {
+                                  field.onChange([...(field.value || []), 'Obra nueva']);
+                                } else {
+                                  field.onChange((field.value || []).filter((v: string) => v !== 'Obra nueva'));
+                                }
+                              }}
+                              className="mr-2"
+                            />
+                            <Building2 className="w-5 h-5 text-orange-400 mr-1" /> Obra nueva
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
               </div>
               <div className="flex justify-end space-x-4">

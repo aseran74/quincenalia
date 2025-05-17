@@ -186,11 +186,12 @@ const CopropertiesManager: React.FC = () => {
                   <Label>Descripción</Label>
                   {editingId === copropiedad.id ? (
                     <textarea
-                      className="w-full min-h-[100px] p-2 border rounded-md mt-2"
+                      className="w-full min-h-[180px] p-2 border rounded-md mt-2"
                       value={copropiedad.descripcion}
                       onChange={(e) => setCopropiedades(copropiedades.map(c => 
                         c.id === copropiedad.id ? { ...c, descripcion: e.target.value } : c
                       ))}
+                      rows={8}
                     />
                   ) : (
                     <p className="text-gray-600 mt-1">{copropiedad.descripcion}</p>

@@ -26,6 +26,8 @@ type Filters = {
   features: string[];
   location: string;
   zona: string;
+  quincena: string; // '1', '2', '3', '4' o ''
+  obraNueva: boolean;
 };
 
 const initialFilters: Filters = {
@@ -37,6 +39,8 @@ const initialFilters: Filters = {
   features: [],
   location: '',
   zona: '',
+  quincena: '',
+  obraNueva: false,
 };
 
 const priceOptions = [
@@ -78,6 +82,7 @@ const FEATURES_LIST = [
   { key: 'Vistas al mar', label: 'Vistas al mar', icon: <Waves className="w-4 h-4 text-blue-400" /> },
   { key: 'Vivienda accesible', label: 'Accesible', icon: <UserCheck className="w-4 h-4 text-pink-500" /> },
   { key: 'Vivienda de lujo', label: 'Lujo', icon: <Sparkles className="w-4 h-4 text-amber-600" /> },
+  { key: 'Obra nueva', label: 'Obra nueva', icon: <Building2 className="w-4 h-4 text-orange-400" /> },
 ];
 
 const formatPriceSimple = (price: number) => {
@@ -199,7 +204,20 @@ export const PropertiesPage = () => {
       const normalizedFilterZona = normalizaZonaFiltro(filters.zona);
       const matchesZona = !filters.zona || (normalizedPropertyZona && normalizedPropertyZona === normalizedFilterZona);
       
-      return matchesBedrooms && matchesBathrooms && matchesType && matchesFeatures && matchesLocation && matchesZona;
+      // --- FILTRO DE QUINCENA ---
+      let matchesQuincena = true;
+      if (filters.quincena) {
+        const shareStatus = property[`share${filters.quincena}_status` as 'share1_status' | 'share2_status' | 'share3_status' | 'share4_status'];
+        matchesQuincena = shareStatus === 'disponible';
+      }
+      
+      // --- FILTRO OBRA NUEVA ---
+      let matchesObraNueva = true;
+      if (filters.obraNueva) {
+        matchesObraNueva = property.features && property.features.includes('Obra nueva');
+      }
+      
+      return matchesBedrooms && matchesBathrooms && matchesType && matchesFeatures && matchesLocation && matchesZona && matchesQuincena && matchesObraNueva;
     });
   };
 
@@ -400,6 +418,26 @@ export const PropertiesPage = () => {
               </Select>
             </div>
 
+            {/* 2.5 Quincena/Copropiedad */}
+            <div>
+              <label htmlFor="filterQuincena" className="block text-xs font-medium text-muted-foreground mb-1.5">Quincena</label>
+              <Select
+                value={filters.quincena || 'all'}
+                onValueChange={quincena => setFilters(prev => ({ ...prev, quincena: quincena === 'all' ? '' : quincena }))}
+              >
+                <SelectTrigger id="filterQuincena" className="w-full text-sm h-10">
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="1">1ª quincena</SelectItem>
+                  <SelectItem value="2">2ª quincena</SelectItem>
+                  <SelectItem value="3">3ª quincena</SelectItem>
+                  <SelectItem value="4">4ª quincena</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* 3. Tipo de Vivienda */}
             <div className="relative w-full" ref={typeChecklistRef}>
               <label htmlFor="filterTypeButton" className="block text-xs font-medium text-muted-foreground mb-1.5">Tipo de Vivienda</label>
@@ -533,6 +571,19 @@ export const PropertiesPage = () => {
               </Button>
             </div>
             {/* --- END REORDERED AND RESTRUCTURED SECTION --- */}
+
+            {/* 9. Obra nueva */}
+            <div className="flex items-center gap-2 mb-2">
+              <input
+                type="checkbox"
+                id="filterObraNueva"
+                checked={filters.obraNueva}
+                onChange={e => setFilters(prev => ({ ...prev, obraNueva: e.target.checked }))}
+                className="mr-1"
+              />
+              <Building2 className="w-5 h-5 text-orange-400 mr-1" />
+              <label htmlFor="filterObraNueva" className="text-sm cursor-pointer select-none">Obra nueva</label>
+            </div>
           </div>
 
           {/* Características Adicionales (condicional) */}
