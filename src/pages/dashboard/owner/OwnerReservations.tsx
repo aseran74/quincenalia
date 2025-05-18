@@ -73,7 +73,7 @@ const formatDate = (dateString: string | null | undefined): string => {
 };
 
 // --- Componente Principal ---
-const OwnerReservations: React.FC = () => {
+function OwnerReservations() {
   const { user } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -84,6 +84,7 @@ const OwnerReservations: React.FC = () => {
   const [reservationToDelete, setReservationToDelete] = useState<Reservation | null>(null);
   const [creatingOrUpdating, setCreatingOrUpdating] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false); // Controla si se muestra el calendario
+  const [selectedRange, setSelectedRange] = useState<{start: Date, end: Date} | null>(null);
 
   // Refs para el formulario
   const formPropertyRef = useRef<HTMLSelectElement>(null);
@@ -331,6 +332,43 @@ const OwnerReservations: React.FC = () => {
     }))
   ];
 
+  // --- NUEVO: Handler para selección de slot en el calendario ---
+  const handleSelectSlot = (slotInfo: { start: Date, end: Date }) => {
+    setSelectedRange({ start: slotInfo.start, end: slotInfo.end });
+  };
+
+  // --- NUEVO: Confirmar reserva desde el modal ---
+  const handleConfirmCalendarReservation = async () => {
+    if (!selectedRange) return;
+    await handleCreateFromCalendar(selectedRange.start, selectedRange.end);
+    setSelectedRange(null);
+  };
+
+  // --- NUEVO: Crear reserva desde el calendario usando la lógica habitual ---
+  const handleCreateFromCalendar = async (start: Date, end: Date) => {
+    if (!user?.id || !filterProperty || filterProperty === 'all') return;
+    // Validación: solo puede reservar si es owner de la propiedad
+    const selectedProp = properties.find(p => p.id === filterProperty);
+    if (!selectedProp) return;
+    if (![selectedProp.id].includes(filterProperty)) return;
+    // Reutilizar la lógica de handleCreateSubmit pero con fechas y propiedad del calendario
+    setCreatingOrUpdating(true);
+    try {
+      const { data, error } = await supabase
+        .from('property_reservations')
+        .insert({ property_id: filterProperty, owner_id: user.id, start_date: format(start, 'yyyy-MM-dd'), end_date: format(end, 'yyyy-MM-dd'), status: 'pendiente' })
+        .select()
+        .single();
+      if (error) throw error;
+      toast({ title: 'Reserva solicitada', description: 'Tu solicitud de reserva se ha enviado.' });
+      await fetchData();
+    } catch (error: any) {
+      toast({ title: 'Error al crear', description: `No se pudo crear la reserva: ${error.message}`, variant: 'destructive' });
+    } finally {
+      setCreatingOrUpdating(false);
+    }
+  };
+
   // --- Renderizado Condicional Inicial ---
   if (loading) {
     return <div className="p-8 text-center text-gray-500">Cargando tus datos...</div>;
@@ -577,12 +615,41 @@ const OwnerReservations: React.FC = () => {
           <h2 className="text-xl font-semibold mb-4 text-gray-700">
             Calendario de Disponibilidad: <span className='font-bold'>{properties.find(p => p.id === filterProperty)?.title}</span>
           </h2>
-          {/* Asegúrate de que ReservationCalendar maneje propertyId correctamente */}
-          <ReservationCalendar key={filterProperty} propertyId={filterProperty} />
-      </div>
+          {/* Calendario ocupa todo el ancho */}
+          <div className="w-full">
+            <div className="relative h-[700px] mt-6 lg:mt-0">
+              {loading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+                  <div className="bg-white p-3 rounded-lg shadow-sm">Cargando reservas...</div>
+                </div>
+              )}
+              <ReservationCalendar
+                propertyId={filterProperty !== 'all' ? filterProperty : undefined}
+                onSelectSlot={handleSelectSlot}
+              />
+            </div>
+          </div>
+          {/* Modal de confirmación de reserva desde el calendario */}
+          {selectedRange && (
+            <Dialog open={!!selectedRange} onOpenChange={open => !open && setSelectedRange(null)}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Confirmar reserva</DialogTitle>
+                </DialogHeader>
+                <div className="mb-4">
+                  <p>¿Deseas reservar la propiedad <b>{properties.find(p => p.id === filterProperty)?.title}</b> del <b>{format(selectedRange.start, 'dd/MM/yyyy')}</b> al <b>{format(selectedRange.end, 'dd/MM/yyyy')}</b>?</p>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setSelectedRange(null)}>Cancelar</Button>
+                  <Button onClick={handleConfirmCalendarReservation} disabled={creatingOrUpdating}>Confirmar</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       )}
     </div>
   );
-};
+}
 
 export default OwnerReservations; 

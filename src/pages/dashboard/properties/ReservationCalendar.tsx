@@ -61,6 +61,7 @@ interface ReservationCalendarProps {
   onSelectedDatesChange?: (dates: Date[]) => void;
   ownerIdForReservation?: string; // Añadido para soporte admin
   onReservationCreated?: () => void; // Por si se usa
+  onSelectSlot?: (slotInfo: { start: Date, end: Date }) => void; // NUEVO: para selección desde el padre
 }
 
 // --- Configuración del Calendario ---
@@ -83,7 +84,7 @@ const exchangeStatusColors: Record<string, string> = {
   'cancelada': '#cccccc', // gris
 };
 
-const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, exchangeMode = false, pointsConfig, ownerPoints, onPointsChange, selectedDates, onSelectedDatesChange, ownerIdForReservation, onReservationCreated }) => {
+const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, exchangeMode = false, pointsConfig, ownerPoints, onPointsChange, selectedDates, onSelectedDatesChange, ownerIdForReservation, onReservationCreated, onSelectSlot }) => {
   const { user } = useAuth();
   const params = useParams();
   const navigate = useNavigate();
@@ -108,23 +109,25 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
           .select('id, title, share1_owner_id, share2_owner_id, share3_owner_id, share4_owner_id');
 
         const { data, error: dbError } = await query;
-
         if (dbError) throw dbError;
 
-        setPropiedades(data || []);
+        let filtered = data || [];
+        if (!exchangeMode && user?.role === 'owner') {
+          filtered = filtered.filter(p => [p.share1_owner_id, p.share2_owner_id, p.share3_owner_id, p.share4_owner_id].includes(user.id));
+        }
+        setPropiedades(filtered);
 
         // Usar propertyId de prop si existe, si no, usar params
         const propId = propertyId || params.id;
         if (propId) {
-          const selectedProperty = data?.find(p => p.id === propId);
+          const selectedProperty = filtered.find(p => p.id === propId);
           if (selectedProperty) {
             setPropiedadSeleccionada(selectedProperty);
           } else {
             setError('Propiedad no encontrada');
           }
-        } else if (user?.role === 'owner' && data && data.length === 1) {
-          // Si el usuario es propietario y solo tiene una propiedad, seleccionarla automáticamente
-          setPropiedadSeleccionada(data[0]);
+        } else if (user?.role === 'owner' && filtered && filtered.length === 1) {
+          setPropiedadSeleccionada(filtered[0]);
         }
       } catch (error) {
         console.error('Error al cargar propiedades:', error);
@@ -134,7 +137,6 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
         setLoadingProps(false);
       }
     };
-
     fetchProperties();
   }, [propertyId, params.id, user]);
 
@@ -276,6 +278,20 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
       });
       return;
     }
+    // Validación: solo puede reservar si es owner de la propiedad, excepto en modo intercambio
+    if (!exchangeMode && user?.role === 'owner' && ![
+      propiedadSeleccionada.share1_owner_id,
+      propiedadSeleccionada.share2_owner_id,
+      propiedadSeleccionada.share3_owner_id,
+      propiedadSeleccionada.share4_owner_id
+    ].includes(user.id)) {
+      toast({
+        title: 'Error',
+        description: 'No puedes reservar en una propiedad que no te pertenece.',
+        variant: 'destructive'
+      });
+      return;
+    }
 
     if (!canManageReservations(propiedadSeleccionada)) {
       toast({
@@ -395,10 +411,22 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
     const startDate = new Date(r.start_date + 'T00:00:00Z');
     const endDate = new Date(r.end_date + 'T00:00:00Z');
     const status = (r as any).status || '';
-    return {
-      title: status === 'fija'
+    // --- NUEVO: Mostrar titular, guest points y '/Guest Point' en reservas de intercambio ---
+    let title = '';
+    if ((r as any).isExchange) {
+      const points = (r as any).points || (r as any).points_used;
+      if (owner) {
+        title = `${owner.first_name} ${owner.last_name}${points ? ` ${points} gp` : ''}/Guest Point`;
+      } else {
+        title = `owner${points ? ` ${points} gp` : ''}/Guest Point`;
+      }
+    } else {
+      title = status === 'fija'
         ? 'Reserva fija' + (owner ? ` (${owner.first_name} ${owner.last_name})` : '')
-        : (typeof (r as any).title === 'string' && (r as any).title) || (owner ? `${owner.first_name} ${owner.last_name}` : 'Reservado (???)'),
+        : (typeof (r as any).title === 'string' && (r as any).title) || (owner ? `${owner.first_name} ${owner.last_name}` : 'Reservado (???)');
+    }
+    return {
+      title,
       start: startDate,
       end: endDate,
       owner_id: r.owner_id,
@@ -423,11 +451,14 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
 
   // --- Manejar Selección de Slot ---
   const handleSelectSlot = (slotInfo: SlotInfo) => {
+    if (typeof slotInfo.start === 'object' && typeof slotInfo.end === 'object' && onSelectSlot) {
+      onSelectSlot({ start: slotInfo.start, end: slotInfo.end });
+      return;
+    }
     if (!ownerSeleccionado) {
       alert('Por favor, selecciona un propietario antes de reservar una semana.');
       return;
     }
-    // Actualizar fechas seleccionadas en el padre
     if (typeof slotInfo.start === 'object' && typeof slotInfo.end === 'object' && onSelectedDatesChange) {
       const dates: Date[] = [];
       let d = new Date(slotInfo.start);
@@ -636,9 +667,21 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
               <ul className="space-y-2">
                 {reservas.map((r) => {
                   const owner = propietarios.find((p) => p.id === r.owner_id);
+                  // --- NUEVO: Mostrar guest points y '/Guest Point' en histórico si es intercambio ---
+                  let label = '';
+                  if ((r as any).isExchange) {
+                    const points = (r as any).points || (r as any).points_used;
+                    if (owner) {
+                      label = `${owner.first_name} ${owner.last_name}${points ? ` ${points} gp` : ''}/Guest Point`;
+                    } else {
+                      label = `owner${points ? ` ${points} gp` : ''}/Guest Point`;
+                    }
+                  } else {
+                    label = owner ? `${owner.first_name} ${owner.last_name}` : 'Propietario desconocido';
+                  }
                   return (
                     <li key={r.id} className="pb-2 border-b border-gray-100">
-                      <span className="font-medium">{owner ? `${owner.first_name} ${owner.last_name}` : 'Propietario desconocido'}</span>
+                      <span className="font-medium">{label}</span>
                       <span className="text-gray-600 ml-2">
                         {` del ${r.start_date} al ${r.end_date}`}
                       </span>

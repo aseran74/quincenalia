@@ -7,6 +7,8 @@ import ReservationCalendar from '@/pages/dashboard/properties/ReservationCalenda
 import { toast } from '@/components/ui/use-toast';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import ExchangeReservationCard from './ExchangeReservationCard'; // Asegúrate que la ruta sea correcta
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { format } from 'date-fns';
 
 interface Property {
   id: string;
@@ -15,6 +17,10 @@ interface Property {
   share2_status: string;
   share3_status: string;
   share4_status: string;
+  share1_owner_id: string;
+  share2_owner_id: string;
+  share3_owner_id: string;
+  share4_owner_id: string;
 }
 
 interface Owner {
@@ -52,6 +58,22 @@ const AdminExchangePanel: React.FC = () => {
   const [calendarOwnerId, setCalendarOwnerId] = useState<string>('');
   const [calendarOwnerPoints, setCalendarOwnerPoints] = useState<number>(0);
 
+  // --- NUEVO: Filtrar propietarios que NO sean dueños de la propiedad seleccionada ---
+  const selectedPropObj = properties.find(p => p.id === selectedProperty);
+  const excludedOwnerIds = selectedPropObj ? [selectedPropObj.share1_owner_id, selectedPropObj.share2_owner_id, selectedPropObj.share3_owner_id, selectedPropObj.share4_owner_id].filter(Boolean) : [];
+  const filteredOwners = owners.filter(o => !excludedOwnerIds.includes(o.id));
+
+  // --- NUEVO: Estado para fechas seleccionadas desde el calendario ---
+  const [selectedRange, setSelectedRange] = useState<{start: Date, end: Date} | null>(null);
+
+  // --- NUEVO: Filtrar propietarios para el calendario de intercambio ---
+  const filteredCalendarOwners = owners.filter(o => !excludedOwnerIds.includes(o.id));
+  // Si el calendarOwnerId actual no está en la lista filtrada, seleccionar el primero
+  useEffect(() => {
+    if (filteredCalendarOwners.length > 0 && !filteredCalendarOwners.some(o => o.id === calendarOwnerId)) {
+      setCalendarOwnerId(filteredCalendarOwners[0].id);
+    }
+  }, [selectedProperty, owners]);
 
   // --- EFECTOS ---
 
@@ -61,7 +83,7 @@ const AdminExchangePanel: React.FC = () => {
       // Cargar propiedades
       const { data: propertiesData, error: propertiesError } = await supabase
         .from('properties')
-        .select('id, title, share1_status, share2_status, share3_status, share4_status');
+        .select('id, title, share1_status, share2_status, share3_status, share4_status, share1_owner_id, share2_owner_id, share3_owner_id, share4_owner_id');
 
       if (propertiesError) {
         console.error("Error fetching properties:", propertiesError);
@@ -417,6 +439,56 @@ const AdminExchangePanel: React.FC = () => {
     setLoading(false);
   };
 
+  // --- NUEVO: Handler para selección de slot en el calendario ---
+  const handleSelectSlot = (slotInfo: { start: Date, end: Date }) => {
+    setSelectedRange({ start: slotInfo.start, end: slotInfo.end });
+  };
+
+  // --- NUEVO: Confirmar reserva desde el modal ---
+  const handleConfirmCalendarReservation = async () => {
+    if (!selectedRange || !calendarOwnerId || !selectedProperty) return;
+    await handleCreateFromCalendar(selectedRange.start, selectedRange.end);
+    setSelectedRange(null);
+  };
+
+  // --- NUEVO: Crear reserva desde el calendario usando la lógica habitual ---
+  const handleCreateFromCalendar = async (start: Date, end: Date) => {
+    if (!calendarOwnerId || !selectedProperty) return;
+    // Calcular puntos
+    let total = 0;
+    let d = new Date(start);
+    const endDate = new Date(end);
+    while (d <= endDate) {
+      if ([0, 6].includes(d.getDay())) {
+        total += pointsWeekend;
+      } else {
+        total += pointsWeekday;
+      }
+      d.setDate(d.getDate() + 1);
+    }
+    try {
+      const { error } = await supabase
+        .from('exchange_reservations')
+        .insert({
+          property_id: selectedProperty,
+          owner_id: calendarOwnerId,
+          start_date: format(start, 'yyyy-MM-dd'),
+          end_date: format(end, 'yyyy-MM-dd'),
+          status: 'pendiente',
+          points: total,
+          points_used: total
+        });
+      if (error) throw error;
+      toast({ title: 'Reserva de intercambio creada', description: 'La reserva se ha creado correctamente.' });
+      setResMsg('Reserva creada');
+      setTimeout(() => setResMsg(''), 2000);
+      // Recargar reservas
+      if (typeof handleCalendarReservationUpdate === 'function') handleCalendarReservationUpdate();
+    } catch (error: any) {
+      toast({ title: 'Error al crear', description: `No se pudo crear la reserva: ${error.message}`, variant: 'destructive' });
+    }
+  };
+
   // Pantalla de carga inicial mientras se obtienen propiedades y dueños por primera vez
   if (loading && properties.length === 0 && owners.length === 0 && !selectedProperty) { 
     return <div className="flex justify-center items-center h-screen">Cargando panel de administrador...</div>;
@@ -573,24 +645,23 @@ const AdminExchangePanel: React.FC = () => {
               <CardTitle className="text-lg font-semibold text-gray-700">Calendario de Intercambio</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="mb-4">
-                <label htmlFor="owner-select-calendar" className="block text-sm font-medium text-gray-700 mb-1">Propietario para Reserva:</label>
+              <div className="mb-4 text-sm text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Propietario para intercambio:</label>
                 <select
-                  id="owner-select-calendar"
-                  className="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                  className="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 mb-2"
                   value={calendarOwnerId}
                   onChange={e => setCalendarOwnerId(e.target.value)}
-                  disabled={owners.length === 0}
+                  disabled={filteredCalendarOwners.length === 0}
                 >
-                  {owners.length === 0 && <option value="">Cargando propietarios...</option>}
-                  {owners.map(o => (
+                  {filteredCalendarOwners.length === 0 && <option value="">No hay propietarios disponibles</option>}
+                  {filteredCalendarOwners.map(o => (
                     <option key={o.id} value={o.id}>{o.first_name} {o.last_name}</option>
                   ))}
                 </select>
+                Puntos del propietario: <b className="text-gray-900">{calendarOwnerPoints}</b>
               </div>
-              <div className="mb-4 text-sm text-gray-700">Puntos del propietario: <b className="text-gray-900">{calendarOwnerPoints}</b></div>
-              <div className="overflow-auto w-full rounded-md border border-gray-200 p-1">
-                {selectedProperty && calendarOwnerId ? (
+              <div className="overflow-auto w-full rounded-md border border-gray-200 p-1 mb-6">
+                {selectedProperty ? (
                   <ReservationCalendar
                     propertyId={selectedProperty}
                     exchangeMode={true}
@@ -598,16 +669,76 @@ const AdminExchangePanel: React.FC = () => {
                       points_per_day: pointsWeekend,
                       points_per_day_weekday: pointsWeekday
                     }}
-                    ownerIdForReservation={calendarOwnerId} // Asegúrate que esta prop es usada por ReservationCalendar
-                    ownerPoints={calendarOwnerPoints}
-                    onReservationCreated={handleCalendarReservationUpdate} 
+                    onReservationCreated={handleCalendarReservationUpdate}
+                    onSelectSlot={handleSelectSlot}
                   />
                 ) : (
                   <div className="text-gray-500 py-10 text-center text-sm">
-                    { !selectedProperty ? "Seleccione una propiedad para ver el calendario." : "Seleccione un propietario para activar el calendario."}
+                    Seleccione una propiedad para ver el calendario.
                   </div>
                 )}
               </div>
+              {/* --- Formulario de reserva manual junto al calendario --- */}
+              <div className="mb-4 p-4 bg-indigo-50 rounded-md border border-indigo-200">
+                <h4 className="font-semibold mb-2 text-indigo-900">Reserva manual de intercambio</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Propietario:</label>
+                    <select
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                      value={manualOwnerId}
+                      onChange={e => setManualOwnerId(e.target.value)}
+                      disabled={filteredOwners.length === 0}
+                    >
+                      <option value="">Selecciona propietario</option>
+                      {filteredOwners.map(o => (
+                        <option key={o.id} value={o.id}>{o.first_name} {o.last_name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha inicio:</label>
+                    <input
+                      type="date"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                      value={manualStart}
+                      onChange={e => setManualStart(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha fin:</label>
+                    <input
+                      type="date"
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                      value={manualEnd}
+                      onChange={e => setManualEnd(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <Button 
+                  onClick={handleManualReservation} 
+                  disabled={loading || !manualOwnerId || !selectedProperty || !manualStart || !manualEnd}
+                >
+                  {loading && manualMsg.startsWith('Reserva') ? 'Creando...' : 'Crear Reserva Manual'}
+                </Button>
+                {manualMsg && <div className="mt-3 text-sm text-green-600 font-medium">{manualMsg.split(' ')[0]} {manualMsg.split(' ')[1]}</div>}
+              </div>
+              {selectedRange && (
+                <Dialog open={!!selectedRange} onOpenChange={open => !open && setSelectedRange(null)}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Confirmar reserva de intercambio</DialogTitle>
+                    </DialogHeader>
+                    <div className="mb-4">
+                      <p>¿Deseas reservar la propiedad <b>{properties.find(p => p.id === selectedProperty)?.title}</b> para el propietario <b>{owners.find(o => o.id === calendarOwnerId)?.first_name} {owners.find(o => o.id === calendarOwnerId)?.last_name}</b> del <b>{format(selectedRange.start, 'dd/MM/yyyy')}</b> al <b>{format(selectedRange.end, 'dd/MM/yyyy')}</b>?</p>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setSelectedRange(null)}>Cancelar</Button>
+                      <Button onClick={handleConfirmCalendarReservation}>Confirmar</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
             </CardContent>
         </Card>
         
@@ -650,71 +781,6 @@ const AdminExchangePanel: React.FC = () => {
                   </Button>
                 </div>
                 {adminPointsMsg && <div className="mt-2 text-sm text-green-600 font-medium">{adminPointsMsg.split(' ')[0]} {adminPointsMsg.split(' ')[1]}</div>}
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="manual_admin" className="border border-gray-200 rounded-md shadow-sm bg-white">
-            <AccordionTrigger className="px-4 py-3 text-md font-semibold text-gray-700 hover:bg-gray-50 rounded-t-md">
-              Asignar Reserva Manual (Administrativo)
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4 pt-2 border-t border-gray-200">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
-                  <div>
-                      <label htmlFor="manual-owner-select" className="block text-sm font-medium text-gray-700 mb-1">Propietario:</label>
-                      <select
-                        id="manual-owner-select"
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                        value={manualOwnerId}
-                        onChange={e => setManualOwnerId(e.target.value)}
-                        disabled={owners.length === 0}
-                      >
-                        {owners.map(o => (
-                            <option key={o.id} value={o.id}>{o.first_name} {o.last_name}</option>
-                        ))}
-                      </select>
-                  </div>
-                  <div>
-                      <label htmlFor="manual-property-select" className="block text-sm font-medium text-gray-700 mb-1">Propiedad:</label>
-                      <select
-                        id="manual-property-select"
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                        value={manualPropertyId}
-                        onChange={e => setManualPropertyId(e.target.value)}
-                        disabled={properties.length === 0}
-                      >
-                        {properties.map(p => (
-                            <option key={p.id} value={p.id}>{p.title}</option>
-                        ))}
-                      </select>
-                  </div>
-                  <div>
-                      <label htmlFor="manual-start-date" className="block text-sm font-medium text-gray-700 mb-1">Fecha inicio:</label>
-                      <input
-                        id="manual-start-date"
-                        type="date"
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                        value={manualStart}
-                        onChange={e => setManualStart(e.target.value)}
-                      />
-                  </div>
-                  <div>
-                      <label htmlFor="manual-end-date" className="block text-sm font-medium text-gray-700 mb-1">Fecha fin:</label>
-                      <input
-                        id="manual-end-date"
-                        type="date"
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                        value={manualEnd}
-                        onChange={e => setManualEnd(e.target.value)}
-                      />
-                  </div>
-                </div>
-                <Button 
-                    onClick={handleManualReservation} 
-                    disabled={loading || !manualOwnerId || !manualPropertyId || !manualStart || !manualEnd}
-                >
-                  {loading && manualMsg.startsWith('Reserva') ? 'Creando...' : 'Crear Reserva Manual'}
-                </Button>
-                {manualMsg && <div className="mt-3 text-sm text-green-600 font-medium">{manualMsg.split(' ')[0]} {manualMsg.split(' ')[1]}</div>}
             </AccordionContent>
           </AccordionItem>
         </Accordion>

@@ -870,24 +870,24 @@ const AddProperty2 = () => {
                     </div>
                     {/* Destacada */}
                     <div className="flex items-center gap-6">
-                      <FormField
-                        control={form.control}
-                        name="destacada"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              <input
-                                type="checkbox"
-                                checked={field.value || false}
-                                onChange={e => field.onChange(e.target.checked)}
-                                className="mr-2"
-                              />
-                              Propiedad destacada
-                            </FormLabel>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    <FormField
+                      control={form.control}
+                      name="destacada"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            <input
+                              type="checkbox"
+                              checked={field.value || false}
+                              onChange={e => field.onChange(e.target.checked)}
+                              className="mr-2"
+                            />
+                            Propiedad destacada
+                          </FormLabel>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                       <FormField
                         control={form.control}
                         name="features"

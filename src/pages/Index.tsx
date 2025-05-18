@@ -11,7 +11,7 @@ const Index: React.FC = () => {
       {/* Hero Section */}
       <section className="bg-blue-800 text-white py-20 px-4">
         <div className="container mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">Casa Comunitaria Digital</h1>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">Quincenalia</h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
             La plataforma integral para la gestión de propiedades en comunidad
           </p>
@@ -209,7 +209,7 @@ const Index: React.FC = () => {
       <footer className="bg-gray-900 text-white py-8 px-4">
         <div className="container mx-auto">
           <div className="text-center">
-            <p>&copy; {new Date().getFullYear()} Casa Comunitaria Digital. Todos los derechos reservados.</p>
+            <p>&copy; {new Date().getFullYear()} Quincenalia. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>
