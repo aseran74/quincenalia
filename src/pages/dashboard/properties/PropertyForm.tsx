@@ -170,7 +170,9 @@ const ZONAS_OPTIONS = [
   'Asturias.',
   'Galicia',
   'Murcia',
-  'Zonas de interior.'
+  'Zonas de interior.',
+  'Marruecos',
+  'República Dominicana'
 ];
 
 const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {

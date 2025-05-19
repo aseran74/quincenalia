@@ -13,12 +13,13 @@ import {
   FaSwimmingPool, FaHotTub, FaChild, FaGamepad, FaUmbrellaBeach, FaParking, FaStore, FaHospital,
   FaBus, FaSchool, FaUtensils, FaShoppingCart, FaMapMarkerAlt, FaImages, FaInfoCircle,
   FaUserTie, FaSearch, FaArrowLeft, FaGlassCheers, FaTree, FaWater, FaShip, FaPrescriptionBottleAlt,
-  FaUsers, FaSnowflake,
+  FaUsers, FaSnowflake, FaWhatsapp, FaFacebook, FaShareAlt, FaRegCopy, FaHeart, FaRegHeart,
   // FaRegBuilding // Ejemplo para ascensor si prefieres Fa
 } from 'react-icons/fa';
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import type { Property } from '@/types/property'; // Asegúrate de que esta ruta sea correcta
 import ContactForm from '@/components/ContactForm'; // Asegúrate de que esta ruta sea correcta
+import { useAuth } from '@/context/AuthContext';
 
 // --- CONSTANTE FEATURES ACTUALIZADA ---
 const FEATURES = [
@@ -297,6 +298,12 @@ export const PropertyDetail = () => {
   const contactFormRef = useRef<HTMLDivElement>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalImageIndex, setModalImageIndex] = useState(0);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const shareTitle = property?.title || 'Propiedad en Quincenalia';
+  const { user, isAuthenticated } = useAuth();
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favLoading, setFavLoading] = useState(false);
 
   const miniaturasRef = useRef<HTMLDivElement>(null);
   let touchStartX = 0;
@@ -427,6 +434,46 @@ export const PropertyDetail = () => {
     }
   }, [id]);
 
+  // Consultar si la propiedad es favorita al cargar
+  useEffect(() => {
+    const checkFavorite = async () => {
+      if (!user || !property?.id) return;
+      const { data, error } = await supabase
+        .from('favorites')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('property_id', property.id)
+        .single();
+      setIsFavorite(!!data && !error);
+    };
+    if (user && property?.id) checkFavorite();
+  }, [user, property?.id]);
+
+  // Añadir o quitar favorito
+  const handleToggleFavorite = async () => {
+    if (!isAuthenticated || !user) {
+      alert('Debes iniciar sesión para guardar favoritos.');
+      return;
+    }
+    if (!property?.id) return;
+    setFavLoading(true);
+    if (isFavorite) {
+      // Eliminar favorito
+      const { error } = await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('property_id', property.id);
+      if (!error) setIsFavorite(false);
+    } else {
+      // Añadir favorito
+      const { error } = await supabase
+        .from('favorites')
+        .insert({ user_id: user.id, property_id: property.id });
+      if (!error) setIsFavorite(true);
+    }
+    setFavLoading(false);
+  };
 
   const handleContactClick = () => {
     setShowContactForm(true);
@@ -452,6 +499,28 @@ export const PropertyDetail = () => {
   const prevModalImage = () => {
     if (!property?.images || property.images.length === 0) return;
     setModalImageIndex((prev) => (prev - 1 + property.images!.length) % property.images!.length);
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShowShareMenu(false);
+      alert('Enlace copiado al portapapeles');
+    } catch (e) {
+      alert('No se pudo copiar el enlace');
+    }
+  };
+
+  const handleShareWhatsapp = () => {
+    const url = `https://wa.me/?text=${encodeURIComponent(shareTitle + ' ' + shareUrl)}`;
+    window.open(url, '_blank');
+    setShowShareMenu(false);
+  };
+
+  const handleShareFacebook = () => {
+    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+    window.open(url, '_blank');
+    setShowShareMenu(false);
   };
 
   if (loading) {
@@ -495,7 +564,7 @@ export const PropertyDetail = () => {
 
   return (
     <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8">
-       <div className="mb-4 sm:mb-6">
+       <div className="mb-4 sm:mb-6 flex items-center justify-between">
             <Button
               variant="outline"
               size="sm"
@@ -511,12 +580,58 @@ export const PropertyDetail = () => {
          <div id="galeria" className="relative group mb-6 p-4">
               {property.images && property.images.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-2 lg:gap-4">
-                  <div className="col-span-1 lg:col-span-2 row-span-2 cursor-pointer" onClick={() => openModal(0)}>
+                  <div className="col-span-1 lg:col-span-2 row-span-2 cursor-pointer relative" onClick={() => openModal(0)}>
                     <img
                       src={property.images[0]}
                       alt={`${property.title} - Imagen principal`}
                       className="w-full h-[250px] sm:h-[350px] lg:h-[500px] object-cover rounded-lg shadow-md"
                     />
+                    {/* Botones favoritos y compartir sobre la imagen */}
+                    <div className="absolute top-4 right-4 flex flex-row gap-4 z-20">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+                        onClick={e => { e.stopPropagation(); handleToggleFavorite(); }}
+                        disabled={favLoading}
+                        className={`bg-white/80 hover:bg-white/90 shadow-lg border-2 border-white ${isFavorite ? 'text-red-500 hover:text-red-600' : 'text-gray-600 hover:text-primary'} w-14 h-14 flex items-center justify-center`}
+                      >
+                        {isFavorite ? <FaHeart className="w-8 h-8" /> : <FaRegHeart className="w-8 h-8" />}
+                      </Button>
+                      <div className="relative flex items-center justify-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Compartir"
+                          onClick={e => { e.stopPropagation(); setShowShareMenu(v => !v); }}
+                          className="bg-white/80 hover:bg-white/90 shadow-lg border-2 border-white text-gray-600 hover:text-primary w-14 h-14 flex items-center justify-center"
+                        >
+                          <FaShareAlt className="w-8 h-8" />
+                        </Button>
+                        {showShareMenu && (
+                          <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50 animate-fade-in">
+                            <button
+                              className="flex items-center gap-2 w-full px-4 py-3 hover:bg-gray-100 text-left text-base"
+                              onClick={e => { e.stopPropagation(); handleShareWhatsapp(); }}
+                            >
+                              <FaWhatsapp className="text-green-500 w-6 h-6" /> Compartir por WhatsApp
+                            </button>
+                            <button
+                              className="flex items-center gap-2 w-full px-4 py-3 hover:bg-gray-100 text-left text-base"
+                              onClick={e => { e.stopPropagation(); handleShareFacebook(); }}
+                            >
+                              <FaFacebook className="text-blue-600 w-6 h-6" /> Compartir en Facebook
+                            </button>
+                            <button
+                              className="flex items-center gap-2 w-full px-4 py-3 hover:bg-gray-100 text-left text-base"
+                              onClick={e => { e.stopPropagation(); handleCopyLink(); }}
+                            >
+                              <FaRegCopy className="text-gray-500 w-6 h-6" /> Copiar enlace
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   <div className="col-span-1 lg:col-span-3 grid grid-cols-2 gap-2 lg:gap-4">
                     <img
@@ -667,7 +782,21 @@ export const PropertyDetail = () => {
 
                     <div id="ubicacion" className="bg-gray-50 rounded-lg p-4 sm:p-6">
                         <h2 className="text-lg sm:text-xl font-semibold mb-3 text-gray-700">Ubicación</h2>
-                        <p className="text-sm sm:text-base text-gray-600 mb-4">{property.location}</p>
+                        <p className="text-sm sm:text-base text-gray-600 mb-4 flex items-center gap-2">
+                          {property.location && (
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Ver en Google Maps"
+                              className="text-blue-600 hover:text-blue-800 transition-colors"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              <FaMapMarkerAlt className="inline-block w-5 h-5 align-middle" />
+                            </a>
+                          )}
+                          {property.location}
+                        </p>
                         <div className="h-[300px] sm:h-[400px] w-full rounded-lg overflow-hidden border">
                             {mapsLoaded ? (
                                 coordinates ? (

@@ -123,7 +123,9 @@ const ZONAS_OFICIALES = [
   'Asturias.',
   'Galicia',
   'Murcia',
-  'Zonas de interior.'
+  'Zonas de interior.',
+  'Marruecos',
+  'República Dominicana'
 ];
 
 const EditProperty = () => {

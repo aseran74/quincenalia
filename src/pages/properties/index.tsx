@@ -129,6 +129,8 @@ const ZONAS_OPTIONS = [
   'Costa de levante.',
   'Canarias.',
   'Baleares.',
+  'Marruecos',
+  'República Dominicana'
 ];
 
 function normalizaZonaFiltro(z?: string | null): string {
@@ -260,7 +262,11 @@ export const PropertiesPage = () => {
   const PropertyCard = ({ property }: { property: Property }) => {
     const [imgIdx, setImgIdx] = useState(0);
     const totalImgs = property.images && property.images.length > 0 ? property.images.length : 0;
-    const imageUrl = property.images && property.images.length > 0 ? property.images[imgIdx] : '/placeholder-property.jpg';
+    let imageUrl = property.images && property.images.length > 0 ? property.images[imgIdx] : '/placeholder-property.jpg';
+    // Si la zona es Marruecos y no hay imágenes, usar marruecos.jpeg
+    if ((!property.images || property.images.length === 0) && (property.zona?.toLowerCase().includes('marruecos') || property.zona?.toLowerCase().includes('marrueco'))) {
+      imageUrl = '/marruecos.jpeg';
+    }
     const minShare = getMinSharePrice(property);
     const monthly = minShare ? calcularCuotaHipoteca(minShare) : null;
     return (

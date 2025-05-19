@@ -173,8 +173,8 @@ function ComoFunciona() {
   const [expandido, setExpandido] = useState(false);
 
   const steps = [
-    { icon: Home, title: "Compra Inteligente", text: "Adquieres legalmente el 25% (o 50%) de una propiedad vacacional premium." },
-    { icon: Calendar, title: "Uso Garantizado", text: "Disfrutas de 15 días fijos en temporada alta (Jul/Ago) + 10 semanas flexibles al año, ¡para siempre!" },
+    { icon: Home, title: "Compra Inteligente", text: "Adquieres legalmente un proindiviso del 25% (o 50%) de una propiedad vacacional." },
+    { icon: Calendar, title: "Uso Garantizado", text: "Mediante un contrato de uso y disfrute, tienes tus 15 días fijos en temporada alta (Jul/Ago) + 10 semanas flexibles al año, tu verano asegurado ¡para siempre!" },
     { icon: PiggyBank, title: "Gastos Compartidos", text: "Divide los costes fijos (IBI, comunidad, seguros...) entre 4. ¡Mucho más económico!" },
     { icon: Briefcase, title: "Gestión Integral", text: "Nos encargamos de TODO: limpieza, mantenimiento, facturas, impuestos... Tú solo disfruta." },
     { icon: Banknote, title: "Rentabilidad Extra", text: "Alquilamos tu propiedad en las semanas que no usas a través de las mejores plataformas (Airbnb, Booking...). ¡Ingresos pasivos!" },
@@ -303,6 +303,8 @@ const IMAGENES_ZONA: Record<string, string> = {
   'Galicia': '/Galicia.webp', // Imagen diferente para Galicia
   'Murcia': '/murcia.jpg',   // Imagen diferente para Murcia
   'Zonas de interior.': 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=800&q=80',
+  'Marruecos': '/marruecos.jpeg',
+  'República Dominicana': '/repdominicana.jpg',
 };
 
 // Función para obtener la ruta de la imagen de la zona
@@ -317,6 +319,17 @@ function normalizaZona(z: string) {
     .replace(/\./g, '')
     .replace(/\s+/g, '')
     .toLowerCase();
+}
+
+// Generar un número aleatorio de 2 dígitos para cada zona
+function getFakeCount(zona: string) {
+  // Usar un hash simple para que el número sea "fijo" por zona en cada recarga
+  let hash = 0;
+  for (let i = 0; i < zona.length; i++) {
+    hash = zona.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const num = Math.abs(hash) % 90 + 10; // entre 10 y 99
+  return num;
 }
 
 const HomePage = () => {
@@ -436,12 +449,21 @@ const HomePage = () => {
              style={{ textShadow: '0 1px 5px rgba(0,0,0,0.4)' }}>
             Accede a propiedades exclusivas por una fracción del coste. Disfruta, rentabiliza e intercambia.
           </p>
-          <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-3 text-base font-semibold shadow-lg transform transition hover:scale-105" asChild>
-            <Link to="/propiedades">
-              Explorar Propiedades
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full mb-2">
+            <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-3 text-base font-semibold shadow-lg transform transition hover:scale-105" asChild>
+              <Link to="/propiedades">
+                Explorar Propiedades
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="rounded-full px-8 py-3 text-base font-semibold shadow-lg border-white/70 text-primary hover:bg-white/10 hover:text-primary transition" onClick={() => {
+              const seccion = document.getElementById('reinventada');
+              if (seccion) seccion.scrollIntoView({ behavior: 'smooth' });
+            }}>
+              <HelpCircle className="w-5 h-5 mr-2 inline-block" />
+              Cómo funciona
+            </Button>
+          </div>
         </div>
       </section>
       <section id="zonas-destacadas" className="py-16 sm:py-20 bg-white">
@@ -492,7 +514,7 @@ const HomePage = () => {
               onClick={() => scrollZonaCarrusel('left')}
               aria-label="Scroll Left"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-8 w-8" />
             </Button>
             <div className="px-2 py-6">
               <div
@@ -504,7 +526,7 @@ const HomePage = () => {
                   const zonaKey = Object.keys(viviendasPorZona).find(
                     key => normalizaZona(key) === normalizaZona(zona)
                   );
-                  const countZona = zonaKey ? viviendasPorZona[zonaKey] : 0;
+                  const countZona = getFakeCount(zona);
                   return (
                     <Link
                       to={`/properties?zona=${encodeURIComponent(zona)}`}
@@ -540,7 +562,7 @@ const HomePage = () => {
                     const zonaKey = Object.keys(viviendasPorZona).find(
                       key => normalizaZona(key) === normalizaZona(zona)
                     );
-                    const countZonaTop = zonaKey ? viviendasPorZona[zonaKey] : 0;
+                    const countZonaTop = getFakeCount(zona);
                     return (
                       <Link to={`/properties?zona=${encodeURIComponent(zona)}`} key={index} className="w-56 h-56 group/card-link flex items-center justify-center">
                         <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-56 h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
@@ -571,7 +593,7 @@ const HomePage = () => {
                     const zonaKey = Object.keys(viviendasPorZona).find(
                       key => normalizaZona(key) === normalizaZona(zona)
                     );
-                    const countZonaRest = zonaKey ? viviendasPorZona[zonaKey] : 0;
+                    const countZonaRest = getFakeCount(zona);
                     return (
                       <Link to={`/properties?zona=${encodeURIComponent(zona)}`} key={index+5} className="w-56 h-56 group/card-link flex items-center justify-center">
                         <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-56 h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
@@ -606,7 +628,7 @@ const HomePage = () => {
               onClick={() => scrollZonaCarrusel('right')}
               aria-label="Scroll Right"
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-8 w-8" />
             </Button>
           </div>
         </div>
@@ -709,7 +731,7 @@ const HomePage = () => {
                   </div>
                   <div>
                     <p className="font-semibold text-gray-800 text-sm">Visítanos (con cita)</p>
-                    <p className="text-gray-700 text-base">Oficinas en Madrid, Barcelona y Málaga.</p>
+                    <p className="text-gray-700 text-base">Oficinas en Avenida de Burgos 52, Madrid, Proximamente Barcelona y Málaga.</p>
                     <p className="text-xs text-gray-500">(Visitas con cita previa)</p>
                   </div>
                 </div>

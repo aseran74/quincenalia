@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'react-hot-toast';
+import { Link } from 'react-router-dom';
 
 const ProfilePanel: React.FC = () => {
   const { user } = useAuth();
@@ -44,31 +45,38 @@ const ProfilePanel: React.FC = () => {
   };
 
   return (
-    <div className="max-w-lg mx-auto mt-10 bg-white p-8 rounded shadow">
-      <h2 className="text-2xl font-bold mb-6">Mi Perfil</h2>
-      <div className="flex flex-col items-center mb-6">
-        <img
-          src={photo ? URL.createObjectURL(photo) : user?.profileImage || '/default-avatar.png'}
-          alt="Avatar"
-          className="w-24 h-24 rounded-full object-cover mb-2"
-        />
-        <input type="file" accept="image/*" onChange={handlePhotoChange} className="mb-2" />
+    <div className="container mx-auto py-8">
+      <h1 className="text-2xl font-bold mb-6">Mi perfil</h1>
+      <div className="max-w-lg mx-auto mt-10 bg-white p-8 rounded shadow">
+        <div className="flex flex-col items-center mb-6">
+          <img
+            src={photo ? URL.createObjectURL(photo) : user?.profileImage || '/default-avatar.png'}
+            alt="Avatar"
+            className="w-24 h-24 rounded-full object-cover mb-2"
+          />
+          <input type="file" accept="image/*" onChange={handlePhotoChange} className="mb-2" />
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Nombre</label>
+          <Input value={name} onChange={e => setName(e.target.value)} />
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Email</label>
+          <Input value={user?.email || ''} disabled />
+        </div>
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-1">Rol</label>
+          <Input value={user?.role || ''} disabled />
+        </div>
+        <div className="mt-8 flex flex-col gap-4">
+          <Button asChild variant="outline" className="w-fit">
+            <Link to="/dashboard/profile/favorites">Ver mis favoritos</Link>
+          </Button>
+        </div>
+        <Button onClick={handleSave} disabled={loading} className="w-full">
+          {loading ? 'Guardando...' : 'Guardar cambios'}
+        </Button>
       </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Nombre</label>
-        <Input value={name} onChange={e => setName(e.target.value)} />
-      </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Email</label>
-        <Input value={user?.email || ''} disabled />
-      </div>
-      <div className="mb-6">
-        <label className="block text-sm font-medium mb-1">Rol</label>
-        <Input value={user?.role || ''} disabled />
-      </div>
-      <Button onClick={handleSave} disabled={loading} className="w-full">
-        {loading ? 'Guardando...' : 'Guardar cambios'}
-      </Button>
     </div>
   );
 };

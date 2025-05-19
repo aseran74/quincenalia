@@ -35,7 +35,11 @@ function getMonthlyPayment(price: number): number | null {
 
 // --- COMPONENTE PropertyCard CON PRECIO/MES ---
 const PropertyCard = ({ property }: { property: any }) => {
-  const imageUrl = property.images && property.images.length > 0 ? property.images[0] : '/placeholder-property.jpg';
+  let imageUrl = property.images && property.images.length > 0 ? property.images[0] : '/placeholder-property.jpg';
+  // Si la zona es Marruecos y no hay imágenes, usar marruecos.jpeg
+  if ((!property.images || property.images.length === 0) && (property.zona?.toLowerCase().includes('marruecos') || property.zona?.toLowerCase().includes('marrueco'))) {
+    imageUrl = '/marruecos.jpeg';
+  }
   const minShare = getMinSharePrice(property);
   const monthly = minShare && minShare > 0 ? getMonthlyPayment(minShare) : null;
 

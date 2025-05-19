@@ -52,6 +52,7 @@ import AgentComisionesPage from './pages/dashboard/agents/comisiones';
 import AgentProfilePage from './pages/dashboard/agents/profile';
 import ProteccionDatos from './pages/ProteccionDatos';
 import PoliticaPrivacidad from './pages/PoliticaPrivacidad';
+import Favorites from './pages/dashboard/profile/Favorites';
 
 const Profile = () => (
   <div style={{ padding: 32 }}>
@@ -114,6 +115,8 @@ function App() {
             <Route path="reservations" element={<ReservationCalendar />} />
             <Route path="properties/:id/reservations" element={<ReservationCalendar />} />
             <Route path="properties/reservas" element={<ReservationCalendar />} />
+            {/* Ruta de favoritos del usuario */}
+            <Route path="profile/favorites" element={<Favorites />} />
           </Route>
 
           {/* Dashboard de Administración */}
