@@ -104,7 +104,9 @@ function getMinSharePrice(property: Property): number | null {
 }
 
 const calcularCuotaHipoteca = (precio: number) => {
-  const principal = precio * 0.8;
+  // Añadir 7% de gastos de compra
+  const precioConGastos = precio * 1.07;
+  const principal = precioConGastos * 0.8;
   const years = 25;
   const interest = 0.03;
   const n = years * 12;
@@ -291,9 +293,12 @@ export const PropertiesPage = () => {
                 </span>
               </div>
               {monthly && (
-                <div className="px-6 pb-4 pt-2">
+                <div className="px-6 pb-4 pt-2 flex flex-col items-center">
                   <span className="inline-block bg-primary/90 text-primary-foreground font-semibold text-base px-4 py-2 rounded-lg shadow">
                     {formatPriceSimple(Math.round(monthly || 0))} <span className="text-xs text-gray-200 font-normal">/mes*</span>
+                  </span>
+                  <span className="text-[10px] text-gray-300 mt-1 text-center">
+                    * Incluye un 7% extra en gastos de compra (notaría, registro, gestoría, impuestos)
                   </span>
                 </div>
               )}

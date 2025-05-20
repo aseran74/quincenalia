@@ -24,8 +24,10 @@ function getMinSharePrice(property: any): number | null {
 
 function getMonthlyPayment(price: number): number | null {
   if (!price || price <= 0) return null;
+  // Añadir 7% de gastos de compra
+  const precioConGastos = price * 1.07;
   // Hipoteca a 25 años, 3% interés, 80% financiación
-  const principal = price * 0.8;
+  const principal = precioConGastos * 0.8;
   const years = 25;
   const interest = 0.03;
   const n = years * 12;
@@ -69,6 +71,11 @@ const PropertyCard = ({ property }: { property: any }) => {
                 </span>
               )}
             </div>
+            {monthly && (
+              <span className="text-[10px] text-gray-200 mt-1 text-center block">
+                * Incluye un 7% extra en gastos de compra (notaría, registro, gestoría, impuestos)
+              </span>
+            )}
           </div>
           <div className="absolute inset-0 z-10 flex flex-col justify-between bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 sm:p-3">
             {/* Contenido inferior sobre la imagen */}
