@@ -646,7 +646,7 @@ function OwnerReservations() {
               </DialogContent>
             </Dialog>
           )}
-        </div>
+      </div>
       )}
     </div>
   );

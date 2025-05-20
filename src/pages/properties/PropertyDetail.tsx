@@ -187,6 +187,9 @@ function MortgageCalculator({ propertyPrice }: { propertyPrice: number }) {
           </p>
           <p className="text-gray-700">Total a pagar: {mortgage.result.total.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
           <p className="text-gray-600">Total intereses: {mortgage.result.totalInterest.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+          <p className="text-xs text-gray-600 mt-2">
+            * El cálculo incluye un 7% extra en gastos de compra (notaría, registro, gestoría, impuestos).
+          </p>
         </div>
       )}
        {mortgage.result && mortgage.result.monthly <= 0 && (

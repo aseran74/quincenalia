@@ -910,9 +910,9 @@ const AddProperty2 = () => {
                               />
                               <Building2 className="w-5 h-5 text-orange-400 mr-1" /> Obra nueva
                             </FormLabel>
-                          </FormItem>
-                        )}
-                      />
+                        </FormItem>
+                      )}
+                    />
                     </div>
                   </div>
                 </div>

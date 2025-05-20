@@ -11,6 +11,7 @@ import AppLayout from '../components/layout/AppLayout';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
+import { FcGoogle } from 'react-icons/fc';
 
 const getDashboardPath = (role: string) => {
   switch (role) {
@@ -31,7 +32,7 @@ const getDashboardPath = (role: string) => {
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, signup, isAuthenticated, loading, user } = useAuth();
+  const { login, signup, isAuthenticated, loading, user, signInWithGoogle } = useAuth();
   const { toast: useToastToast } = useToast();
   const [loginData, setLoginData] = useState({
     email: '',
@@ -69,18 +70,16 @@ const Login: React.FC = () => {
           .eq('id', user.id)
           .single();
 
-        await login(user);
-        
-        toast({
+        useToastToast({
           title: "¡Bienvenido!",
           description: "Has iniciado sesión correctamente.",
         });
 
-        navigate(getDashboardPath(profile?.role || 'user'));
+        navigate(getDashboardPath(profile?.role || 'user'), { replace: true });
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
+      useToastToast({
+        title: "Error al iniciar sesión",
         description: error.message || "Ha ocurrido un error al iniciar sesión.",
         variant: "destructive"
       });
@@ -95,12 +94,23 @@ const Login: React.FC = () => {
     try {
       const success = await signup(signupData.email, signupData.password, signupData.name);
       if (success) {
-        toast.success('¡Registro exitoso!');
+        useToastToast({
+          title: "¡Registro exitoso!",
+          description: "Tu cuenta ha sido creada.",
+        });
       } else {
-        toast.error('Error al registrarse. Por favor, intenta de nuevo.');
+        useToastToast({
+          title: "Error al registrarse",
+          description: 'Error al registrarse. Por favor, intenta de nuevo.',
+          variant: "destructive"
+        });
       }
-    } catch (error) {
-      toast.error('Error al registrarse');
+    } catch (error: any) {
+      useToastToast({
+        title: "Error al registrarse",
+        description: error.message || 'Error al registrarse. Por favor, intenta de nuevo.',
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -206,6 +216,18 @@ const Login: React.FC = () => {
                       </Button>
                     </CardFooter>
                   </form>
+
+                  <div className="relative mt-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-card px-2 text-muted-foreground">O continuar con</span>
+                    </div>
+                  </div>
+                  <Button variant="outline" className="w-full mt-4" onClick={() => signInWithGoogle()}>
+                    <FcGoogle className="mr-2 h-4 w-4" /> Google
+                  </Button>
                 </Card>
               </TabsContent>
 
@@ -249,10 +271,29 @@ const Login: React.FC = () => {
                     </CardContent>
                     <CardFooter>
                       <Button type="submit" className="w-full" disabled={isLoading}>
-                        {isLoading ? 'Registrando...' : 'Registrarse'}
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Registrando...
+                          </>
+                        ) : (
+                          'Registrarse'
+                        )}
                       </Button>
                     </CardFooter>
                   </form>
+
+                  <div className="relative mt-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-card px-2 text-muted-foreground">O continuar con</span>
+                    </div>
+                  </div>
+                  <Button variant="outline" className="w-full mt-4" onClick={() => signInWithGoogle()}>
+                    <FcGoogle className="mr-2 h-4 w-4" /> Google
+                  </Button>
                 </Card>
               </TabsContent>
             </Tabs>

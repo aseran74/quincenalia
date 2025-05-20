@@ -669,7 +669,7 @@ const AdminExchangePanel: React.FC = () => {
                       points_per_day: pointsWeekend,
                       points_per_day_weekday: pointsWeekday
                     }}
-                    onReservationCreated={handleCalendarReservationUpdate}
+                    onReservationCreated={handleCalendarReservationUpdate} 
                     onSelectSlot={handleSelectSlot}
                   />
                 ) : (
