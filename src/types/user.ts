@@ -1,4 +1,3 @@
-
 export type UserRole = 'admin' | 'agency' | 'agent' | 'owner' | 'interested';
 
 export interface User {
@@ -30,6 +29,7 @@ export interface Owner extends User {
   role: 'owner';
   properties: string[]; // Property IDs
   invoices: string[]; // Invoice IDs
+  points: number; // Add points field
 }
 
 export interface Interested extends User {

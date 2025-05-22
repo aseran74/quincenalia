@@ -6,6 +6,7 @@ import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import MessagesBoard from '@/pages/dashboard/mensajes/MessagesBoard';
+import { Owner } from '@/types/user'; // Import Owner type
 
 // Importamos TODOS los iconos necesarios de react-icons/fa
 import {
@@ -57,7 +58,7 @@ const SIDEBAR_ID = "owner-sidebar";
 const OwnerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
@@ -167,10 +168,21 @@ const OwnerDashboard: React.FC = () => {
                     {user?.name ? user.name.substring(0, 1).toUpperCase() : (user?.email ? user.email.substring(0, 1).toUpperCase() : 'P')}
                 </AvatarFallback>
            </Avatar>
-           <div className="flex flex-col overflow-hidden">
+           <div className="flex flex-col overflow-hidden flex-grow">
                 <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100 truncate">{user?.name || 'Propietario'}</h2>
                 <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
            </div>
+
+           {/* Display user points here in the sidebar header */}
+           {!authLoading && user && user.role === 'owner' && 'points' in user && (
+              <div className="flex-shrink-0 ml-2">
+                 {/* You might want a smaller card or just text for the sidebar */}
+                 <div className="text-center bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-md px-2 py-1 text-sm font-bold">
+                    {(user as Owner).points} Pts
+                 </div>
+              </div>
+           )}
+
         </div>
 
         {/* Navegación */}

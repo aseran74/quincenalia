@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, name, role, profile_image, points')
         .eq('id', userId)
         .single();
 
@@ -62,6 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: data.id,
         name: data.name || '',
         email: '',
+        points: data.points ?? 0,
         role: data.role,
         profileImage: data.profile_image || undefined
       };
