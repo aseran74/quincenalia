@@ -86,7 +86,7 @@ function MortgageCalculator({ propertyPrice }: { propertyPrice: number }) {
   const [mortgage, setMortgage] = useState<MortgageType>({
     value: sharePrice,
     downPayment: sharePrice * 0.3,
-    interest: 2.1,
+    interest: 1.9,
     years: 20,
     result: null
   });
@@ -252,7 +252,7 @@ const calculateMonthlyPayment = (totalPrice: number): number => {
   const downPayment = sharePrice * 0.3;
   const loanAmount = sharePrice - downPayment;
   if (loanAmount <= 0) return 0;
-  const interestRate = 2.1 / 100 / 12; // 2.1% annual interest
+  const interestRate = 1.9 / 100 / 12; // 1.9% annual interest
   const numberOfPayments = 20 * 12; // 20 years
   if (interestRate === 0) return loanAmount / numberOfPayments;
   const monthlyPayment = loanAmount * interestRate * Math.pow(1 + interestRate, numberOfPayments) /

@@ -178,11 +178,11 @@ const PropertyDetail = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [agent, setAgent] = useState<Agent | null>(null);
   const [mortgage, setMortgage] = useState<MortgageType>({
-    value: 0,
-    downPayment: 0,
-    interest: 2.1,
+    value: property?.price ? property.price / 4 : 0,
+    downPayment: property?.price ? (property.price / 4) * 0.2 : 0,
+    interest: 1.9,
     years: 20,
-    result: null
+    result: null,
   });
   const { isLoaded } = useLoadScript({ googleMapsApiKey: GOOGLE_MAPS_API_KEY });
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
@@ -236,15 +236,14 @@ const PropertyDetail = () => {
   };
 
   useEffect(() => {
-    if (property) {
-      const sharePrice = property.price / 4;
+    if (property?.price) {
       setMortgage(m => ({
         ...m,
-        value: sharePrice,
-        downPayment: Math.round(sharePrice * 0.2),
+        value: property.price / 4,
+        downPayment: (property.price / 4) * 0.2,
       }));
     }
-  }, [property]);
+  }, [property?.price]);
 
   const handleMortgageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
