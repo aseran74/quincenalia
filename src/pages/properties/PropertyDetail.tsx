@@ -758,7 +758,7 @@ export const PropertyDetail = () => {
                     {property.features && property.features.length > 0 && (
                         <div id="features" className="bg-gray-50 rounded-lg p-4 sm:p-6">
                             <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Características Destacadas</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                                 {FEATURES.filter(f => property.features!.includes(f.key)).map(feature => (
                                     <div key={feature.key} className="flex items-center gap-3 p-3 bg-white rounded-lg border">
                                         {feature.icon}
@@ -772,7 +772,7 @@ export const PropertyDetail = () => {
                     {property.nearby_services && property.nearby_services.length > 0 && (
                         <div id="servicios" className="bg-gray-50 rounded-lg p-4 sm:p-6">
                             <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-700">Servicios Cercanos</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                                 {property.nearby_services.map((service) => (
                                     <div key={service} className="flex items-center gap-3 p-3 bg-white rounded-lg border">
                                         {SERVICE_ICONS[service] || SERVICE_ICONS.default}
