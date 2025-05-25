@@ -32,7 +32,7 @@ const getDashboardPath = (role: string) => {
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, signup, isAuthenticated, loading, user, signInWithGoogle } = useAuth();
+  const { login, signup, isAuthenticated, loading, user } = useAuth();
   const { toast: useToastToast } = useToast();
   const [loginData, setLoginData] = useState({
     email: '',
@@ -179,55 +179,40 @@ const Login: React.FC = () => {
                   <CardHeader>
                     <CardTitle>Iniciar Sesión</CardTitle>
                     <CardDescription>
-                      Ingresa tus credenciales para acceder a tu cuenta
+                      Ingresa tu correo y contraseña para acceder
                     </CardDescription>
                   </CardHeader>
-                  <form onSubmit={handleLogin}>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Input
-                          type="email"
-                          placeholder="Email"
-                          value={loginData.email}
-                          onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Input
-                          type="password"
-                          placeholder="Contraseña"
-                          value={loginData.password}
-                          onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button type="submit" className="w-full" disabled={isLoading}>
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Iniciando sesión...
-                          </>
-                        ) : (
-                          'Iniciar Sesión'
-                        )}
-                      </Button>
-                    </CardFooter>
-                  </form>
-
-                  <div className="relative mt-6">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Correo Electrónico</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="m@example.com"
+                        required
+                        value={loginData.email}
+                        onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                      />
                     </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-card px-2 text-muted-foreground">O continuar con</span>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Contraseña</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        required
+                        value={loginData.password}
+                        onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                      />
                     </div>
-                  </div>
-                  <Button variant="outline" className="w-full mt-4" onClick={() => signInWithGoogle()}>
-                    <FcGoogle className="mr-2 h-4 w-4" /> Google
-                  </Button>
+                  </CardContent>
+                  <CardFooter className="flex flex-col">
+                    <Button onClick={handleLogin} className="w-full" disabled={isLoading}>
+                      {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Iniciar Sesión
+                    </Button>
+                    <Button variant="link" className="mt-2 w-full text-center text-sm" onClick={handleMagicLink} disabled={isLoading}>
+                      {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Enviar Enlace Mágico
+                    </Button>
+                  </CardFooter>
                 </Card>
               </TabsContent>
 
@@ -239,61 +224,45 @@ const Login: React.FC = () => {
                       Crea una nueva cuenta para acceder
                     </CardDescription>
                   </CardHeader>
-                  <form onSubmit={handleSignup}>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Input
-                          type="text"
-                          placeholder="Nombre"
-                          value={signupData.name}
-                          onChange={(e) => setSignupData({ ...signupData, name: e.target.value })}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Input
-                          type="email"
-                          placeholder="Email"
-                          value={signupData.email}
-                          onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Input
-                          type="password"
-                          placeholder="Contraseña"
-                          value={signupData.password}
-                          onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button type="submit" className="w-full" disabled={isLoading}>
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Registrando...
-                          </>
-                        ) : (
-                          'Registrarse'
-                        )}
-                      </Button>
-                    </CardFooter>
-                  </form>
-
-                  <div className="relative mt-6">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Nombre Completo</Label>
+                      <Input
+                        id="name"
+                        type="text"
+                        placeholder="Nombre Apellido"
+                        required
+                        value={signupData.name}
+                        onChange={(e) => setSignupData({ ...signupData, name: e.target.value })}
+                      />
                     </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-card px-2 text-muted-foreground">O continuar con</span>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email">Correo Electrónico</Label>
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        placeholder="m@example.com"
+                        required
+                        value={signupData.email}
+                        onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
+                      />
                     </div>
-                  </div>
-                  <Button variant="outline" className="w-full mt-4" onClick={() => signInWithGoogle()}>
-                    <FcGoogle className="mr-2 h-4 w-4" /> Google
-                  </Button>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password">Contraseña</Label>
+                      <Input
+                        id="signup-password"
+                        type="password"
+                        required
+                        value={signupData.password}
+                        onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
+                      />
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex flex-col">
+                    <Button onClick={handleSignup} className="w-full" disabled={isLoading}>
+                      {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Registrarse
+                    </Button>
+                  </CardFooter>
                 </Card>
               </TabsContent>
             </Tabs>
