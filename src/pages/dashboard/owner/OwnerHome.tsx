@@ -2,16 +2,52 @@ import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { Owner } from '@/types/user';
 
 const OwnerHome = () => {
   const { user, loading: authLoading } = useAuth();
   const [property, setProperty] = useState<{ id: string; title: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [ownerPoints, setOwnerPoints] = useState<number | null>(null);
+  const [pointsLoading, setPointsLoading] = useState(true);
 
   useEffect(() => {
     console.log('User object in OwnerHome:', user);
-  }, [user]);
+
+    const fetchOwnerPoints = async () => {
+      if (!user?.id) {
+        setPointsLoading(false);
+        setOwnerPoints(null);
+        return;
+      }
+      setPointsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('owner_points')
+          .select('points')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching owner points:', error);
+          setOwnerPoints(0);
+        } else if (data) {
+          setOwnerPoints(typeof data.points === 'number' ? data.points : 0);
+        } else {
+          setOwnerPoints(0);
+        }
+      } catch (error) {
+        console.error('Unexpected error fetching owner points:', error);
+        setOwnerPoints(0);
+      } finally {
+        setPointsLoading(false);
+      }
+    };
+
+    if (user && user.role === 'owner') {
+      fetchOwnerPoints();
+    }
+
+  }, [user?.id, user?.role]);
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -38,17 +74,17 @@ const OwnerHome = () => {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Bienvenido a tu Panel de Propietario</h1>
       
-      {/* Display user points here */}
-      {/* Check if auth is not loading, user exists, is owner, and points property exists */}
-      {!authLoading && user && user.role === 'owner' && 'points' in user && (
+      {user && user.role === 'owner' && !pointsLoading && (
          <Card className="p-4 mb-6 bg-blue-50 border-blue-200">
             <h2 className="text-lg font-semibold mb-2 text-blue-800">Tus Puntos</h2>
-            {/* Access points using Owner type assertion, ensuring it's a number */}
-            <p className="text-blue-700 text-xl font-bold">{(user as Owner).points} Puntos</p> 
+            <p className="text-blue-700 text-xl font-bold">
+               {typeof ownerPoints === 'number' ? `${ownerPoints} Puntos` : 'Cargando...'}
+            </p>
          </Card>
       )}
 
-      {/* Show loading message while auth is loading */}
+      {user && user.role === 'owner' && pointsLoading && <p>Cargando puntos...</p>}
+
       {authLoading && <p>Cargando información del usuario...</p>}
 
       <Card className="p-4 mb-6">
@@ -66,7 +102,7 @@ const OwnerHome = () => {
             <li>• Crear y dar seguimiento a incidencias</li>
             <li>• Consultar tus facturas</li>
             <li>• Ver mensajes del administrador</li>
-            <li>• Intercambiar estancias mdaiante Guest points</li>
+            <li>• Intercambiar estancias mediante Guest points</li>
           </ul>
         </Card>
 

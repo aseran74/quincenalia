@@ -47,6 +47,7 @@ const menuItems = [
   { icon: <FaExclamationTriangle className="w-5 h-5 flex-shrink-0" />, label: 'Incidencias', path: '/dashboard/owner/incidents' },
   { icon: <FaCalendarAlt className="w-5 h-5 flex-shrink-0" />, label: 'Reservar Semanas', path: '/dashboard/owner/reservations' },
   { icon: <FaExchangeAlt className="w-5 h-5 flex-shrink-0" />, label: 'Intercambio', path: '/dashboard/owner/exchange' },
+  { icon: <FaExchangeAlt className="w-5 h-5 flex-shrink-0" />, label: 'Explorar intercambios', path: '/dashboard/owner/explorar' },
   { icon: <FaFileInvoiceDollar className="w-5 h-5 flex-shrink-0" />, label: 'Facturas', path: '/dashboard/owner/invoices' },
   { icon: <FaEnvelope className="w-5 h-5 flex-shrink-0" />, label: 'Mensajes', path: '/dashboard/owner/messages' },
   { icon: <FaUser className="w-5 h-5 flex-shrink-0" />, label: 'Perfil', path: '/dashboard/owner/profile' }
