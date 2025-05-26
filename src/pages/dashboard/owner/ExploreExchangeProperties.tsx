@@ -1,31 +1,27 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
-import { format, parse, startOfWeek, getDay, addMonths, addDays } from 'date-fns';
+// import { Calendar, dateFnsLocalizer } from 'react-big-calendar'; // No longer needed
+import 'react-big-calendar/lib/css/react-big-calendar.css'; // May still be needed if other components use it, but likely not for this page. Let's keep it for now and remove if build errors occur or if confirmed not needed.
+import { format, parse, startOfWeek, getDay, addMonths } from 'date-fns'; // addDays might be removable if not used elsewhere
 import { es } from 'date-fns/locale';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card'; // CardFooter no longer used
 import { Button } from '@/components/ui/button';
 import PropertyFilters from '@/components/properties/PropertyFilters';
 import { DateRange } from 'react-day-picker';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarIcon } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
-import { Select } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
 
-const locales = { 'es': es };
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 1 }),
-  getDay,
-  locales,
-});
+// const locales = { 'es': es }; // No longer needed for react-big-calendar
+// const localizer = dateFnsLocalizer({ // No longer needed for react-big-calendar
+//   format,
+//   parse,
+//   startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 1 }),
+//   getDay,
+//   locales,
+// });
 
 interface Property {
   id: string;
@@ -63,7 +59,7 @@ const ExploreExchangeProperties: React.FC = () => {
   const [reservas, setReservas] = useState<Record<string, Reservation[]>>({});
   const [exchangeConfigs, setExchangeConfigs] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
-  const [openCalendar, setOpenCalendar] = useState<string | null>(null);
+  // const [openCalendar, setOpenCalendar] = useState<string | null>(null); // No longer needed
   // Filtros
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [minPoints, setMinPoints] = useState('40');
@@ -167,105 +163,91 @@ const ExploreExchangeProperties: React.FC = () => {
     setFilteredProperties(result);
   }, [properties, bedrooms, bathrooms, minPoints, maxPoints, dateRange, reservas, exchangeConfigs]);
 
-  // Mostrar dos meses a la vista
-  const defaultDate = new Date();
-  const maxDate = addMonths(defaultDate, 1);
+  // const defaultDate = new Date(); // No longer needed for individual calendars
+  // const maxDate = addMonths(defaultDate, 1); // No longer needed for individual calendars
 
   return (
     <div className="p-4 max-w-7xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Explorar propiedades para intercambio</h1>
-      <div className="mb-6 flex flex-col md:flex-row gap-4 items-end">
-        {/* Filtro fechas */}
-        <div>
-          <label className="block font-medium mb-1">Rango de fechas</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-start text-left font-normal">
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateRange?.from ?
-                  dateRange.to
-                    ? `${format(dateRange.from, 'dd/MM/yyyy')} - ${format(dateRange.to, 'dd/MM/yyyy')}`
-                    : format(dateRange.from, 'dd/MM/yyyy')
-                  : <span>Selecciona fechas</span>
-                }
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-auto p-0">
-              <DayPicker
-                mode="range"
-                selected={dateRange}
-                onSelect={setDateRange}
-                numberOfMonths={2}
-                locale={es}
-              />
-              {(dateRange?.from || dateRange?.to) && (
-                <div className="px-4 py-2">
-                  <Button variant="ghost" className="w-full text-blue-600 hover:text-blue-800 justify-center" onClick={() => setDateRange(undefined)}>
-                    Limpiar fechas
-                  </Button>
-                </div>
-              )}
-            </PopoverContent>
-          </Popover>
-        </div>
+
+      {/* Calendar View for Date Range Selection */}
+      <Card className="mb-6">
+        <CardContent className="p-4 flex flex-col items-center">
+          <DayPicker
+            mode="range"
+            selected={dateRange}
+            onSelect={setDateRange}
+            numberOfMonths={2}
+            locale={es}
+            className="rounded-md border"
+          />
+          {(dateRange?.from || dateRange?.to) && (
+            <Button
+              variant="ghost"
+              className="mt-2 text-blue-600 hover:text-blue-800 justify-center"
+              onClick={() => setDateRange(undefined)}
+            >
+              Limpiar fechas
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
         {/* Filtro Guest point */}
-        <div>
-          <label className="block font-medium mb-1">Guest point</label>
-          <div className="flex gap-2">
-            <select
+        <div className="flex flex-col">
+          <label className="block font-medium mb-1 text-sm">Guest point / día</label>
+          <div className="flex gap-2 items-center">
+            <Input
+              type="number"
               value={minPoints}
               onChange={e => setMinPoints(e.target.value)}
-              className="w-24 border rounded px-2 py-1"
-            >
-              {Array.from({ length: 17 }, (_, i) => 40 + i * 10).map(val => (
-                <option key={val} value={val}>{val}</option>
-              ))}
-            </select>
-            <span className="mx-1">a</span>
-            <select
+              placeholder="Mín."
+              className="w-24 border rounded px-2 py-1 h-9"
+            />
+            <span>-</span>
+            <Input
+              type="number"
               value={maxPoints}
               onChange={e => setMaxPoints(e.target.value)}
-              className="w-24 border rounded px-2 py-1"
-            >
-              {Array.from({ length: 17 }, (_, i) => 40 + i * 10).map(val => (
-                <option key={val} value={val}>{val}</option>
-              ))}
-            </select>
+              placeholder="Máx."
+              className="w-24 border rounded px-2 py-1 h-9"
+            />
           </div>
         </div>
         {/* Filtro habitaciones */}
-        <div>
-          <label className="block font-medium mb-1">Habitaciones mín.</label>
-          <select
+        <div className="flex flex-col">
+          <label className="block font-medium mb-1 text-sm">Habitaciones mín.</label>
+          <Input
+            type="number"
             value={bedrooms}
             onChange={e => setBedrooms(e.target.value)}
-            className="w-24 border rounded px-2 py-1"
-          >
-            <option value="">Todas</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
+            placeholder="Cualquiera"
+            className="w-full border rounded px-2 py-1 h-9"
+          />
         </div>
         {/* Filtro baños */}
-        <div>
-          <label className="block font-medium mb-1">Baños mín.</label>
-          <select
+        <div className="flex flex-col">
+          <label className="block font-medium mb-1 text-sm">Baños mín.</label>
+          <Input
+            type="number"
             value={bathrooms}
             onChange={e => setBathrooms(e.target.value)}
-            className="w-24 border rounded px-2 py-1"
-          >
-            <option value="">Todos</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
+            placeholder="Cualquiera"
+            className="w-full border rounded px-2 py-1 h-9"
+          />
         </div>
       </div>
+
+      {/* Leyenda de fechas seleccionadas */}
+      {dateRange?.from && (
+        <div className="mb-4 text-center text-sm text-gray-700">
+          {dateRange.to
+            ? `Fechas seleccionadas: ${format(dateRange.from, 'dd/MM/yyyy')} - ${format(dateRange.to, 'dd/MM/yyyy')}`
+            : `Fecha seleccionada: ${format(dateRange.from, 'dd/MM/yyyy')}`}
+        </div>
+      )}
+
       {loading ? (
         <div className="text-center text-gray-500 py-10">Cargando propiedades...</div>
       ) : filteredProperties.length === 0 ? (
@@ -303,72 +285,18 @@ const ExploreExchangeProperties: React.FC = () => {
                     <span>🏷️ {prop.property_type}</span>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  className="mt-2 mb-2"
-                  onClick={() => setOpenCalendar(openCalendar === prop.id ? null : prop.id)}
-                >
-                  {openCalendar === prop.id ? 'Ocultar disponibilidad' : 'Ver disponibilidad'}
-                </Button>
-                {openCalendar === prop.id && (
-                  <div className="mb-2 mt-2">
-                    <div className="mb-2 text-xs text-gray-500 font-semibold">Disponibilidad (2 meses):</div>
-                    <Calendar
-                      localizer={localizer}
-                      events={(reservas[prop.id] || []).map(r => ({
-                        title: r.isExchange ? 'Intercambio' : 'Reserva',
-                        start: new Date(r.start_date + 'T00:00:00Z'),
-                        end: new Date(r.end_date + 'T00:00:00Z'),
-                        allDay: true,
-                        resource: r
-                      }))}
-                      startAccessor="start"
-                      endAccessor="end"
-                      views={['month']}
-                      defaultView="month"
-                      defaultDate={defaultDate}
-                      min={defaultDate}
-                      max={maxDate}
-                      style={{ height: 350 }}
-                      eventPropGetter={event => ({
-                        style: {
-                          backgroundColor: event.resource.isExchange ? '#4f8cff' : '#ffb84f',
-                          color: '#222',
-                          borderRadius: '4px',
-                          border: 'none',
-                          opacity: 0.9
-                        }
-                      })}
-                      messages={{
-                        month: 'Mes',
-                        week: 'Semana',
-                        day: 'Día',
-                        agenda: 'Agenda',
-                        date: 'Fecha',
-                        time: 'Hora',
-                        event: 'Evento',
-                        today: 'Hoy',
-                        previous: '<',
-                        next: '>',
-                        noEventsInRange: 'No hay reservas en este rango.',
-                        showMore: total => `+${total} más`,
-                      }}
-                      culture='es'
-                    />
-                  </div>
-                )}
+                {/* Removed "Ver disponibilidad" button and individual calendar display */}
                 <Button
                   variant="default"
-                  className="w-full mt-2"
+                  className="w-full mt-4" // Added margin top for spacing after removing calendar
                   onClick={() => navigate('/dashboard/owner/exchange', { state: { property: prop, dateRange } })}
-                  disabled={!dateRange?.from || !dateRange?.to}
+                  disabled={!dateRange?.from || !dateRange?.to || !exchangeConfigs[prop.id]} // Deshabilitar si no hay config
                 >
-                  Solicitar intercambio
+                  {exchangeConfigs[prop.id]
+                    ? `Solicitar intercambio (${exchangeConfigs[prop.id].points_per_day} puntos/día)`
+                    : 'Intercambio no disponible'}
                 </Button>
               </CardContent>
-              <CardFooter>
-                {/* Aquí podrías poner un botón de "Solicitar intercambio" si lo deseas */}
-              </CardFooter>
             </Card>
           ))}
         </div>
