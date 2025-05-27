@@ -408,7 +408,7 @@ const HomePage = () => {
   console.log('viviendasPorZona:', viviendasPorZona);
 
   return (
-    <div className="min-h-screen bg-quincenalia-bg font-poppins">
+    <div className="min-h-screen bg-background font-poppins">
       <Navbar />
       <section className="relative h-[85vh] sm:h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
@@ -531,9 +531,9 @@ const HomePage = () => {
                     <Link
                       to={`/properties?zona=${encodeURIComponent(zona)}`}
                       key={index}
-                      className="flex-shrink-0 w-[80vw] max-w-xs sm:max-w-sm lg:max-w-[240px] h-48 sm:h-56 lg:h-56 group/card-link flex items-center justify-center snap-center px-2"
+                      className="flex-shrink-0 w-[80vw] max-w-xs h-48 sm:h-56 group/card-link flex items-center justify-center snap-center px-2"
                     >
-                      <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-full h-48 sm:h-56 lg:h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
+                      <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-full h-48 sm:h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
                         <div className="relative w-full h-full flex items-center justify-center">
                           <img
                             src={getZonaImage(zona)}
