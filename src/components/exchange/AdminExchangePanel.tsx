@@ -143,12 +143,12 @@ const AdminExchangePanel: React.FC = () => {
       }
       
       // La carga termina después de ambos fetches.
-      setLoading(false);
+          setLoading(false);
     };
     
     // Este useEffect se ejecuta al montar y cuando cambian los filtros de texto
     fetchPropertiesAndRelatedData();
-    
+
   }, [propertyFilter, ownerFilter]); // Dependencias de los filtros de texto
 
   // Cargar configuración de puntos de la propiedad seleccionada y reservas
@@ -550,184 +550,184 @@ const AdminExchangePanel: React.FC = () => {
       {successMsg && <div className="mt-3 text-sm text-green-600 font-medium">{successMsg.split(' ')[0]} {successMsg.split(' ')[1]}</div>}
       {resMsg && <div className="mt-3 text-sm text-green-600 font-medium">{resMsg.split(' ')[0]} {resMsg.split(' ')[1]}</div>}
 
-      {/* Card: Configuración de Precios */}
-      <Card className="w-full shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-700">Configuración de Precios de Intercambio</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
-            <label htmlFor="property-select-config" className="block text-sm font-medium text-gray-700 mb-1">Propiedad:</label>
-            <select
-              id="property-select-config"
-              className="block w-full max-w-md rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-              value={selectedProperty}
-              onChange={e => setSelectedProperty(e.target.value)}
-              disabled={properties.length === 0}
-            >
-              {properties.length === 0 && <option value="">No hay propiedades vendidas al 100%</option>}
-              {properties.map(p => (
-                <option key={p.id} value={p.id}>{p.title}</option>
-              ))}
-            </select>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              <div>
-                  <label htmlFor="points-weekday" className="block text-sm font-medium text-gray-700 mb-1">Puntos / día (entre semana):</label>
-                  <input
-                      id="points-weekday"
-                      type="number"
-                      className="block w-full max-w-[150px] rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                      value={pointsWeekday}
-                      onChange={e => setPointsWeekday(Math.max(0, Number(e.target.value)))}
-                      min={0}
-                  />
-              </div>
-              <div>
-                  <label htmlFor="points-weekend" className="block text-sm font-medium text-gray-700 mb-1">Puntos / día (fin de semana):</label>
-                  <input
-                      id="points-weekend"
-                      type="number"
-                      className="block w-full max-w-[150px] rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                      value={pointsWeekend}
-                      onChange={e => setPointsWeekend(Math.max(0, Number(e.target.value)))}
-                      min={0}
-                  />
-              </div>
-          </div>
-          <Button onClick={handleSaveConfig} disabled={loading || !selectedProperty}>
-              {loading && successMsg.startsWith('Configur') ? 'Guardando...' : 'Guardar Configuración'}
-          </Button>
-        </CardContent>
-      </Card>
-        
-      {/* Card: Reservas de Intercambio */}
-      <Card className="w-full shadow-sm">
+        {/* Card: Configuración de Precios */}
+        <Card className="w-full shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-700">Reservas de Intercambio</CardTitle>
+            <CardTitle className="text-lg font-semibold text-gray-700">Configuración de Precios de Intercambio</CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Cards en móvil y tablet */}
-            <div className="space-y-4 block lg:hidden">
-              {loading && reservations.length === 0 && selectedProperty && <div className="text-center py-4 text-gray-500">Cargando reservas...</div>}
-              {!loading && reservations.length === 0 && selectedProperty && <div className="text-gray-500 py-4 text-center">No hay reservas para esta propiedad.</div>}
-              {!selectedProperty && <div className="text-gray-500 py-4 text-center">Seleccione una propiedad para ver sus reservas.</div>}
-              {reservations.map(r => (
-                <ExchangeReservationCard
-                  key={r.id}
-                  startDate={r.start_date}
-                  endDate={r.end_date}
-                  points={r.points_used || r.points || 0}
-                  status={r.status}
-                  ownerName={r.profiles ? `${r.profiles.first_name} ${r.profiles.last_name}` : `ID: ${r.owner_id.substring(0,8)}`}
-                  actions={
-                    <div className="flex flex-col sm:flex-row gap-2 mt-3">
-                      {r.status === 'pendiente' && (
-                        <>
-                          <Button size="sm" variant="default" className="w-full sm:w-auto" onClick={() => handleStatusChange(r.id, 'aprobada')} disabled={loading}>Aceptar</Button>
-                          <Button size="sm" variant="destructive" className="w-full sm:w-auto" onClick={() => handleStatusChange(r.id, 'anulada')} disabled={loading}>Anular</Button>
-                        </>
-                      )}
-                      <Button size="sm" variant="outline" className="w-full sm:w-auto text-red-600 border-red-300 hover:bg-red-50" onClick={() => handleDeleteExchangeReservation(r.id)} title="Eliminar reserva" disabled={loading}>
-                        Eliminar
-                      </Button>
-                    </div>
-                  }
-                />
-              ))}
-            </div>
-            
-            {/* Tabla solo en escritorio grande */}
-            <div className="hidden lg:block">
-              {loading && reservations.length === 0 && selectedProperty && <div className="text-center py-6 text-gray-500">Cargando reservas...</div>}
-              {!loading && reservations.length === 0 && selectedProperty && <div className="text-gray-500 py-6 text-center">No hay reservas para esta propiedad.</div>}
-              {!selectedProperty && <div className="text-gray-500 py-6 text-center">Seleccione una propiedad para ver sus reservas.</div>}
-              {reservations.length > 0 && (
-                <div className="overflow-x-auto border border-gray-200 rounded-md">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Propietario</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inicio</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fin</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Puntos</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {reservations.map(r => (
-                        <tr key={r.id} className="hover:bg-gray-50 transition-colors duration-150">
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800 font-medium">
-                            {r.profiles ? `${r.profiles.first_name} ${r.profiles.last_name}` : `ID: ${r.owner_id.substring(0,8)}`}
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{new Date(r.start_date + 'T00:00:00Z').toLocaleDateString()}</td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{new Date(r.end_date + 'T00:00:00Z').toLocaleDateString()}</td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${r.status === 'aprobada' ? 'bg-blue-100 text-blue-800' : r.status === 'pendiente' ? 'bg-yellow-100 text-yellow-800' : r.status === 'anulada' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>
-                              {r.status}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{r.points_used || r.points || 0}</td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm space-x-2">
-                            {r.status === 'pendiente' && (
-                              <>
-                                <Button size="sm" variant="default" onClick={() => handleStatusChange(r.id, 'aprobada')} disabled={loading}>Aceptar</Button>
-                                <Button size="sm" variant="destructive" onClick={() => handleStatusChange(r.id, 'anulada')} disabled={loading}>Anular</Button>
-                              </>
-                            )}
-                            <Button size="sm" variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => handleDeleteExchangeReservation(r.id)} title="Eliminar reserva" disabled={loading}>
-                              Eliminar
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </CardContent>
-      </Card>
-
-      {/* Card: Calendario */}
-      <Card className="w-full shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-700">Calendario de Intercambio</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-4 text-sm text-gray-700">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Propietario para intercambio:</label>
+            <div className="mb-4">
+              <label htmlFor="property-select-config" className="block text-sm font-medium text-gray-700 mb-1">Propiedad:</label>
               <select
-                className="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 mb-2"
-                value={calendarOwnerId}
-                onChange={e => setCalendarOwnerId(e.target.value)}
-                disabled={filteredCalendarOwners.length === 0}
+                id="property-select-config"
+                className="block w-full max-w-md rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                value={selectedProperty}
+                onChange={e => setSelectedProperty(e.target.value)}
+                disabled={properties.length === 0}
               >
-                {filteredCalendarOwners.length === 0 && <option value="">No hay propietarios disponibles</option>}
-                {filteredCalendarOwners.map(o => (
-                  <option key={o.id} value={o.id}>{o.first_name} {o.last_name}</option>
+                {properties.length === 0 && <option value="">No hay propiedades vendidas al 100%</option>}
+                {properties.map(p => (
+                  <option key={p.id} value={p.id}>{p.title}</option>
                 ))}
               </select>
-              Puntos del propietario: <b className="text-gray-900">{calendarOwnerPoints}</b>
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label htmlFor="points-weekday" className="block text-sm font-medium text-gray-700 mb-1">Puntos / día (entre semana):</label>
+                    <input
+                        id="points-weekday"
+                        type="number"
+                        className="block w-full max-w-[150px] rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                        value={pointsWeekday}
+                        onChange={e => setPointsWeekday(Math.max(0, Number(e.target.value)))}
+                        min={0}
+                    />
+                </div>
+                <div>
+                    <label htmlFor="points-weekend" className="block text-sm font-medium text-gray-700 mb-1">Puntos / día (fin de semana):</label>
+                    <input
+                        id="points-weekend"
+                        type="number"
+                        className="block w-full max-w-[150px] rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                        value={pointsWeekend}
+                        onChange={e => setPointsWeekend(Math.max(0, Number(e.target.value)))}
+                        min={0}
+                    />
+                </div>
+            </div>
+            <Button onClick={handleSaveConfig} disabled={loading || !selectedProperty}>
+                {loading && successMsg.startsWith('Configur') ? 'Guardando...' : 'Guardar Configuración'}
+            </Button>
+          </CardContent>
+        </Card>
+          
+        {/* Card: Reservas de Intercambio */}
+        <Card className="w-full shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-gray-700">Reservas de Intercambio</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* Cards en móvil y tablet */}
+              <div className="space-y-4 block lg:hidden">
+                {loading && reservations.length === 0 && selectedProperty && <div className="text-center py-4 text-gray-500">Cargando reservas...</div>}
+                {!loading && reservations.length === 0 && selectedProperty && <div className="text-gray-500 py-4 text-center">No hay reservas para esta propiedad.</div>}
+                {!selectedProperty && <div className="text-gray-500 py-4 text-center">Seleccione una propiedad para ver sus reservas.</div>}
+                {reservations.map(r => (
+                  <ExchangeReservationCard
+                    key={r.id}
+                    startDate={r.start_date}
+                    endDate={r.end_date}
+                    points={r.points_used || r.points || 0}
+                    status={r.status}
+                    ownerName={r.profiles ? `${r.profiles.first_name} ${r.profiles.last_name}` : `ID: ${r.owner_id.substring(0,8)}`}
+                    actions={
+                      <div className="flex flex-col sm:flex-row gap-2 mt-3">
+                        {r.status === 'pendiente' && (
+                          <>
+                            <Button size="sm" variant="default" className="w-full sm:w-auto" onClick={() => handleStatusChange(r.id, 'aprobada')} disabled={loading}>Aceptar</Button>
+                            <Button size="sm" variant="destructive" className="w-full sm:w-auto" onClick={() => handleStatusChange(r.id, 'anulada')} disabled={loading}>Anular</Button>
+                          </>
+                        )}
+                        <Button size="sm" variant="outline" className="w-full sm:w-auto text-red-600 border-red-300 hover:bg-red-50" onClick={() => handleDeleteExchangeReservation(r.id)} title="Eliminar reserva" disabled={loading}>
+                          Eliminar
+                        </Button>
+                      </div>
+                    }
+                  />
+                ))}
+              </div>
+              
+              {/* Tabla solo en escritorio grande */}
+              <div className="hidden lg:block">
+                {loading && reservations.length === 0 && selectedProperty && <div className="text-center py-6 text-gray-500">Cargando reservas...</div>}
+                {!loading && reservations.length === 0 && selectedProperty && <div className="text-gray-500 py-6 text-center">No hay reservas para esta propiedad.</div>}
+                {!selectedProperty && <div className="text-gray-500 py-6 text-center">Seleccione una propiedad para ver sus reservas.</div>}
+                {reservations.length > 0 && (
+                  <div className="overflow-x-auto border border-gray-200 rounded-md">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Propietario</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inicio</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fin</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Puntos</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {reservations.map(r => (
+                          <tr key={r.id} className="hover:bg-gray-50 transition-colors duration-150">
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800 font-medium">
+                              {r.profiles ? `${r.profiles.first_name} ${r.profiles.last_name}` : `ID: ${r.owner_id.substring(0,8)}`}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{new Date(r.start_date + 'T00:00:00Z').toLocaleDateString()}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{new Date(r.end_date + 'T00:00:00Z').toLocaleDateString()}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${r.status === 'aprobada' ? 'bg-blue-100 text-blue-800' : r.status === 'pendiente' ? 'bg-yellow-100 text-yellow-800' : r.status === 'anulada' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>
+                                {r.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{r.points_used || r.points || 0}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm space-x-2">
+                              {r.status === 'pendiente' && (
+                                <>
+                                  <Button size="sm" variant="default" onClick={() => handleStatusChange(r.id, 'aprobada')} disabled={loading}>Aceptar</Button>
+                                  <Button size="sm" variant="destructive" onClick={() => handleStatusChange(r.id, 'anulada')} disabled={loading}>Anular</Button>
+                                </>
+                              )}
+                              <Button size="sm" variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => handleDeleteExchangeReservation(r.id)} title="Eliminar reserva" disabled={loading}>
+                                Eliminar
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+        </Card>
+
+        {/* Card: Calendario */}
+        <Card className="w-full shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-gray-700">Calendario de Intercambio</CardTitle>
+            </CardHeader>
+            <CardContent>
+            <div className="mb-4 text-sm text-gray-700">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Propietario para intercambio:</label>
+                <select
+                className="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 mb-2"
+                  value={calendarOwnerId}
+                  onChange={e => setCalendarOwnerId(e.target.value)}
+                disabled={filteredCalendarOwners.length === 0}
+                >
+                {filteredCalendarOwners.length === 0 && <option value="">No hay propietarios disponibles</option>}
+                {filteredCalendarOwners.map(o => (
+                    <option key={o.id} value={o.id}>{o.first_name} {o.last_name}</option>
+                  ))}
+                </select>
+              Puntos del propietario: <b className="text-gray-900">{calendarOwnerPoints}</b>
+              </div>
             <div className="overflow-auto w-full rounded-md border border-gray-200 p-1 mb-6">
               {selectedProperty ? (
-                <ReservationCalendar
-                  propertyId={selectedProperty}
-                  exchangeMode={true}
-                  pointsConfig={{
-                    points_per_day: pointsWeekend,
-                    points_per_day_weekday: pointsWeekday
-                  }}
-                  onReservationCreated={handleCalendarReservationUpdate} 
+                  <ReservationCalendar
+                    propertyId={selectedProperty}
+                    exchangeMode={true}
+                    pointsConfig={{
+                      points_per_day: pointsWeekend,
+                      points_per_day_weekday: pointsWeekday
+                    }}
+                    onReservationCreated={handleCalendarReservationUpdate} 
                   onSelectSlot={handleSelectSlot}
-                />
-              ) : (
-                <div className="text-gray-500 py-10 text-center text-sm">
+                  />
+                ) : (
+                  <div className="text-gray-500 py-10 text-center text-sm">
                   Seleccione una propiedad para ver el calendario.
-                </div>
-              )}
+                  </div>
+                )}
             </div>
             {/* --- Formulario de reserva manual junto al calendario --- */}
             <div className="mb-4 p-4 bg-indigo-50 rounded-md border border-indigo-200">
@@ -790,51 +790,51 @@ const AdminExchangePanel: React.FC = () => {
                 </DialogContent>
               </Dialog>
             )}
-          </CardContent>
-      </Card>
-      
+            </CardContent>
+        </Card>
+        
 
-      {/* Sección: Gestión de Puntos y Asignación Manual (Acordeón) */}
-      <Accordion type="multiple" className="w-full space-y-1" defaultValue={['puntos_admin']}>
-        <AccordionItem value="puntos_admin" className="border border-gray-200 rounded-md shadow-sm bg-white">
-          <AccordionTrigger className="px-4 py-3 text-md font-semibold text-gray-700 hover:bg-gray-50 rounded-t-md">
-            Gestión de Puntos (Administrativo)
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4 pt-2 border-t border-gray-200">
-              <div className="mb-4">
-                <label htmlFor="admin-owner-select" className="block text-sm font-medium text-gray-700 mb-1">Propietario:</label>
-                <select
-                  id="admin-owner-select"
-                  className="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                  value={adminSelectedOwner}
-                  onChange={e => setAdminSelectedOwner(e.target.value)}
-                  disabled={owners.length === 0}
-                >
-                  {owners.map(o => (
-                    <option key={o.id} value={o.id}>{o.first_name} {o.last_name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="mb-3 text-sm text-gray-700">Puntos actuales (gestión): <b className="text-gray-900">{adminOwnerPoints}</b></div>
-              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mb-3">
-                <div>
-                  <label htmlFor="admin-points-delta" className="block text-sm font-medium text-gray-700 mb-1 whitespace-nowrap">Sumar/Restar Puntos:</label>
-                  <input
-                    id="admin-points-delta"
-                    type="number"
-                    className="block w-full max-w-[120px] rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                    value={adminPointsDelta}
-                    onChange={e => setAdminPointsDelta(Number(e.target.value))}
-                  />
+        {/* Sección: Gestión de Puntos y Asignación Manual (Acordeón) */}
+        <Accordion type="multiple" className="w-full space-y-1" defaultValue={['puntos_admin']}>
+          <AccordionItem value="puntos_admin" className="border border-gray-200 rounded-md shadow-sm bg-white">
+            <AccordionTrigger className="px-4 py-3 text-md font-semibold text-gray-700 hover:bg-gray-50 rounded-t-md">
+              Gestión de Puntos (Administrativo)
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4 pt-2 border-t border-gray-200">
+                <div className="mb-4">
+                  <label htmlFor="admin-owner-select" className="block text-sm font-medium text-gray-700 mb-1">Propietario:</label>
+                  <select
+                    id="admin-owner-select"
+                    className="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                    value={adminSelectedOwner}
+                    onChange={e => setAdminSelectedOwner(e.target.value)}
+                    disabled={owners.length === 0}
+                  >
+                    {owners.map(o => (
+                      <option key={o.id} value={o.id}>{o.first_name} {o.last_name}</option>
+                    ))}
+                  </select>
                 </div>
-                <Button size="sm" onClick={handleUpdateAdminOwnerPoints} disabled={loading || !adminSelectedOwner} className="mt-4 sm:mt-0 self-start sm:self-center">
-                  {loading && adminPointsMsg.startsWith('Puntos') ? 'Actualizando...' : 'Actualizar Puntos'}
-                </Button>
-              </div>
-              {adminPointsMsg && <div className="mt-2 text-sm text-green-600 font-medium">{adminPointsMsg.split(' ')[0]} {adminPointsMsg.split(' ')[1]}</div>}
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+                <div className="mb-3 text-sm text-gray-700">Puntos actuales (gestión): <b className="text-gray-900">{adminOwnerPoints}</b></div>
+                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mb-3">
+                  <div>
+                    <label htmlFor="admin-points-delta" className="block text-sm font-medium text-gray-700 mb-1 whitespace-nowrap">Sumar/Restar Puntos:</label>
+                    <input
+                      id="admin-points-delta"
+                      type="number"
+                      className="block w-full max-w-[120px] rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                      value={adminPointsDelta}
+                      onChange={e => setAdminPointsDelta(Number(e.target.value))}
+                    />
+                  </div>
+                  <Button size="sm" onClick={handleUpdateAdminOwnerPoints} disabled={loading || !adminSelectedOwner} className="mt-4 sm:mt-0 self-start sm:self-center">
+                    {loading && adminPointsMsg.startsWith('Puntos') ? 'Actualizando...' : 'Actualizar Puntos'}
+                  </Button>
+                </div>
+                {adminPointsMsg && <div className="mt-2 text-sm text-green-600 font-medium">{adminPointsMsg.split(' ')[0]} {adminPointsMsg.split(' ')[1]}</div>}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
     </div>
   );

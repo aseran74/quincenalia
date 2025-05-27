@@ -408,7 +408,7 @@ const HomePage = () => {
   console.log('viviendasPorZona:', viviendasPorZona);
 
   return (
-    <div className="min-h-screen bg-background font-poppins">
+    <div className="min-h-screen bg-quincenalia-bg font-poppins">
       <Navbar />
       <section className="relative h-[85vh] sm:h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
@@ -510,7 +510,7 @@ const HomePage = () => {
             <Button
               variant="outline"
               size="icon"
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 sm:-translate-x-6 z-10 rounded-full bg-white/80 hover:bg-white shadow-md backdrop-blur-sm block md:hidden"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 sm:-translate-x-6 z-10 rounded-full bg-white/80 hover:bg-white shadow-md backdrop-blur-sm"
               onClick={() => scrollZonaCarrusel('left')}
               aria-label="Scroll Left"
             >
@@ -519,7 +519,7 @@ const HomePage = () => {
             <div className="px-2 py-6">
               <div
                 ref={scrollContainerRef}
-                className="flex lg:hidden space-x-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+                className="flex space-x-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
               >
                 {zonasUnicas.map((zona, index) => {
                   // Buscar el contador usando la zona normalizada
@@ -531,9 +531,9 @@ const HomePage = () => {
                     <Link
                       to={`/properties?zona=${encodeURIComponent(zona)}`}
                       key={index}
-                      className="flex-shrink-0 w-[80vw] max-w-xs h-48 sm:h-56 group/card-link flex items-center justify-center snap-center px-2"
+                      className="flex-shrink-0 w-[80vw] max-w-xs sm:max-w-sm lg:max-w-[240px] h-48 sm:h-56 lg:h-56 group/card-link flex items-center justify-center snap-center px-2"
                     >
-                      <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-full h-48 sm:h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
+                      <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-full h-48 sm:h-56 lg:h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
                         <div className="relative w-full h-full flex items-center justify-center">
                           <img
                             src={getZonaImage(zona)}
@@ -556,75 +556,11 @@ const HomePage = () => {
                   );
                 })}
               </div>
-              <div className="hidden lg:flex flex-col items-center gap-10">
-                <div className="flex flex-row flex-wrap justify-center gap-8 mb-8">
-                  {zonasUnicas.slice(0, 5).map((zona, index) => {
-                    const zonaKey = Object.keys(viviendasPorZona).find(
-                      key => normalizaZona(key) === normalizaZona(zona)
-                    );
-                    const countZonaTop = getFakeCount(zona);
-                    return (
-                      <Link to={`/properties?zona=${encodeURIComponent(zona)}`} key={index} className="w-56 h-56 group/card-link flex items-center justify-center">
-                        <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-56 h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
-                          <div className="relative w-full h-full flex items-center justify-center">
-                            <img
-                              src={getZonaImage(zona)}
-                              alt={`Propiedades en ${zona}`}
-                              className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-full"
-                              onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-80 group-hover/card:opacity-100 transition-opacity duration-300 rounded-full"></div>
-                            <div className="absolute bottom-6 left-0 right-0 px-4 text-center">
-                              <h3 className="text-xl font-bold text-white truncate" title={zona}>
-                                {zona}
-                              </h3>
-                              <p className="text-sm text-gray-100 mt-1">
-                                {countZonaTop} {countZonaTop === 1 ? 'vivienda' : 'viviendas'}
-                              </p>
-                            </div>
-                          </div>
-                        </Card>
-                      </Link>
-                    );
-                  })}
-                </div>
-                <div className="flex flex-row flex-wrap justify-center gap-8">
-                  {zonasUnicas.slice(5, 10).map((zona, index) => {
-                    const zonaKey = Object.keys(viviendasPorZona).find(
-                      key => normalizaZona(key) === normalizaZona(zona)
-                    );
-                    const countZonaRest = getFakeCount(zona);
-                    return (
-                      <Link to={`/properties?zona=${encodeURIComponent(zona)}`} key={index+5} className="w-56 h-56 group/card-link flex items-center justify-center">
-                        <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-56 h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
-                          <div className="relative w-full h-full flex items-center justify-center">
-                            <img
-                              src={getZonaImage(zona)}
-                              alt={`Propiedades en ${zona}`}
-                              className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-full"
-                              onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-80 group-hover/card:opacity-100 transition-opacity duration-300 rounded-full"></div>
-                            <div className="absolute bottom-6 left-0 right-0 px-4 text-center">
-                              <h3 className="text-xl font-bold text-white truncate" title={zona}>
-                                {zona}
-                              </h3>
-                              <p className="text-sm text-gray-100 mt-1">
-                                {countZonaRest} {countZonaRest === 1 ? 'vivienda' : 'viviendas'}
-                              </p>
-                            </div>
-                          </div>
-                        </Card>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
             </div>
             <Button
               variant="outline"
               size="icon"
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 sm:translate-x-6 z-10 rounded-full bg-white/80 hover:bg-white shadow-md backdrop-blur-sm block md:hidden"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 sm:translate-x-6 z-10 rounded-full bg-white/80 hover:bg-white shadow-md backdrop-blur-sm"
               onClick={() => scrollZonaCarrusel('right')}
               aria-label="Scroll Right"
             >
