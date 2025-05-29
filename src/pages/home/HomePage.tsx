@@ -450,12 +450,12 @@ const HomePage = () => {
             Accede a propiedades exclusivas por una fracción del coste. Disfruta, rentabiliza e intercambia.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full mb-2">
-            <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-3 text-base font-semibold shadow-lg transform transition hover:scale-105" asChild>
-              <Link to="/propiedades">
-                Explorar Propiedades
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
+          <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-3 text-base font-semibold shadow-lg transform transition hover:scale-105" asChild>
+            <Link to="/propiedades">
+              Explorar Propiedades
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
             <Button size="lg" variant="outline" className="rounded-full px-8 py-3 text-base font-semibold shadow-lg border-white/70 text-primary hover:bg-white/10 hover:text-primary transition" onClick={() => {
               const seccion = document.getElementById('reinventada');
               if (seccion) seccion.scrollIntoView({ behavior: 'smooth' });
@@ -466,7 +466,7 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-      <section id="zonas-destacadas" className="py-16 sm:py-20 bg-white">
+      <section id="zonas-destacadas" className="py-12 sm:py-16 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl sm:text-4xl font-bold text-center mb-3 text-gray-800">
             Explora por{' '}
@@ -569,7 +569,7 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-      <section className="py-16 sm:py-20">
+      <section className="py-12 sm:py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl sm:text-4xl font-bold text-center mb-10 sm:mb-12 text-gray-800">
             Oportunidades{' '}

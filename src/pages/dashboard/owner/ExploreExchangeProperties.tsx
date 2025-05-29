@@ -103,18 +103,18 @@ const ExploreExchangeProperties: React.FC = () => {
       console.log('Fetching properties...');
 
       try {
-        // Traer todas las propiedades
-        const { data: propsData, error: propsError } = await supabase
-          .from('properties')
+      // Traer todas las propiedades
+      const { data: propsData, error: propsError } = await supabase
+        .from('properties')
           .select('*'); // Seleccionar todas las columnas de la tabla properties
 
-        if (propsError) {
+      if (propsError) {
           console.error('Error al cargar propiedades:', propsError);
-          setProperties([]);
-          setFilteredProperties([]);
-          setLoading(false);
-          return;
-        }
+        setProperties([]);
+        setFilteredProperties([]);
+        setLoading(false);
+        return;
+      }
         
         const allProperties = propsData || [];
         console.log(`Total properties fetched: ${allProperties.length}`);
@@ -145,33 +145,33 @@ const ExploreExchangeProperties: React.FC = () => {
         setPropertyImageIndexes(initialIndexes);
 
         // Cargar reservas y exchange config solo para las propiedades filtradas
-        const reservasObj: Record<string, Reservation[]> = {};
-        const configsObj: Record<string, any> = {};
+      const reservasObj: Record<string, Reservation[]> = {};
+      const configsObj: Record<string, any> = {};
         for (const prop of notOwnedByMeFullySold) { 
-          const { data: resNorm } = await supabase
-            .from('property_reservations')
-            .select('*')
-            .eq('property_id', prop.id);
-          const { data: resEx } = await supabase
-            .from('exchange_reservations')
-            .select('*')
-            .eq('property_id', prop.id);
-          reservasObj[prop.id] = [
-            ...(resNorm || []),
-            ...((resEx || []).map(r => ({ ...r, isExchange: true })))
-          ];
-          // Configuración de puntos
-          const { data: configData } = await supabase
-            .from('exchange_properties')
-            .select('*')
-            .eq('property_id', prop.id)
-            .eq('active', true)
-            .single();
-          configsObj[prop.id] = configData;
-        }
-        setReservas(reservasObj);
-        setExchangeConfigs(configsObj);
-        setLoading(false);
+        const { data: resNorm } = await supabase
+          .from('property_reservations')
+          .select('*')
+          .eq('property_id', prop.id);
+        const { data: resEx } = await supabase
+          .from('exchange_reservations')
+          .select('*')
+          .eq('property_id', prop.id);
+        reservasObj[prop.id] = [
+          ...(resNorm || []),
+          ...((resEx || []).map(r => ({ ...r, isExchange: true })))
+        ];
+        // Configuración de puntos
+        const { data: configData } = await supabase
+          .from('exchange_properties')
+          .select('*')
+          .eq('property_id', prop.id)
+          .eq('active', true)
+          .single();
+        configsObj[prop.id] = configData;
+      }
+      setReservas(reservasObj);
+      setExchangeConfigs(configsObj);
+      setLoading(false);
       } catch (error) {
         console.error('Error al cargar propiedades:', error);
         setProperties([]);
@@ -270,43 +270,43 @@ const ExploreExchangeProperties: React.FC = () => {
                 <CalendarIcon className="h-4 w-4 text-indigo-500" />
                 Fechas de intercambio
               </label>
-              <Popover>
-                <PopoverTrigger asChild>
+          <Popover>
+            <PopoverTrigger asChild>
                   <Button 
                     variant="outline" 
                     className="w-full justify-start text-left font-normal h-11 bg-white/50 hover:bg-white/80 border-gray-200"
                   >
-                    {dateRange?.from ?
-                      dateRange.to
-                        ? `${format(dateRange.from, 'dd/MM/yyyy')} - ${format(dateRange.to, 'dd/MM/yyyy')}`
-                        : format(dateRange.from, 'dd/MM/yyyy')
+                {dateRange?.from ?
+                  dateRange.to
+                    ? `${format(dateRange.from, 'dd/MM/yyyy')} - ${format(dateRange.to, 'dd/MM/yyyy')}`
+                    : format(dateRange.from, 'dd/MM/yyyy')
                       : <span className="text-gray-500">Selecciona fechas</span>
-                    }
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="w-auto p-0">
-                  <DayPicker
-                    mode="range"
-                    selected={dateRange}
-                    onSelect={setDateRange}
+                }
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-auto p-0">
+              <DayPicker
+                mode="range"
+                selected={dateRange}
+                onSelect={setDateRange}
                     numberOfMonths={isMobile ? 1 : 2}
-                    locale={es}
+                locale={es}
                     className="rounded-md border"
-                  />
-                  {(dateRange?.from || dateRange?.to) && (
+              />
+              {(dateRange?.from || dateRange?.to) && (
                     <div className="px-4 py-3 border-t bg-gray-50">
                       <Button 
                         variant="ghost" 
                         className="w-full text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50" 
                         onClick={() => setDateRange(undefined)}
                       >
-                        Limpiar fechas
-                      </Button>
-                    </div>
-                  )}
-                </PopoverContent>
-              </Popover>
-            </div>
+                    Limpiar fechas
+                  </Button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+        </div>
 
             {/* Filtro Guest Points mejorado */}
             <div className="space-y-2">
@@ -315,27 +315,27 @@ const ExploreExchangeProperties: React.FC = () => {
                 Guest Points por día
               </label>
               <div className="flex gap-2 items-center">
-                <select
-                  value={minPoints}
-                  onChange={e => setMinPoints(e.target.value)}
+            <select
+              value={minPoints}
+              onChange={e => setMinPoints(e.target.value)}
                   className="flex-1 h-11 border border-gray-200 rounded-lg px-3 text-sm bg-white/50 hover:bg-white/80 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                >
-                  {Array.from({ length: 17 }, (_, i) => 40 + i * 10).map(val => (
-                    <option key={val} value={val}>{val}</option>
-                  ))}
-                </select>
+            >
+              {Array.from({ length: 17 }, (_, i) => 40 + i * 10).map(val => (
+                <option key={val} value={val}>{val}</option>
+              ))}
+            </select>
                 <span className="text-gray-400 text-sm font-medium">a</span>
-                <select
-                  value={maxPoints}
-                  onChange={e => setMaxPoints(e.target.value)}
+            <select
+              value={maxPoints}
+              onChange={e => setMaxPoints(e.target.value)}
                   className="flex-1 h-11 border border-gray-200 rounded-lg px-3 text-sm bg-white/50 hover:bg-white/80 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                >
-                  {Array.from({ length: 17 }, (_, i) => 40 + i * 10).map(val => (
-                    <option key={val} value={val}>{val}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            >
+              {Array.from({ length: 17 }, (_, i) => 40 + i * 10).map(val => (
+                <option key={val} value={val}>{val}</option>
+              ))}
+            </select>
+          </div>
+        </div>
 
             {/* Filtro habitaciones mejorado */}
             <div className="space-y-2">
@@ -343,17 +343,17 @@ const ExploreExchangeProperties: React.FC = () => {
                 <Bed className="h-4 w-4 text-purple-500" />
                 Habitaciones mín.
               </label>
-              <select
-                value={bedrooms}
-                onChange={e => setBedrooms(e.target.value)}
+          <select
+            value={bedrooms}
+            onChange={e => setBedrooms(e.target.value)}
                 className="w-full h-11 border border-gray-200 rounded-lg px-3 text-sm bg-white/50 hover:bg-white/80 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              >
-                <option value="">Todas</option>
+          >
+            <option value="">Todas</option>
                 {[1, 2, 3, 4, 5].map(num => (
                   <option key={num} value={num}>{num}+ habitaciones</option>
                 ))}
-              </select>
-            </div>
+          </select>
+        </div>
 
             {/* Filtro baños mejorado */}
             <div className="space-y-2">
@@ -361,22 +361,22 @@ const ExploreExchangeProperties: React.FC = () => {
                 <Bath className="h-4 w-4 text-blue-500" />
                 Baños mín.
               </label>
-              <select
-                value={bathrooms}
-                onChange={e => setBathrooms(e.target.value)}
+          <select
+            value={bathrooms}
+            onChange={e => setBathrooms(e.target.value)}
                 className="w-full h-11 border border-gray-200 rounded-lg px-3 text-sm bg-white/50 hover:bg-white/80 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              >
-                <option value="">Todos</option>
+          >
+            <option value="">Todos</option>
                 {[1, 2, 3, 4, 5].map(num => (
                   <option key={num} value={num}>{num}+ baños</option>
                 ))}
-              </select>
-            </div>
-          </div>
+          </select>
+        </div>
+      </div>
         </div>
 
         {/* Contenido principal */}
-        {loading ? (
+      {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
@@ -384,7 +384,7 @@ const ExploreExchangeProperties: React.FC = () => {
               <p className="text-gray-400 text-sm mt-1">Esto solo tomará un momento</p>
             </div>
           </div>
-        ) : filteredProperties.length === 0 ? (
+      ) : filteredProperties.length === 0 ? (
           <div className="text-center py-20">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 max-w-md mx-auto">
               <div className="text-6xl mb-4">🏠</div>
@@ -448,14 +448,14 @@ const ExploreExchangeProperties: React.FC = () => {
                             >
                               <ArrowRight className="h-6 w-6" />
                             </Button>
-                          )}
-                        </div>
+                )}
+              </div>
                       </>
                     ) : (
                       <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-100 to-gray-200">
                         <Home className="h-16 w-16 text-gray-400" />
-                      </div>
-                    )}
+                    </div>
+                  )}
 
                     {/* Badge de puntos */}
                     <div className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
@@ -466,8 +466,8 @@ const ExploreExchangeProperties: React.FC = () => {
                     {prop.zona && (
                       <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-gray-800 px-3 py-1 rounded-full text-sm font-medium shadow-lg">
                         {prop.zona}
-                      </div>
-                    )}
+                    </div>
+                  )}
                   </div>
 
                   <CardContent className="p-6">
@@ -524,16 +524,16 @@ const ExploreExchangeProperties: React.FC = () => {
                           <div className="text-xs text-gray-500">Tipo</div>
                           <div className="font-semibold text-xs">{prop.property_type || '—'}</div>
                         </div>
-                      </div>
-                    </div>
+                  </div>
+                </div>
 
                     {/* Botones de acción mejorados */}
                     <div className="space-y-3">
-                      <Button
-                        variant="outline"
+                <Button
+                  variant="outline"
                         className="w-full border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300 transition-all duration-200"
-                        onClick={() => setOpenCalendar(openCalendar === prop.id ? null : prop.id)}
-                      >
+                  onClick={() => setOpenCalendar(openCalendar === prop.id ? null : prop.id)}
+                >
                         {openCalendar === prop.id ? (
                           <>
                             <EyeOff className="h-4 w-4 mr-2" />
@@ -554,11 +554,11 @@ const ExploreExchangeProperties: React.FC = () => {
                       >
                         <Sparkles className="h-4 w-4 mr-2" />
                         Solicitar intercambio
-                      </Button>
+                </Button>
                     </div>
 
                     {/* Calendario mejorado */}
-                    {openCalendar === prop.id && (
+                {openCalendar === prop.id && (
                       <div className="mt-6 pt-6 border-t border-gray-100">
                         <div className="flex items-center gap-2 mb-4">
                           <CalendarIcon className="h-4 w-4 text-indigo-600" />
@@ -566,49 +566,49 @@ const ExploreExchangeProperties: React.FC = () => {
                         </div>
                         
                         <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
-                          <Calendar
-                            localizer={localizer}
-                            events={(reservas[prop.id] || []).map(r => ({
-                              title: r.isExchange ? 'Intercambio' : 'Reserva',
-                              start: new Date(r.start_date + 'T00:00:00Z'),
-                              end: new Date(r.end_date + 'T00:00:00Z'),
-                              allDay: true,
-                              resource: r
-                            }))}
-                            startAccessor="start"
-                            endAccessor="end"
-                            views={['month']}
-                            defaultView="month"
-                            defaultDate={defaultDate}
-                            min={defaultDate}
-                            max={maxDate}
+                    <Calendar
+                      localizer={localizer}
+                      events={(reservas[prop.id] || []).map(r => ({
+                        title: r.isExchange ? 'Intercambio' : 'Reserva',
+                        start: new Date(r.start_date + 'T00:00:00Z'),
+                        end: new Date(r.end_date + 'T00:00:00Z'),
+                        allDay: true,
+                        resource: r
+                      }))}
+                      startAccessor="start"
+                      endAccessor="end"
+                      views={['month']}
+                      defaultView="month"
+                      defaultDate={defaultDate}
+                      min={defaultDate}
+                      max={maxDate}
                             style={{ height: 320 }}
-                            eventPropGetter={event => ({
-                              style: {
+                      eventPropGetter={event => ({
+                        style: {
                                 backgroundColor: event.resource.isExchange ? '#6366f1' : '#f59e0b',
                                 color: 'white',
                                 borderRadius: '6px',
-                                border: 'none',
+                          border: 'none',
                                 fontSize: '12px',
                                 fontWeight: '500'
-                              }
-                            })}
-                            messages={{
-                              month: 'Mes',
-                              week: 'Semana',
-                              day: 'Día',
-                              agenda: 'Agenda',
-                              date: 'Fecha',
-                              time: 'Hora',
-                              event: 'Evento',
-                              today: 'Hoy',
+                        }
+                      })}
+                      messages={{
+                        month: 'Mes',
+                        week: 'Semana',
+                        day: 'Día',
+                        agenda: 'Agenda',
+                        date: 'Fecha',
+                        time: 'Hora',
+                        event: 'Evento',
+                        today: 'Hoy',
                               previous: '‹',
                               next: '›',
                               noEventsInRange: 'Disponible todo el mes 🎉',
-                              showMore: total => `+${total} más`,
-                            }}
-                            culture='es'
-                          />
+                        showMore: total => `+${total} más`,
+                      }}
+                      culture='es'
+                    />
                         </div>
                         
                         {/* Leyenda del calendario */}
@@ -622,17 +622,17 @@ const ExploreExchangeProperties: React.FC = () => {
                             <span className="text-gray-600">Reservas</span>
                           </div>
                         </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
               );
             })}
-          </div>
-        )}
+        </div>
+      )}
       </div>
     </div>
   );
 };
 
-export default ExploreExchangeProperties;
+export default ExploreExchangeProperties; 

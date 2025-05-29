@@ -221,7 +221,10 @@ export const PropertiesPage = () => {
         matchesObraNueva = property.features && property.features.includes('Obra nueva');
       }
       
-      return matchesBedrooms && matchesBathrooms && matchesType && matchesFeatures && matchesLocation && matchesZona && matchesQuincena && matchesObraNueva;
+      // --- FILTRO: Excluir propiedades "vendida" ---
+      const isSold = property.status === 'vendida';
+
+      return matchesBedrooms && matchesBathrooms && matchesType && matchesFeatures && matchesLocation && matchesZona && matchesQuincena && matchesObraNueva && !isSold;
     });
   };
 
