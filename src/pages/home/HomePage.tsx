@@ -506,7 +506,8 @@ const HomePage = () => {
               </Link>
             </Button>
           </div>
-          <div className="relative">
+          {/* Vista móvil: Carrusel horizontal */}
+          <div className="relative block md:hidden">
             <Button
               variant="outline"
               size="icon"
@@ -566,6 +567,46 @@ const HomePage = () => {
             >
               <ChevronRight className="h-8 w-8" />
             </Button>
+          </div>
+
+          {/* Vista PC: Grid de 6x2 cards */}
+          <div className="hidden md:block">
+            <div className="grid grid-cols-6 gap-4 px-4 max-w-7xl mx-auto">
+              {zonasUnicas.map((zona, index) => {
+                // Buscar el contador usando la zona normalizada
+                const zonaKey = Object.keys(viviendasPorZona).find(
+                  key => normalizaZona(key) === normalizaZona(zona)
+                );
+                const countZona = getFakeCount(zona);
+                return (
+                  <Link
+                    to={`/properties?zona=${encodeURIComponent(zona)}`}
+                    key={index}
+                    className="group/card-link block"
+                  >
+                    <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-2 hover:scale-105 rounded-2xl group/card bg-white relative h-32 border-2 border-primary/20 hover:border-primary/40">
+                      <div className="relative w-full h-full">
+                        <img
+                          src={getZonaImage(zona)}
+                          alt={`Propiedades en ${zona}`}
+                          className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-2xl"
+                          onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-90 group-hover/card:opacity-95 transition-opacity duration-300 rounded-2xl"></div>
+                        <div className="absolute bottom-2 left-0 right-0 px-3 text-center">
+                          <h3 className="text-sm font-bold text-white truncate" title={zona}>
+                            {zona}
+                          </h3>
+                          <p className="text-xs text-gray-200 mt-0.5">
+                            {countZona} {countZona === 1 ? 'vivienda' : 'viviendas'}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
