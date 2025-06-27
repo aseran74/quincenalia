@@ -406,16 +406,24 @@ const HomePage = () => {
           <Carousel className="w-full h-full">
             <CarouselContent className="h-full">
               <CarouselItem className="h-full">
-                <img src="/hero.jpg" alt="Hero 1" className="w-full h-full object-cover object-center" />
+                <div className="w-full h-full bg-black flex items-center justify-center">
+                  <img src="/hero.jpg" alt="Hero 1" className="w-full h-full object-contain sm:object-cover object-center transition-all duration-500" style={{backgroundColor:'#111'}} />
+                </div>
               </CarouselItem>
               <CarouselItem className="h-full">
-                <img src="/hero3.jpg" alt="Hero 2" className="w-full h-full object-cover object-center" />
+                <div className="w-full h-full bg-black flex items-center justify-center">
+                  <img src="/hero3.jpg" alt="Hero 2" className="w-full h-full object-contain sm:object-cover object-center transition-all duration-500" style={{backgroundColor:'#111'}} />
+                </div>
               </CarouselItem>
               <CarouselItem className="h-full">
-                <img src="/hero5.jpg" alt="Hero 3" className="w-full h-full object-cover object-center" />
+                <div className="w-full h-full bg-black flex items-center justify-center">
+                  <img src="/hero5.jpg" alt="Hero 3" className="w-full h-full object-contain sm:object-cover object-center transition-all duration-500" style={{backgroundColor:'#111'}} />
+                </div>
               </CarouselItem>
               <CarouselItem className="h-full">
-                <img src="/hero6.jpg" alt="Hero 4" className="w-full h-full object-cover object-center" />
+                <div className="w-full h-full bg-black flex items-center justify-center">
+                  <img src="/hero6.jpg" alt="Hero 4" className="w-full h-full object-contain sm:object-cover object-center transition-all duration-500" style={{backgroundColor:'#111'}} />
+                </div>
               </CarouselItem>
             </CarouselContent>
             <CarouselPrevious className="left-4 top-1/2 -translate-y-1/2 z-10" />
