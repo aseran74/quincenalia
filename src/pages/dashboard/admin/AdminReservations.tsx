@@ -448,7 +448,7 @@ const AdminReservations: React.FC = () => {
       {/* Modal para crear nueva reserva */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto transition-opacity duration-300 ease-out">
-          <div className="bg-white p-5 md:p-6 rounded-lg shadow-xl w-full max-w-lg max-h-[95vh] overflow-y-auto transform transition-all duration-300 ease-out scale-95 opacity-0 animate-fade-in-scale relative">
+          <div className="bg-white p-5 md:p-6 rounded-lg shadow-xl w-full max-w-lg max-h-[95vh] overflow-y-auto transform transition-all duration-300 ease-out relative">
             <button
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
               onClick={() => !creatingOrUpdating && setShowCreateModal(false)}
