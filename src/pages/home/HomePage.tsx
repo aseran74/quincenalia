@@ -404,18 +404,18 @@ const HomePage = () => {
       <section className="relative h-[85vh] sm:h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Carousel className="w-full h-full">
-            <CarouselContent>
-              <CarouselItem>
-                <img src="/hero.jpg" alt="Hero 1" className="w-full h-full object-cover" />
+            <CarouselContent className="h-full">
+              <CarouselItem className="h-full">
+                <img src="/hero.jpg" alt="Hero 1" className="w-full h-full object-cover object-center" />
               </CarouselItem>
-              <CarouselItem>
-                <img src="/hero3.jpg" alt="Hero 2" className="w-full h-full object-cover" />
+              <CarouselItem className="h-full">
+                <img src="/hero3.jpg" alt="Hero 2" className="w-full h-full object-cover object-center" />
               </CarouselItem>
-              <CarouselItem>
-                <img src="/hero5.jpg" alt="Hero 3" className="w-full h-full object-cover" />
+              <CarouselItem className="h-full">
+                <img src="/hero5.jpg" alt="Hero 3" className="w-full h-full object-cover object-center" />
               </CarouselItem>
-              <CarouselItem>
-                <img src="/hero6.jpg" alt="Hero 4" className="w-full h-full object-cover" />
+              <CarouselItem className="h-full">
+                <img src="/hero6.jpg" alt="Hero 4" className="w-full h-full object-cover object-center" />
               </CarouselItem>
             </CarouselContent>
             <CarouselPrevious className="left-4 top-1/2 -translate-y-1/2 z-10" />
