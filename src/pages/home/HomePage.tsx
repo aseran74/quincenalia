@@ -407,22 +407,22 @@ const HomePage = () => {
             <CarouselContent className="h-full">
               <CarouselItem className="h-full">
                 <div className="w-full h-full bg-black flex items-center justify-center">
-                  <img src="/hero.jpg" alt="Hero 1" className="w-full h-full object-contain sm:object-cover object-center transition-all duration-500" style={{backgroundColor:'#111'}} />
+                  <img src="/hero.jpg" alt="Hero 1" className="w-full h-full object-contain object-center transition-all duration-500" style={{backgroundColor:'#111'}} />
                 </div>
               </CarouselItem>
               <CarouselItem className="h-full">
                 <div className="w-full h-full bg-black flex items-center justify-center">
-                  <img src="/hero3.jpg" alt="Hero 2" className="w-full h-full object-contain sm:object-cover object-center transition-all duration-500" style={{backgroundColor:'#111'}} />
+                  <img src="/hero3.jpg" alt="Hero 2" className="w-full h-full object-contain object-center transition-all duration-500" style={{backgroundColor:'#111'}} />
                 </div>
               </CarouselItem>
               <CarouselItem className="h-full">
                 <div className="w-full h-full bg-black flex items-center justify-center">
-                  <img src="/hero5.jpg" alt="Hero 3" className="w-full h-full object-contain sm:object-cover object-center transition-all duration-500" style={{backgroundColor:'#111'}} />
+                  <img src="/hero5.jpg" alt="Hero 3" className="w-full h-full object-contain object-center transition-all duration-500" style={{backgroundColor:'#111'}} />
                 </div>
               </CarouselItem>
               <CarouselItem className="h-full">
                 <div className="w-full h-full bg-black flex items-center justify-center">
-                  <img src="/hero6.jpg" alt="Hero 4" className="w-full h-full object-contain sm:object-cover object-center transition-all duration-500" style={{backgroundColor:'#111'}} />
+                  <img src="/hero6.jpg" alt="Hero 4" className="w-full h-full object-contain object-center transition-all duration-500" style={{backgroundColor:'#111'}} />
                 </div>
               </CarouselItem>
             </CarouselContent>
