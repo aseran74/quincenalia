@@ -17,6 +17,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import ContactForm from '@/components/ContactForm';
 import './HomePage.css'; // Asegúrate de que este archivo exista y no cause conflictos
 import { supabase } from '@/lib/supabase';
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
 
 const FAQS = [
   {
@@ -282,16 +283,6 @@ function ComoFunciona() {
   );
 }
 
-const HeroParallax = () => {
-  return (
-    <img
-      src="/hero.jpg"
-      alt="Villa vacacional de lujo con piscina y vistas al mar"
-      className="w-full h-full object-cover hero-image" // Asegúrate que .hero-image tiene los estilos CSS para el efecto
-    />
-  );
-};
-
 const IMAGENES_ZONA: Record<string, string> = {
   'Costa de levante.': '/Levante.webp',
   'Canarias.': '/Canarias.webp',
@@ -412,7 +403,24 @@ const HomePage = () => {
       <Navbar />
       <section className="relative h-[85vh] sm:h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <HeroParallax />
+          <Carousel className="w-full h-full">
+            <CarouselContent>
+              <CarouselItem>
+                <img src="/hero.jpg" alt="Hero 1" className="w-full h-full object-cover" />
+              </CarouselItem>
+              <CarouselItem>
+                <img src="/hero3.jpg" alt="Hero 2" className="w-full h-full object-cover" />
+              </CarouselItem>
+              <CarouselItem>
+                <img src="/hero5.jpg" alt="Hero 3" className="w-full h-full object-cover" />
+              </CarouselItem>
+              <CarouselItem>
+                <img src="/hero6.jpg" alt="Hero 4" className="w-full h-full object-cover" />
+              </CarouselItem>
+            </CarouselContent>
+            <CarouselPrevious className="left-4 top-1/2 -translate-y-1/2 z-10" />
+            <CarouselNext className="right-4 top-1/2 -translate-y-1/2 z-10" />
+          </Carousel>
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
         </div>
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
