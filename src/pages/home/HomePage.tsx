@@ -336,6 +336,7 @@ const HeroAutoSlider = () => {
   return (
     <div className="absolute inset-0 z-0 w-full h-full">
       <img
+        key={index}
         src={images[index]}
         alt="Hero slide"
         className="w-full h-full object-cover transition-opacity duration-1000 animate-hero-zoom"
