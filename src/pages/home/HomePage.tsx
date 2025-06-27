@@ -338,7 +338,7 @@ const HeroAutoSlider = () => {
       <img
         src={images[index]}
         alt="Hero slide"
-        className="w-full h-full object-cover transition-opacity duration-1000"
+        className="w-full h-full object-cover transition-opacity duration-1000 animate-hero-zoom"
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
