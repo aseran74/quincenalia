@@ -17,7 +17,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import ContactForm from '@/components/ContactForm';
 import './HomePage.css'; // Asegúrate de que este archivo exista y no cause conflictos
 import { supabase } from '@/lib/supabase';
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
 
 const FAQS = [
   {
@@ -323,6 +322,16 @@ function getFakeCount(zona: string) {
   return num;
 }
 
+const HeroParallax = () => {
+  return (
+    <img
+      src="/hero.jpg"
+      alt="Villa vacacional de lujo con piscina y vistas al mar"
+      className="w-full h-full object-cover hero-image"
+    />
+  );
+};
+
 const HomePage = () => {
   const [viviendasPorZona, setViviendasPorZona] = useState<{ [key: string]: number }>({});
   const [zonasUnicas, setZonasUnicas] = useState<string[]>([]);
@@ -403,32 +412,7 @@ const HomePage = () => {
       <Navbar />
       <section className="relative h-[85vh] sm:h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <Carousel className="w-full h-full">
-            <CarouselContent className="h-full">
-              <CarouselItem className="h-full">
-                <div className="w-full h-full bg-black flex items-center justify-center">
-                  <img src="/hero.jpg" alt="Hero 1" className="w-full h-full object-contain object-center transition-all duration-500" style={{backgroundColor:'#111'}} />
-                </div>
-              </CarouselItem>
-              <CarouselItem className="h-full">
-                <div className="w-full h-full bg-black flex items-center justify-center">
-                  <img src="/hero3.jpg" alt="Hero 2" className="w-full h-full object-contain object-center transition-all duration-500" style={{backgroundColor:'#111'}} />
-                </div>
-              </CarouselItem>
-              <CarouselItem className="h-full">
-                <div className="w-full h-full bg-black flex items-center justify-center">
-                  <img src="/hero5.jpg" alt="Hero 3" className="w-full h-full object-contain object-center transition-all duration-500" style={{backgroundColor:'#111'}} />
-                </div>
-              </CarouselItem>
-              <CarouselItem className="h-full">
-                <div className="w-full h-full bg-black flex items-center justify-center">
-                  <img src="/hero6.jpg" alt="Hero 4" className="w-full h-full object-contain object-center transition-all duration-500" style={{backgroundColor:'#111'}} />
-                </div>
-              </CarouselItem>
-            </CarouselContent>
-            <CarouselPrevious className="left-4 top-1/2 -translate-y-1/2 z-10" />
-            <CarouselNext className="right-4 top-1/2 -translate-y-1/2 z-10" />
-          </Carousel>
+          <HeroParallax />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
         </div>
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
