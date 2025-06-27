@@ -75,6 +75,7 @@ const localizer = dateFnsLocalizer({
 });
 
 const Colores = ['#4f8cff', '#ffb84f', '#4fff8c', '#ff4f8c', '#8c4fff', '#ff7b4f', '#4fffc3'];
+const pastelColores = Colores.map(c => c + '22'); // Añade transparencia para un pastel suave
 
 // Colores para estados de reservas de intercambio
 const exchangeStatusColors: Record<string, string> = {
@@ -593,32 +594,65 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
       {propiedadSeleccionada && (loadingOwners || propietarios.length > 0) && user?.role === 'admin' && (
         <div style={{ marginBottom: '20px' }}>
           <h3>Selecciona Propietario para Reservar:</h3>
-           {loadingOwners ? <p>Cargando propietarios...</p> :
-              propietarios.length === 0 ? <p>No hay propietarios asociados a esta propiedad.</p> :
-              propietarios.map((o, idx) => (
-              <button
-                key={o.id}
-                style={{
-                  background: ownerSeleccionado?.id === o.id ? Colores[idx % Colores.length] : '#eee',
-                  color: '#222',
-                  margin: '4px',
-                  padding: '8px 12px',
-                  borderRadius: '4px',
-                  border: `1px solid ${ownerSeleccionado?.id === o.id ? '#555' : '#ccc'}`,
-                  cursor: 'pointer',
-                  opacity: ownerSeleccionado?.id === o.id ? 1 : 0.8,
-                  transition: 'background 0.2s ease',
-                }}
-                onClick={() => setOwnerSeleccionado(o)}
-              >
-                {o.first_name} {o.last_name}
-                {o.shareLabel && (
-                   <span style={{ fontSize: '0.8em', color: '#555', marginLeft: '8px' }}>
-                     ({o.shareLabel})
-                   </span>
-                )}
-              </button>
-            ))}
+          {loadingOwners ? (
+            <p>Cargando propietarios...</p>
+          ) : propietarios.length === 0 ? (
+            <p>No hay propietarios asociados a esta propiedad.</p>
+          ) : (
+            <div
+              role="grid-owners"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                gap: '10px',
+                maxWidth: '340px',
+                margin: '16px auto 0 auto',
+              }}
+            >
+              {propietarios.slice(0, 4).map((o, idx) => {
+                const isSelected = ownerSeleccionado?.id === o.id;
+                const color = Colores[idx % Colores.length];
+                const pastel = pastelColores[idx % pastelColores.length];
+                return (
+                  <button
+                    key={o.id}
+                    style={{
+                      background: isSelected ? color : pastel,
+                      color: isSelected ? '#fff' : '#374151',
+                      height: '56px',
+                      width: '100%',
+                      borderRadius: '12px',
+                      border: isSelected ? `2px solid ${color}` : '2px solid #e5e7eb',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: '14px',
+                      boxShadow: isSelected ? '0 2px 8px 0 rgba(0,0,0,0.10)' : '0 1px 4px 0 rgba(0,0,0,0.04)',
+                      opacity: isSelected ? 1 : 0.97,
+                      transition: 'all 0.18s cubic-bezier(.4,0,.2,1)',
+                      outline: isSelected ? '2px solid #222' : 'none',
+                      minWidth: '0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: 0,
+                    }}
+                    onClick={() => setOwnerSeleccionado(o)}
+                  >
+                    {o.first_name} {o.last_name}
+                  </button>
+                );
+              })}
+              <style>{`
+                @media (min-width: 640px) {
+                  /* PC y tablet: 1x4 */
+                  div[role='grid-owners'] {
+                    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+                    max-width: 600px !important;
+                  }
+                }
+              `}</style>
+            </div>
+          )}
         </div>
       )}
 
