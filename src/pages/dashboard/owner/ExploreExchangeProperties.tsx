@@ -17,6 +17,7 @@ import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { Select } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
+import { toast } from '@/components/ui/use-toast';
 
 const locales = { 'es': es };
 const localizer = dateFnsLocalizer({
@@ -549,7 +550,16 @@ const ExploreExchangeProperties: React.FC = () => {
 
                       <Button
                         className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-                        onClick={() => navigate('/dashboard/owner/exchange', { state: { property: prop, dateRange } })}
+                        onClick={() => {
+                          navigate('/dashboard/owner/exchange', { state: { property: prop, dateRange } });
+                          toast({
+                            title: '¡Intercambio solicitado!',
+                            description: 'Tu solicitud de intercambio ha sido enviada correctamente. Pronto recibirás una respuesta.',
+                            variant: 'custom-exchange',
+                            icon: <Sparkles className="h-6 w-6 text-purple-500" />,
+                            className: 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-0 shadow-xl',
+                          });
+                        }}
                         disabled={!dateRange?.from || !dateRange?.to}
                       >
                         <Sparkles className="h-4 w-4 mr-2" />

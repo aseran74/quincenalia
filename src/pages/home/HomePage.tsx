@@ -322,31 +322,6 @@ function getFakeCount(zona: string) {
   return num;
 }
 
-const HeroAutoSlider = () => {
-  const images = ["/hero.jpg", "/hero6.jpg"];
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIndex((prev) => (prev + 1) % images.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [images.length]);
-
-  return (
-    <div className="absolute inset-0 z-0 w-full h-full">
-      <img
-        key={index}
-        src={images[index]}
-        alt="Hero slide"
-        className="w-full h-full object-cover transition-opacity duration-1000 animate-hero-zoom"
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
-    </div>
-  );
-};
-
 const HomePage = () => {
   const [viviendasPorZona, setViviendasPorZona] = useState<{ [key: string]: number }>({});
   const [zonasUnicas, setZonasUnicas] = useState<string[]>([]);
@@ -426,7 +401,16 @@ const HomePage = () => {
     <div className="min-h-screen bg-background font-poppins">
       <Navbar />
       <section className="relative h-[85vh] sm:h-screen flex items-center justify-center overflow-hidden">
-        <HeroAutoSlider />
+        {/* Imagen hero única con efecto zoom in/zoom out */}
+        <div className="absolute inset-0 z-0 w-full h-full">
+          <img
+            src="/hero.jpg"
+            alt="Hero principal"
+            className="w-full h-full object-cover transition-opacity duration-1000 animate-hero-zoom"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
+        </div>
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-4 sm:mb-6 !leading-tight"
               style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>

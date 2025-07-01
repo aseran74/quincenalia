@@ -5,13 +5,13 @@
 import { Calendar, dateFnsLocalizer, EventPropGetter, SlotInfo } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { supabase } from '@/lib/supabase';
-import { format, parse, startOfWeek, getDay } from 'date-fns';
+import { format, parse, startOfWeek, getDay, addDays, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAuth } from '@/context/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 // --- Interfaces ---
 interface Property {
@@ -98,6 +98,10 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
   const [loadingOwners, setLoadingOwners] = useState(false);
   const [loadingReservations, setLoadingReservations] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // --- ESTADO PARA EL CALENDARIO ---
+  // `dates` guarda el rango. PrimeReact se encarga de la lógica de selección.
+  const [dates, setDates] = useState<(Date | null)[]>([null, null]);
 
   // Cargar Propiedades
   useEffect(() => {
@@ -270,13 +274,10 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
   };
 
   // Función para Reservar
-  const reservarSemana = async ({ start, end }: { start: Date, end: Date }) => {
-    if (!ownerSeleccionado || !propiedadSeleccionada) {
-      toast({
-        title: 'Error',
-        description: 'Selecciona una propiedad y un propietario para reservar.',
-        variant: 'destructive'
-      });
+  const reservarSemana = async () => {
+    const [startDate, endDate] = dates;
+    if (!startDate || !endDate) {
+      toast({ title: 'Error', description: 'Selecciona un rango completo.', variant: 'destructive' });
       return;
     }
     // Validación: solo puede reservar si es owner de la propiedad, excepto en modo intercambio
@@ -310,9 +311,9 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
         const resStart = new Date(res.start_date);
         const resEnd = new Date(res.end_date);
         return (
-          (start >= resStart && start <= resEnd) ||
-          (end >= resStart && end <= resEnd) ||
-          (start <= resStart && end >= resEnd)
+          (startDate >= resStart && startDate <= resEnd) ||
+          (endDate >= resStart && endDate <= resEnd) ||
+          (startDate <= resStart && endDate >= resEnd)
         );
       });
 
@@ -329,8 +330,8 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
       if (exchangeMode && pointsConfig && ownerPoints !== undefined && onPointsChange) {
         // Calcular coste en puntos
         let total = 0;
-        let d = new Date(start);
-        const endDate = new Date(end);
+        let d = new Date(startDate);
+        const endDate = new Date(endDate);
         while (d <= endDate) {
           if ([0, 6].includes(d.getDay())) {
             total += pointsConfig.points_per_day;
@@ -353,8 +354,8 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
           .insert({
             property_id: propiedadSeleccionada.id,
             owner_id: ownerSeleccionado.id,
-            start_date: format(start, 'yyyy-MM-dd'),
-            end_date: format(end, 'yyyy-MM-dd'),
+            start_date: format(startDate, 'yyyy-MM-dd'),
+            end_date: format(endDate, 'yyyy-MM-dd'),
             status: 'pendiente',
             points: total,
             points_used: total
@@ -375,8 +376,8 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
         .upsert([{
           property_id: propiedadSeleccionada.id,
           owner_id: ownerSeleccionado.id,
-          start_date: format(start, 'yyyy-MM-dd'),
-          end_date: format(end, 'yyyy-MM-dd'),
+          start_date: format(startDate, 'yyyy-MM-dd'),
+          end_date: format(endDate, 'yyyy-MM-dd'),
         }]);
 
       if (upsertError) throw upsertError;
@@ -403,6 +404,7 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
         variant: 'destructive'
       });
     }
+    setDates([null, null]); // Limpiar selección
   };
 
   // --- Mapeo de Reservas a Eventos del Calendario ---
@@ -542,6 +544,33 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
     };
   };
 
+  // --- Preparamos las fechas deshabilitadas para PrimeReact ---
+  const disabledDates = useMemo(() => {
+    const datesToDisable: Date[] = [];
+    reservas.forEach(res => {
+      let currentDate = new Date(res.start_date);
+      const lastDate = new Date(res.end_date);
+      // Ajustamos la zona horaria para evitar problemas
+      currentDate.setMinutes(currentDate.getMinutes() + currentDate.getTimezoneOffset());
+      lastDate.setMinutes(lastDate.getMinutes() + currentDate.getTimezoneOffset());
+      
+      while (currentDate <= lastDate) {
+        datesToDisable.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    });
+    return datesToDisable;
+  }, [reservas]);
+
+  // --- Calculamos el número de noches para el resumen ---
+  const nochesSeleccionadas = useMemo(() => {
+    const [startDate, endDate] = dates;
+    if (startDate && endDate) {
+      return differenceInDays(endDate, startDate);
+    }
+    return 0;
+  }, [dates]);
+
   // --- Renderizado ---
   return (
     <div className="p-6">
@@ -665,7 +694,7 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
           </div>
           <button
             className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded shadow"
-            onClick={() => reservarSemana({ start: selectedDates[0], end: selectedDates[selectedDates.length-1] })}
+            onClick={reservarSemana}
           >
             Confirmar reserva
           </button>
