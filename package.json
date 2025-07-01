@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@types/react-calendar": "^3.9.0"
+  },
+  "dependencies": {
+    "primeicons": "^7.0.0",
+    "primereact": "^10.9.6",
+    "react-calendar": "^6.0.0"
+  }
+}
