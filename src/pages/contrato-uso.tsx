@@ -41,7 +41,8 @@ const ContratoUsoPage: React.FC = () => (
       Gestionados mediante la aplicación Quincenalia.<br/>
       Repartidos a partes iguales entre los cuatro propietarios.<br/>
       Reportados en la app junto con las facturas digitalizadas correspondientes.<br/>
-      A estos gastos se añadirá una cuota de gestión de 10 € mensuales por propietario (40 € al mes en total), destinada a la administración general y al mantenimiento operativo de la app y sus servicios asociados.<br/>
+      A estos gastos se añadirá una cuota de gestión de 20 € mensuales por usuario, destinada a la administración general y al mantenimiento operativo de la app y sus servicios asociados. Esta cuota incluye 1 limpiezas al año por usuario.<br/>
+      Las limpiezas adicionales correspondientes a las 10 semanas de uso flexible se pagarán aparte según tarifa vigente.<br/>
       El pago de dichos importes deberá realizarse dentro del plazo y por los medios establecidos en la aplicación.</p>
       <p><strong>SEXTO. – Vigencia y modificación</strong><br/>
       Este contrato entra en vigor desde la firma y tendrá vigencia indefinida, mientras se mantenga la copropiedad. Cualquier modificación requerirá acuerdo unánime y por escrito.</p>
