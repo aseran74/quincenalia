@@ -28,7 +28,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ selectedAgent, canSendMessage }
   return (
     <div className="flex flex-col h-full">
       {/* Header del chat */}
-      <header className="flex items-center p-4 border-b bg-white">
+      <header className="flex items-center p-4 border-b bg-white md:sticky md:top-0 md:z-10">
         <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden mr-3">
           {selectedAgent.photo_url ? (
             <img 
