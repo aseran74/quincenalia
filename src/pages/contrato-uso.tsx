@@ -1,7 +1,18 @@
 import React from 'react';
+import { ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const ContratoUsoPage: React.FC = () => (
   <div className="max-w-2xl mx-auto py-12 px-4 text-gray-800 bg-white rounded-lg shadow">
+    <div className="mb-8">
+      <Link
+        to="/"
+        className="inline-flex items-center gap-2 px-5 py-2 bg-primary text-white font-semibold rounded-full shadow hover:bg-primary/90 transition-colors group"
+      >
+        <ArrowLeft className="w-5 h-5 transition-transform duration-300 group-hover:-translate-x-1" />
+        Volver a la página principal
+      </Link>
+    </div>
     <h1 className="text-2xl font-bold mb-6 text-center">Contrato de Uso y Disfrute</h1>
     <div className="space-y-4 text-justify">
       <p><strong>REUNIDOS</strong></p>

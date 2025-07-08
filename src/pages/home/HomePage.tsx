@@ -11,7 +11,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-    PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin, ChevronLeft, HelpCircle, FileText, Cookie, Star, Users // Asegúrate de que CheckCircle y ShieldAlert estén aquí si los usas
+    PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin, ChevronLeft, HelpCircle, Cookie, Star, Users, FileText // Asegúrate de que CheckCircle y ShieldAlert estén aquí si los usas
 } from 'lucide-react'; // Iconos usados y potencialmente nuevos
 import { Link, useNavigate } from 'react-router-dom';
 import ContactForm from '@/components/ContactForm';
@@ -278,8 +278,13 @@ function ComoFunciona() {
           </Button>
         </div>
         <div className="text-center mt-6">
-          <Link to="/contrato-uso" className="text-primary underline hover:text-primary/80 transition-colors">
-            Ver Contrato de Uso y Disfrute
+          <Link
+            to="/contrato-uso"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-full shadow-lg hover:bg-primary/90 transition-colors group"
+            style={{ fontSize: '1.1rem' }}
+          >
+            <span>Ver Contrato de Uso y Disfrute</span>
+            <FileText className="w-6 h-6 transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110" />
           </Link>
         </div>
       </div>
@@ -813,11 +818,6 @@ const HomePage = () => {
           </div>
           <div className="border-t border-gray-700 pt-8 text-center text-xs text-gray-500">
             © {new Date().getFullYear()} Quincenalia. Todos los derechos reservados.
-          </div>
-          <div className="text-center mt-6">
-            <Link to="/contrato-uso" className="text-primary underline hover:text-primary/80 transition-colors">
-              Ver Contrato de Uso y Disfrute
-            </Link>
           </div>
         </div>
       </footer>
