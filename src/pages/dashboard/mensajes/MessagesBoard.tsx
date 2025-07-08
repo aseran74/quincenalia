@@ -86,7 +86,7 @@ const MessagesBoard = () => {
         <Button
           variant="outline"
           size="lg"
-          className="fixed top-20 left-4 right-4 z-50 md:hidden flex items-center justify-center gap-2"
+          className="block mt-4 mb-6 mx-auto max-w-xs rounded-lg shadow flex items-center justify-center gap-2"
           onClick={toggleSidebar}
         >
           <MessageSquare className="h-5 w-5" />
@@ -105,7 +105,7 @@ const MessagesBoard = () => {
           isMobile && !isSidebarVisible && "hidden"
         )}>
           <div className="flex flex-col p-4 border-b">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-2">
               <h2 className="text-lg font-semibold">Mensajes</h2>
               {isMobile && (
                 <Button
@@ -120,21 +120,21 @@ const MessagesBoard = () => {
             </div>
 
             {/* Barra de búsqueda */}
-            <div className="relative mb-4">
+            <div className="relative mb-2">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type="text"
                 placeholder="Buscar contacto..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 w-full"
+                className="pl-9 w-full h-8 text-sm"
               />
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 mb-4">
               <Button
                 variant={chatType === 'propietarios' ? 'default' : 'outline'}
-                className="flex-1"
+                className="flex-1 h-8 text-sm"
                 onClick={() => setChatType('propietarios')}
                 disabled={!canMessageOwners}
               >
@@ -142,7 +142,7 @@ const MessagesBoard = () => {
               </Button>
               <Button
                 variant={chatType === 'agentes' ? 'default' : 'outline'}
-                className="flex-1"
+                className="flex-1 h-8 text-sm"
                 onClick={() => setChatType('agentes')}
                 disabled={!canMessageAgents}
               >
