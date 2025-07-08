@@ -19,9 +19,9 @@ const ContratoUsoPage: React.FC = () => (
       Se acuerda la siguiente distribución fija para el período estival de cada año:</p>
       <ul className="list-disc pl-6">
         <li>Propietario A: del 1 al 15 de julio.</li>
-        <li>Propietario B: del 15 al 31 de julio.</li>
+        <li>Propietario B: del 16 al 31 de julio.</li>
         <li>Propietario C: del 1 al 15 de agosto.</li>
-        <li>Propietario D: del 16 de agosto al 2 de septiembre.</li>
+        <li>Propietario D: del 16 de agosto al 1 de septiembre.</li>
       </ul>
       <p><strong>TERCERO. – Uso adicional (10 semanas anuales por propietario)</strong><br/>
       Cada copropietario tendrá derecho a 10 semanas adicionales de uso exclusivo por año, con el siguiente sistema:</p>
