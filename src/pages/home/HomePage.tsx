@@ -277,6 +277,11 @@ function ComoFunciona() {
             <ChevronRight className={`ml-2 h-4 w-4 transition-transform duration-300 ${expandido ? 'rotate-90' : ''} group-hover:translate-x-1`} />
           </Button>
         </div>
+        <div className="text-center mt-6">
+          <Link to="/contrato-uso" className="text-primary underline hover:text-primary/80 transition-colors">
+            Ver Contrato de Uso y Disfrute
+          </Link>
+        </div>
       </div>
     </section>
   );
@@ -808,6 +813,11 @@ const HomePage = () => {
           </div>
           <div className="border-t border-gray-700 pt-8 text-center text-xs text-gray-500">
             © {new Date().getFullYear()} Quincenalia. Todos los derechos reservados.
+          </div>
+          <div className="text-center mt-6">
+            <Link to="/contrato-uso" className="text-primary underline hover:text-primary/80 transition-colors">
+              Ver Contrato de Uso y Disfrute
+            </Link>
           </div>
         </div>
       </footer>

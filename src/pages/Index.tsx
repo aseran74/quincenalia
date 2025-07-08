@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import ContratoUsoPage from './contrato-uso';
 
 const Index: React.FC = () => {
   const { isAuthenticated, user } = useAuth();

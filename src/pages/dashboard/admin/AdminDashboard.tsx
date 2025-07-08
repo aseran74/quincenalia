@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import AddProperty2 from '../AddProperty2';
+import DashboardCharts from './DashboardCharts';
 
 const menuItems = [
   { icon: <Home className="w-5 h-5" />, label: 'Panel de Control', path: '/dashboard/admin' },
@@ -181,6 +182,7 @@ const AdminDashboard = () => {
         "mt-16 md:mt-0",
         isSidebarOpen ? "md:ml-64" : "md:ml-20"
       )}>
+        <DashboardCharts />
         <Outlet />
       </main>
     </div>
