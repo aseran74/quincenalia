@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { ChevronDown, Trash2, Plus, X, Home, User, Tag, Calendar } from 'lucide-react';
 import ReservationCalendar from '../properties/ReservationCalendar';
 import ExchangeReservationCard from '@/components/exchange/ExchangeReservationCard';
+import { Calendar as DayPickerCalendar } from '@/components/ui/calendar';
 
 // Opciones de estado con colores
 const STATUS_OPTIONS = [
@@ -56,6 +57,8 @@ const AdminReservations: React.FC = () => {
   const [reservationToDelete, setReservationToDelete] = useState<Reservation | null>(null);
   const [creatingOrUpdating, setCreatingOrUpdating] = useState(false);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [selectedRange, setSelectedRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [preselectedDates, setPreselectedDates] = useState<{ start: string; end: string } | null>(null);
 
   // Refs para el formulario de creación
   const formPropertyRef = useRef<HTMLSelectElement>(null);
@@ -260,6 +263,58 @@ const AdminReservations: React.FC = () => {
     }
   };
 
+  // Días ocupados (rango de fechas de cada reserva)
+  const bookedDays: Date[] = React.useMemo(() => {
+    const days: Date[] = [];
+    reservations.forEach(r => {
+      const start = new Date(r.start_date);
+      const end = new Date(r.end_date);
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        days.push(new Date(d));
+      }
+    });
+    return days;
+  }, [reservations]);
+
+  // Handler para seleccionar rango en el calendario
+  const handleSelectRange = (range: { from?: Date; to?: Date }) => {
+    setSelectedRange(range);
+    if (range.from && range.to) {
+      // Verificar que el rango no toque días ocupados
+      let valid = true;
+      for (let d = new Date(range.from); d <= range.to; d.setDate(d.getDate() + 1)) {
+        if (bookedDays.some(bd => bd.toDateString() === d.toDateString())) {
+          valid = false;
+          break;
+        }
+      }
+      if (valid) {
+        setPreselectedDates({
+          start: range.from.toISOString().slice(0, 10),
+          end: range.to.toISOString().slice(0, 10),
+        });
+        setShowCreateModal(true);
+      } else {
+        toast({ title: 'Fechas ocupadas', description: 'El rango seleccionado incluye días ya reservados.', variant: 'destructive' });
+      }
+    }
+  };
+
+  // Handler para mostrar info de reserva al hacer clic en día ocupado
+  const handleDayClick = (day: Date) => {
+    const reserva = reservations.find(r => {
+      const start = new Date(r.start_date);
+      const end = new Date(r.end_date);
+      return day >= start && day <= end;
+    });
+    if (reserva) {
+      toast({
+        title: 'Reserva',
+        description: `Propietario: ${reserva.owner ? reserva.owner.first_name + ' ' + reserva.owner.last_name : reserva.owner_id}\nDel: ${formatDate(reserva.start_date)} al ${formatDate(reserva.end_date)}\nEstado: ${reserva.status}`,
+      });
+    }
+  };
+
   if (loading) return <div style={{padding: '2rem', textAlign: 'center'}}>Cargando reservas...</div>;
 
   return (
@@ -445,7 +500,7 @@ const AdminReservations: React.FC = () => {
         </table>
       </div>
 
-      {/* Modal para crear nueva reserva */}
+      {/* Modal para crear nueva reserva: si preselectedDates existe, pre-rellenar fechas */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto transition-opacity duration-300 ease-out">
           <div className="bg-white p-5 md:p-6 rounded-lg shadow-xl w-full max-w-lg max-h-[95vh] overflow-y-auto transform transition-all duration-300 ease-out relative">
@@ -470,7 +525,7 @@ const AdminReservations: React.FC = () => {
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
                     required
                     disabled={creatingOrUpdating}
-                    defaultValue=""
+                    defaultValue={filterProperty !== 'all' ? filterProperty : ''}
                   >
                     <option value="" disabled>Selecciona...</option>
                     {properties.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
@@ -509,6 +564,7 @@ const AdminReservations: React.FC = () => {
                     className="w-full text-sm disabled:bg-gray-100"
                     required
                     disabled={creatingOrUpdating}
+                    defaultValue={preselectedDates?.start}
                   />
                 </div>
                 <div>
@@ -521,6 +577,7 @@ const AdminReservations: React.FC = () => {
                     className="w-full text-sm disabled:bg-gray-100"
                     required
                     disabled={creatingOrUpdating}
+                    defaultValue={preselectedDates?.end}
                   />
                 </div>
               </div>
@@ -554,16 +611,22 @@ const AdminReservations: React.FC = () => {
 
       {/* Mostrar calendario y resumen si hay una propiedad seleccionada */}
       {filterProperty !== 'all' && !loading && (
-        <div className="mt-8 pt-6 border-t">
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">
-            Calendario de Disponibilidad: <span className='font-bold'>{properties.find(p => p.id === filterProperty)?.title}</span>
-          </h2>
-          <ReservationCalendar
-            key={filterProperty}
-            propertyId={filterProperty}
-            selectedDates={selectedDates}
-            onSelectedDatesChange={setSelectedDates}
-          />
+        <div className="mt-8 pt-6 border-t flex justify-center">
+          <div className="w-full max-w-xl md:max-w-2xl lg:max-w-3xl">
+            <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-700 text-center">
+              Calendario de Disponibilidad: <span className='font-bold'>{properties.find(p => p.id === filterProperty)?.title}</span>
+            </h2>
+            <DayPickerCalendar
+              mode="range"
+              selected={selectedRange}
+              onSelect={handleSelectRange}
+              disabled={date => bookedDays.some(bd => bd.toDateString() === date.toDateString())}
+              modifiers={{ booked: bookedDays }}
+              modifiersClassNames={{ booked: 'bg-red-200 text-red-700' }}
+              onDayClick={handleDayClick}
+              className="text-base md:text-lg lg:text-xl p-2 md:p-6 lg:p-8 [&_.rdp]:!w-full"
+            />
+          </div>
         </div>
       )}
 
