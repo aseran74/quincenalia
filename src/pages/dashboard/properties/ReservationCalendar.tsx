@@ -2,7 +2,7 @@
 // npm install react-calendar
 // npm install --save-dev @types/react-calendar
 
-import { Calendar, dateFnsLocalizer, EventPropGetter, SlotInfo } from 'react-big-calendar';
+import { Calendar as DayPickerCalendar } from '@/components/ui/calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { supabase } from '@/lib/supabase';
 import { format, parse, startOfWeek, getDay, addDays, differenceInDays } from 'date-fns';
@@ -102,6 +102,11 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
   // --- ESTADO PARA EL CALENDARIO ---
   // `dates` guarda el rango. PrimeReact se encarga de la lógica de selección.
   const [dates, setDates] = useState<(Date | null)[]>([null, null]);
+
+  // Estado para rango seleccionado
+  const [selectedRange, setSelectedRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [preselectedDates, setPreselectedDates] = useState<{ start: string; end: string } | null>(null);
 
   // Cargar Propiedades
   useEffect(() => {
@@ -571,6 +576,56 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
     return 0;
   }, [dates]);
 
+  // Días ocupados (reservas normales e intercambio)
+  const bookedDays: Date[] = useMemo(() => {
+    const days: Date[] = [];
+    reservas.forEach(r => {
+      const start = new Date(r.start_date);
+      const end = new Date(r.end_date);
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        days.push(new Date(d));
+      }
+    });
+    return days;
+  }, [reservas]);
+  // Handler para seleccionar rango
+  const handleSelectRange = (range: { from?: Date; to?: Date }) => {
+    setSelectedRange(range);
+    if (range.from && range.to) {
+      // Verificar que el rango no toque días ocupados
+      let valid = true;
+      for (let d = new Date(range.from); d <= range.to; d.setDate(d.getDate() + 1)) {
+        if (bookedDays.some(bd => bd.toDateString() === d.toDateString())) {
+          valid = false;
+          break;
+        }
+      }
+      if (valid) {
+        setPreselectedDates({
+          start: range.from.toISOString().slice(0, 10),
+          end: range.to.toISOString().slice(0, 10),
+        });
+        setShowCreateModal(true);
+      } else {
+        toast({ title: 'Fechas ocupadas', description: 'El rango seleccionado incluye días ya reservados.', variant: 'destructive' });
+      }
+    }
+  };
+  // Handler para mostrar info de reserva al hacer clic en día ocupado
+  const handleDayClick = (day: Date) => {
+    const reserva = reservas.find(r => {
+      const start = new Date(r.start_date);
+      const end = new Date(r.end_date);
+      return day >= start && day <= end;
+    });
+    if (reserva) {
+      toast({
+        title: 'Reserva',
+        description: `Propietario: ${reserva.owner_id}\nDel: ${reserva.start_date} al ${reserva.end_date}\nEstado: ${(reserva as any).status || ''}`,
+      });
+    }
+  };
+
   // --- Renderizado ---
   return (
     <div className="p-6">
@@ -764,35 +819,15 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
                   <div className="bg-white p-3 rounded-lg shadow-sm">Cargando reservas...</div>
                 </div>
               )}
-              <Calendar
-                localizer={localizer}
-                events={events}
-                startAccessor="start"
-                endAccessor="end"
-                selectable={!!ownerSeleccionado}
-                onSelectSlot={handleSelectSlot}
-                eventPropGetter={eventPropGetter}
-                views={['month', 'week']}
-                className={cn(
-                  "h-[700px] transition-opacity duration-200",
-                  loadingReservations && "opacity-50"
-                )}
-                selected={selectedDates && selectedDates.length > 0 ? selectedDates[0] : undefined}
-                messages={{
-                  month: 'Mes',
-                  week: 'Semana',
-                  day: 'Día',
-                  agenda: 'Agenda',
-                  date: 'Fecha',
-                  time: 'Hora',
-                  event: 'Evento',
-                  today: 'Hoy',
-                  previous: '<',
-                  next: '>',
-                  noEventsInRange: 'No hay reservas en este rango.',
-                  showMore: total => `+${total} más`,
-                }}
-                culture='es'
+              <DayPickerCalendar
+                mode="range"
+                selected={selectedRange}
+                onSelect={handleSelectRange}
+                disabled={date => bookedDays.some(bd => bd.toDateString() === date.toDateString())}
+                modifiers={{ booked: bookedDays }}
+                modifiersClassNames={{ booked: 'bg-indigo-200 text-indigo-700' }}
+                onDayClick={handleDayClick}
+                className="text-base md:text-lg lg:text-xl p-2 md:p-6 lg:p-8 [&_.rdp]:!w-full"
               />
             </div>
           </div>

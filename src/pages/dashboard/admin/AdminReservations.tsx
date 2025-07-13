@@ -612,7 +612,7 @@ const AdminReservations: React.FC = () => {
       {/* Mostrar calendario y resumen si hay una propiedad seleccionada */}
       {filterProperty !== 'all' && !loading && (
         <div className="mt-8 pt-6 border-t flex justify-center">
-          <div className="w-full max-w-xl md:max-w-2xl lg:max-w-3xl">
+          <div className="w-full max-w-xl md:max-w-2xl lg:max-w-3xl px-2 md:px-8 lg:px-16 py-4 md:py-8">
             <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-700 text-center">
               Calendario de Disponibilidad: <span className='font-bold'>{properties.find(p => p.id === filterProperty)?.title}</span>
             </h2>
