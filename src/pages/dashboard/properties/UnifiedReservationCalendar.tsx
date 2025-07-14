@@ -18,18 +18,25 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
   const [selectedRange, setSelectedRange] = useState({ from: undefined, to: undefined });
   const [ownerPoints, setOwnerPoints] = useState(0);
 
-  // --- Detectar si es admin ---
-  const isAdmin = user?.role === 'admin';
-  // --- Lista de copropietarios ---
-  const coOwners = useMemo(() => [
-    propiedadSeleccionada?.share1_owner_id,
-    propiedadSeleccionada?.share2_owner_id,
-    propiedadSeleccionada?.share3_owner_id,
-    propiedadSeleccionada?.share4_owner_id
-  ].filter(Boolean), [propiedadSeleccionada]);
+  // --- Lista de copropietarios con datos ---
+  const coOwnerData = [
+    { id: propiedadSeleccionada?.share1_owner_id, label: 'share1' },
+    { id: propiedadSeleccionada?.share2_owner_id, label: 'share2' },
+    { id: propiedadSeleccionada?.share3_owner_id, label: 'share3' },
+    { id: propiedadSeleccionada?.share4_owner_id, label: 'share4' },
+  ].filter(o => !!o.id);
+  // --- Lista de IDs de copropietarios (como string, sin espacios) ---
+  const coOwners = coOwnerData.map(o => String(o.id).trim());
   // --- Estado para el copropietario seleccionado (solo admin) ---
   const [selectedOwnerId, setSelectedOwnerId] = useState(coOwners[0] || '');
   useEffect(() => { setSelectedOwnerId(coOwners[0] || ''); }, [coOwners]);
+  // --- Detectar si es admin ---
+  const isAdmin = user?.role === 'admin';
+  // --- Detectar si el usuario es copropietario (comparando como string, sin espacios) ---
+  const isCoOwner = useMemo(() => {
+    if (!user || !propiedadSeleccionada) return false;
+    return coOwners.includes(String(user.id).trim());
+  }, [user, coOwners, propiedadSeleccionada]);
 
   // --- Cargar reservas normales y de intercambio juntas ---
   const fetchAllReservations = async () => {
@@ -78,17 +85,6 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
   }, [reservas]);
 
   // --- Permisos de modo ---
-  const isCoOwner = useMemo(() => {
-    if (!user || !propiedadSeleccionada) return false;
-    const ids = [
-      propiedadSeleccionada.share1_owner_id,
-      propiedadSeleccionada.share2_owner_id,
-      propiedadSeleccionada.share3_owner_id,
-      propiedadSeleccionada.share4_owner_id,
-    ];
-    return ids.includes(user.id);
-  }, [user, propiedadSeleccionada]);
-
   const canExchange = user?.points > 0; // O lógica real de puntos
 
   // --- Cambiar modo según permisos ---
@@ -240,11 +236,15 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
                   value={selectedOwnerId}
                   onChange={e => setSelectedOwnerId(e.target.value)}
                 >
-                  {coOwners.map(id => (
-                    <option key={id} value={id}>{id}</option>
+                  {coOwnerData.map(o => (
+                    <option key={o.id} value={o.id}>{o.id}</option>
                   ))}
                 </select>
               </div>
+            )}
+            {/* Mensaje de ayuda si el usuario es copropietario pero no se detecta */}
+            {!isAdmin && !isCoOwner && mode === 'normal' && (
+              <div className="mb-2 text-red-600 text-xs font-semibold">Si eres copropietario y no puedes reservar, revisa que tu usuario esté correctamente asignado en la propiedad.</div>
             )}
             <div className="flex gap-4 mt-6">
               <button className="flex-1 py-2 rounded bg-primary text-white font-semibold" onClick={handleCreateReservation}>Confirmar</button>
