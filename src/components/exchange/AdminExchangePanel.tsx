@@ -407,33 +407,62 @@ const AdminExchangePanel: React.FC = () => {
 
   const handleManualReservation = async () => {
     if (!manualOwnerId || !manualPropertyId || !manualStart || !manualEnd) {
-        toast({ title: "Advertencia", description: "Todos los campos son requeridos para la reserva manual.", variant: "default" });
-        return;
+      toast({ title: "Advertencia", description: "Todos los campos son requeridos para la reserva manual.", variant: "default" });
+      return;
     }
     if (new Date(manualEnd) <= new Date(manualStart)) {
-        toast({ title: "Advertencia", description: "La fecha de fin debe ser posterior a la fecha de inicio.", variant: "default" });
-        return;
+      toast({ title: "Advertencia", description: "La fecha de fin debe ser posterior a la fecha de inicio.", variant: "default" });
+      return;
     }
     setLoading(true);
-    const { error } = await supabase.from('exchange_reservations').insert({
-      property_id: manualPropertyId,
-      owner_id: manualOwnerId,
-      start_date: manualStart,
-      end_date: manualEnd,
-      status: 'aprobada', 
-      points: 0, 
-      points_used: 0 
-    });
-
-    if (!error) {
+    try {
+      // --- FETCH en tiempo real de todas las reservas (normales + intercambio) antes de validar conflicto ---
+      const [{ data: reservationsData }, { data: exchangeData }] = await Promise.all([
+        supabase.from('property_reservations').select('start_date, end_date').eq('property_id', manualPropertyId),
+        supabase.from('exchange_reservations').select('start_date, end_date').eq('property_id', manualPropertyId)
+      ]);
+      const allReservations = [
+        ...(reservationsData || []),
+        ...(exchangeData || [])
+      ];
+      const start = new Date(manualStart);
+      const end = new Date(manualEnd);
+      // Validación de conflicto sobre el array fresco
+      const conflictingReservations = allReservations.filter(res => {
+        const resStart = new Date(res.start_date);
+        const resEnd = new Date(res.end_date);
+        return (
+          (start >= resStart && start <= resEnd) ||
+          (end >= resStart && end <= resEnd) ||
+          (start <= resStart && end >= resEnd)
+        );
+      });
+      if (conflictingReservations.length > 0) {
+        toast({ title: 'Error', description: 'Ya existe una reserva (normal o intercambio) en ese rango de fechas', variant: 'destructive' });
+        setLoading(false);
+        return;
+      }
+      const { error } = await supabase.from('exchange_reservations').insert({
+        property_id: manualPropertyId,
+        owner_id: manualOwnerId,
+        start_date: manualStart,
+        end_date: manualEnd,
+        status: 'aprobada',
+        points: 0,
+        points_used: 0
+      });
+      if (!error) {
         toast({ title: "Éxito", description: "Reserva manual creada.", variant: "success" });
         setManualMsg('Reserva creada ' + Date.now());
         setManualStart('');
         setManualEnd('');
-        setResMsg('Manual reservation created ' + Date.now()); 
-    } else {
+        setResMsg('Manual reservation created ' + Date.now());
+      } else {
         toast({ title: "Error", description: "No se pudo crear la reserva manual.", variant: "destructive" });
         console.error("Error creating manual reservation:", error);
+      }
+    } catch (error: any) {
+      toast({ title: 'Error al crear', description: `No se pudo crear la reserva: ${error.message}`, variant: 'destructive' });
     }
     setLoading(false);
     setTimeout(() => setManualMsg(''), 3000);
@@ -484,6 +513,29 @@ const AdminExchangePanel: React.FC = () => {
       d.setDate(d.getDate() + 1);
     }
     try {
+      // --- FETCH en tiempo real de todas las reservas (normales + intercambio) antes de validar conflicto ---
+      const [{ data: reservationsData }, { data: exchangeData }] = await Promise.all([
+        supabase.from('property_reservations').select('start_date, end_date').eq('property_id', selectedProperty),
+        supabase.from('exchange_reservations').select('start_date, end_date').eq('property_id', selectedProperty)
+      ]);
+      const allReservations = [
+        ...(reservationsData || []),
+        ...(exchangeData || [])
+      ];
+      // Validación de conflicto sobre el array fresco
+      const conflictingReservations = allReservations.filter(res => {
+        const resStart = new Date(res.start_date);
+        const resEnd = new Date(res.end_date);
+        return (
+          (start >= resStart && start <= resEnd) ||
+          (end >= resStart && end <= resEnd) ||
+          (start <= resStart && end >= resEnd)
+        );
+      });
+      if (conflictingReservations.length > 0) {
+        toast({ title: 'Error', description: 'Ya existe una reserva (normal o intercambio) en ese rango de fechas', variant: 'destructive' });
+        return;
+      }
       const { error } = await supabase
         .from('exchange_reservations')
         .insert({
