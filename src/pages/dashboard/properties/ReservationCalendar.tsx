@@ -306,7 +306,7 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
 
     setError(null);
     try {
-      // Verificar conflictos
+      // Unificar validación de conflicto: comprobar todas las reservas (normales + intercambio)
       const conflictingReservations = reservas.filter(res => {
         const resStart = new Date(res.start_date);
         const resEnd = new Date(res.end_date);
@@ -320,7 +320,7 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
       if (conflictingReservations.length > 0) {
         toast({
           title: 'Error',
-          description: 'Ya existe una reserva en ese rango de fechas',
+          description: 'Ya existe una reserva (normal o intercambio) en ese rango de fechas',
           variant: 'destructive'
         });
         return;
@@ -553,7 +553,6 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
       // Ajustamos la zona horaria para evitar problemas
       currentDate.setMinutes(currentDate.getMinutes() + currentDate.getTimezoneOffset());
       lastDate.setMinutes(lastDate.getMinutes() + currentDate.getTimezoneOffset());
-      
       while (currentDate <= lastDate) {
         datesToDisable.push(new Date(currentDate));
         currentDate.setDate(currentDate.getDate() + 1);
