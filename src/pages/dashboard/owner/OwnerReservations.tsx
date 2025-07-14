@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'; // Removido DialogHeader/Footer si no se usan
 import { Input } from '@/components/ui/input';
 import { Info, ChevronDown, Trash2, Plus, X, Home, Calendar as CalendarIcon } from 'lucide-react';
-import ReservationCalendar from '../properties/ReservationCalendar'; // Asegúrate que la ruta sea correcta
+import UnifiedReservationCalendar from '../properties/UnifiedReservationCalendar';
 
 // Configuración del Calendario (localizer solo es necesario si usas Rrule o algo avanzado aquí, ReservationCalendar ya lo tiene)
 // const locales = { 'es': es };
@@ -623,9 +623,11 @@ function OwnerReservations() {
                   <div className="bg-white p-3 rounded-lg shadow-sm">Cargando reservas...</div>
                 </div>
               )}
-              <ReservationCalendar
-                propertyId={filterProperty !== 'all' ? filterProperty : undefined}
-                onSelectSlot={handleSelectSlot}
+              <UnifiedReservationCalendar 
+                propiedadSeleccionada={filterProperty}
+                owners={properties.map(p => ({ id: p.id, name: p.title }))}
+                pointsConfig={[]} // No hay puntos configurados en este momento
+                onPointsChange={() => {}} // No hay cambio de puntos en este momento
               />
             </div>
           </div>

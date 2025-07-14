@@ -8,6 +8,7 @@ import { ChevronDown, Trash2, Plus, X, Home, User, Tag, Calendar } from 'lucide-
 import ReservationCalendar from '../properties/ReservationCalendar';
 import ExchangeReservationCard from '@/components/exchange/ExchangeReservationCard';
 import { Calendar as DayPickerCalendar } from '@/components/ui/calendar';
+import UnifiedReservationCalendar from '../properties/UnifiedReservationCalendar';
 
 // Opciones de estado con colores
 const STATUS_OPTIONS = [
@@ -632,15 +633,11 @@ const AdminReservations: React.FC = () => {
             <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-700 text-center">
               Calendario de Disponibilidad: <span className='font-bold'>{properties.find(p => p.id === filterProperty)?.title}</span>
             </h2>
-            <DayPickerCalendar
-              mode="range"
-              selected={selectedRange}
-              onSelect={handleSelectRange}
-              disabled={date => bookedDays.some(bd => bd.toDateString() === date.toDateString())}
-              modifiers={{ booked: bookedDays }}
-              modifiersClassNames={{ booked: 'bg-red-200 text-red-700' }}
-              onDayClick={handleDayClick}
-              className="text-base md:text-lg lg:text-xl p-2 md:p-6 lg:p-8 [&_.rdp]:!w-full"
+            <UnifiedReservationCalendar 
+              propiedadSeleccionada={properties.find(p => p.id === filterProperty)}
+              owners={owners}
+              pointsConfig={[]} // Assuming pointsConfig is not needed for this calendar view
+              onPointsChange={() => {}} // Assuming onPointsChange is not needed for this calendar view
             />
           </div>
         </div>

@@ -150,6 +150,19 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
   // --- Render ---
   return (
     <div className="w-full max-w-3xl mx-auto px-2 md:px-8 lg:px-16 py-4 md:py-8">
+      {/* Debug info copropietarios y usuario */}
+      <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+        <div><b>Copropietarios:</b> {[
+          propiedadSeleccionada?.share1_owner_id,
+          propiedadSeleccionada?.share2_owner_id,
+          propiedadSeleccionada?.share3_owner_id,
+          propiedadSeleccionada?.share4_owner_id
+        ].filter(Boolean).join(', ') || 'Ninguno'}</div>
+        <div><b>Tu ID:</b> {user?.id || 'No logueado'}</div>
+        {!isCoOwner && mode === 'normal' && (
+          <div className="mt-1 text-red-600 font-semibold">No puedes reservar en modo normal porque no eres copropietario de esta propiedad.</div>
+        )}
+      </div>
       <div className="flex gap-4 mb-4 justify-center">
         {MODES.map(opt => (
           <button
