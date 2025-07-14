@@ -55,26 +55,16 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
   const coOwnerUsers = allUsers.filter(u => coOwnerIds.includes(u.id));
   const notCoOwnerUsers = allUsers.filter(u => !coOwnerIds.includes(u.id));
 
-  // --- Cargar reservas normales y de intercambio juntas ---
+  // --- Cambiar fetch y creación de reservas para usar reservations_unified ---
   const fetchAllReservations = async () => {
     setLoading(true);
     try {
-      const { data: normal, error: err1 } = await supabase
-        .from('property_reservations')
-        .select('*, owner:profiles!fk_owner_profile (id, first_name, last_name)')
+      const { data, error } = await supabase
+        .from('reservations_unified')
+        .select('*, user:profiles (id, first_name, last_name, email)')
         .eq('property_id', propiedadSeleccionada.id);
-      if (err1) throw err1;
-      const { data: exchange, error: err2 } = await supabase
-        .from('exchange_reservations')
-        .select('*')
-        .eq('property_id', propiedadSeleccionada.id);
-      if (err2) throw err2;
-      // Añadimos tipo
-      const all = [
-        ...(normal || []).map(r => ({ ...r, type: 'normal' })),
-        ...(exchange || []).map(r => ({ ...r, type: 'exchange' })),
-      ];
-      setReservas(all);
+      if (error) throw error;
+      setReservas(data || []);
     } catch (e) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
     } finally {
@@ -125,7 +115,6 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
   // --- Crear reserva (modal simplificado) ---
   const handleCreateReservation = async () => {
     if (!selectedRange.from || !selectedRange.to) return;
-    // Validación de conflicto en tiempo real
     await fetchAllReservations();
     const conflict = reservas.some(res => {
       const resStart = new Date(res.start_date);
@@ -138,47 +127,22 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
       toast({ title: 'Error', description: 'Fechas ocupadas por otra reserva.' });
       return;
     }
-    // Insert según modo
-    if (mode === 'normal') {
-      // Admin puede reservar para cualquier copropietario
-      const ownerIdToUse = isAdmin ? selectedOwnerId : user.id;
-      if (!isAdmin && !isCoOwner) {
-        toast({ title: 'Error', description: 'Solo copropietarios pueden reservar en este modo.' });
-        return;
-      }
-      const { error } = await supabase
-        .from('property_reservations')
-        .insert({
-          property_id: propiedadSeleccionada.id,
-          owner_id: ownerIdToUse,
-          start_date: selectedRange.from,
-          end_date: selectedRange.to,
-          status: 'pending',
-        });
-      if (error) {
-        toast({ title: 'Error', description: error.message });
-        return;
-      }
-    } else {
-      // Intercambio
-      const ownerIdToUse = isAdmin ? selectedOwnerId : user.id;
-      if (!isAdmin && !canExchange) {
-        toast({ title: 'Error', description: 'No tienes puntos suficientes.' });
-        return;
-      }
-      const { error } = await supabase
-        .from('exchange_reservations')
-        .insert({
-          property_id: propiedadSeleccionada.id,
-          owner_id: ownerIdToUse,
-          start_date: selectedRange.from,
-          end_date: selectedRange.to,
-          status: 'pending',
-        });
-      if (error) {
-        toast({ title: 'Error', description: error.message });
-        return;
-      }
+    // Insert en reservations_unified
+    const ownerIdToUse = isAdmin ? selectedOwnerId : user.id;
+    const typeToUse = isAdmin ? mode : (isCoOwner ? 'normal' : 'exchange');
+    const { error } = await supabase
+      .from('reservations_unified')
+      .insert({
+        property_id: propiedadSeleccionada.id,
+        user_id: ownerIdToUse,
+        start_date: selectedRange.from,
+        end_date: selectedRange.to,
+        type: typeToUse,
+        status: 'pending',
+      });
+    if (error) {
+      toast({ title: 'Error', description: error.message });
+      return;
     }
     toast({ title: 'Reserva creada', description: 'Reserva registrada correctamente.' });
     setModalOpen(false);
@@ -248,7 +212,7 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
         <ul className="space-y-2">
           {reservas.map((res, i) => (
             <li key={i} className={`rounded px-3 py-2 flex items-center gap-2 ${res.type === 'normal' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
-              <span className="font-bold">{res.owner?.first_name || 'owner'}:</span>
+              <span className="font-bold">{res.user?.first_name || 'owner'}:</span>
               <span>{new Date(res.start_date).toLocaleDateString()} - {new Date(res.end_date).toLocaleDateString()}</span>
               <span className="ml-auto text-xs px-2 py-1 rounded-full bg-white border font-semibold">{res.type === 'normal' ? 'Normal' : 'Intercambio'}</span>
             </li>
