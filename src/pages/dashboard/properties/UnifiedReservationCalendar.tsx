@@ -18,6 +18,12 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
   const [selectedRange, setSelectedRange] = useState({ from: undefined, to: undefined });
   const [ownerPoints, setOwnerPoints] = useState(0);
 
+  // Paso 1: Seleccionar propiedad (ya se hace fuera, con propiedadSeleccionada)
+  // Paso 2: Seleccionar tipo de reserva (solo admin)
+  const [adminStep, setAdminStep] = useState(1);
+  const [adminMode, setAdminMode] = useState('normal');
+  const [adminSelectedUser, setAdminSelectedUser] = useState('');
+
   // --- Lista de copropietarios con datos ---
   const coOwnerData = [
     { id: propiedadSeleccionada?.share1_owner_id, label: 'share1' },
@@ -149,6 +155,136 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
     setSelectedRange({ from: undefined, to: undefined });
     fetchAllReservations();
   };
+
+  // --- Render paso a paso para admin ---
+  if (isAdmin) {
+    return (
+      <div className="w-full max-w-3xl mx-auto px-2 md:px-8 lg:px-16 py-4 md:py-8">
+        {/* Paso 1: Seleccionar tipo de reserva */}
+        {adminStep === 1 && (
+          <div className="mb-6">
+            <h2 className="text-lg font-bold mb-2">Paso 1: Selecciona el tipo de reserva</h2>
+            <div className="flex gap-4 mb-4 justify-center">
+              <button
+                className={`px-4 py-2 rounded ${adminMode === 'normal' ? 'bg-green-200 text-green-800' : 'bg-gray-100 text-gray-500'} font-semibold`}
+                onClick={() => { setAdminMode('normal'); setAdminStep(2); }}
+              >Reserva normal</button>
+              <button
+                className={`px-4 py-2 rounded ${adminMode === 'exchange' ? 'bg-blue-200 text-blue-800' : 'bg-gray-100 text-gray-500'} font-semibold`}
+                onClick={() => { setAdminMode('exchange'); setAdminStep(2); }}
+              >Intercambio</button>
+            </div>
+          </div>
+        )}
+        {/* Paso 2: Seleccionar usuario */}
+        {adminStep === 2 && (
+          <div className="mb-6">
+            <h2 className="text-lg font-bold mb-2">Paso 2: Selecciona el usuario</h2>
+            <select
+              className="w-full border rounded px-2 py-2 mb-4"
+              value={adminSelectedUser}
+              onChange={e => setAdminSelectedUser(e.target.value)}
+            >
+              <option value="">Selecciona un usuario...</option>
+              {(adminMode === 'normal' ? coOwnerUsers : notCoOwnerUsers).map(u => (
+                <option key={u.id} value={u.id}>{u.first_name ? `${u.first_name} ${u.last_name}` : u.email} ({u.email})</option>
+              ))}
+            </select>
+            <button
+              className="px-6 py-2 bg-primary text-white rounded shadow font-semibold"
+              disabled={!adminSelectedUser}
+              onClick={() => setAdminStep(3)}
+            >
+              Siguiente: Seleccionar fechas
+            </button>
+            <button
+              className="ml-4 px-4 py-2 bg-gray-200 text-gray-700 rounded font-semibold"
+              onClick={() => { setAdminStep(1); setAdminSelectedUser(''); }}
+            >
+              Volver
+            </button>
+          </div>
+        )}
+        {/* Paso 3: Seleccionar fechas y confirmar */}
+        {adminStep === 3 && (
+          <div>
+            <h2 className="text-lg font-bold mb-2">Paso 3: Selecciona las fechas</h2>
+            <Calendar
+              mode="range"
+              selected={selectedRange}
+              onSelect={setSelectedRange}
+              disabled={date => bookedDays.some(bd => bd.toDateString() === date.toDateString())}
+              modifiers={{ booked: bookedDays }}
+              modifiersClassNames={{ booked: 'bg-red-200 text-red-700' }}
+              className="mb-6"
+            />
+            <div className="flex justify-center gap-4">
+              <button
+                className="px-6 py-2 bg-primary text-white rounded shadow font-semibold"
+                onClick={async () => {
+                  // Validación y creación
+                  await fetchAllReservations();
+                  const conflict = reservas.some(res => {
+                    const resStart = new Date(res.start_date);
+                    const resEnd = new Date(res.end_date);
+                    return (
+                      (selectedRange.from <= resEnd && selectedRange.to >= resStart)
+                    );
+                  });
+                  if (conflict) {
+                    toast({ title: 'Error', description: 'Fechas ocupadas por otra reserva.' });
+                    return;
+                  }
+                  const { error } = await supabase
+                    .from('reservations_unified')
+                    .insert({
+                      property_id: propiedadSeleccionada.id,
+                      user_id: adminSelectedUser,
+                      start_date: selectedRange.from,
+                      end_date: selectedRange.to,
+                      type: adminMode,
+                      status: 'pending',
+                    });
+                  if (error) {
+                    toast({ title: 'Error', description: error.message });
+                    return;
+                  }
+                  toast({ title: 'Reserva creada', description: 'Reserva registrada correctamente.' });
+                  setModalOpen(false);
+                  setSelectedRange({ from: undefined, to: undefined });
+                  setAdminStep(1);
+                  setAdminSelectedUser('');
+                  fetchAllReservations();
+                }}
+                disabled={!selectedRange.from || !selectedRange.to}
+              >
+                Confirmar reserva
+              </button>
+              <button
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded font-semibold"
+                onClick={() => setAdminStep(2)}
+              >
+                Volver
+              </button>
+            </div>
+          </div>
+        )}
+        {/* Listado de reservas */}
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold mb-2">Reservas existentes</h3>
+          <ul className="space-y-2">
+            {reservas.map((res, i) => (
+              <li key={i} className={`rounded px-3 py-2 flex items-center gap-2 ${res.type === 'normal' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
+                <span className="font-bold">{res.user?.first_name || 'owner'}:</span>
+                <span>{new Date(res.start_date).toLocaleDateString()} - {new Date(res.end_date).toLocaleDateString()}</span>
+                <span className="ml-auto text-xs px-2 py-1 rounded-full bg-white border font-semibold">{res.type === 'normal' ? 'Normal' : 'Intercambio'}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+  }
 
   // --- Render ---
   return (
