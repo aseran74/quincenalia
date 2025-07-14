@@ -306,8 +306,21 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
 
     setError(null);
     try {
-      // Unificar validación de conflicto: comprobar todas las reservas (normales + intercambio)
-      const conflictingReservations = reservas.filter(res => {
+      // --- FETCH en tiempo real de todas las reservas (normales + intercambio) antes de validar conflicto ---
+      const [{ data: reservationsData }, { data: exchangeData }] = await Promise.all([
+        supabase.from('property_reservations').select('*, owner:profiles!fk_owner_profile (id, first_name, last_name)').eq('property_id', propiedadSeleccionada.id),
+        supabase.from('exchange_reservations').select('*').eq('property_id', propiedadSeleccionada.id)
+      ]);
+      const allReservations = [
+        ...(reservationsData || []),
+        ...((exchangeData || []).map(r => ({
+          ...r,
+          title: 'Reserva Guest points',
+          isExchange: true
+        })))
+      ];
+      // Validación de conflicto sobre el array fresco
+      const conflictingReservations = allReservations.filter(res => {
         const resStart = new Date(res.start_date);
         const resEnd = new Date(res.end_date);
         return (
@@ -316,7 +329,6 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
           (startDate <= resStart && endDate >= resEnd)
         );
       });
-
       if (conflictingReservations.length > 0) {
         toast({
           title: 'Error',
