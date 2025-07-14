@@ -87,12 +87,23 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
   // --- Permisos de modo ---
   const canExchange = user?.points > 0; // O lógica real de puntos
 
-  // --- Cambiar modo según permisos ---
+  // --- Determinar modos permitidos ---
+  let allowedModes = MODES;
+  let forcedMode = null;
+  if (!isAdmin) {
+    if (isCoOwner) {
+      allowedModes = MODES.filter(m => m.value === 'normal');
+      forcedMode = 'normal';
+    } else {
+      allowedModes = MODES.filter(m => m.value === 'exchange');
+      forcedMode = 'exchange';
+    }
+  }
+  // Si solo hay un modo permitido, forzamos ese modo
   useEffect(() => {
-    if (mode === 'normal' && !isCoOwner) setMode('exchange');
-    if (mode === 'exchange' && !canExchange) setMode('normal');
+    if (forcedMode && mode !== forcedMode) setMode(forcedMode);
     // eslint-disable-next-line
-  }, [isCoOwner, canExchange]);
+  }, [forcedMode]);
 
   // --- Crear reserva (modal simplificado) ---
   const handleCreateReservation = async () => {
@@ -174,20 +185,24 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
         )}
       </div>
       <div className="flex gap-4 mb-4 justify-center">
-        {MODES.map(opt => (
+        {allowedModes.map(opt => (
           <button
             key={opt.value}
             className={`px-4 py-2 rounded ${mode === opt.value ? opt.color + ' ' + opt.text : 'bg-gray-100 text-gray-500'} font-semibold`}
             onClick={() => setMode(opt.value)}
-            disabled={
-              (opt.value === 'normal' && !isCoOwner) ||
-              (opt.value === 'exchange' && !canExchange)
-            }
+            disabled={false}
           >
             {opt.label}
           </button>
         ))}
       </div>
+      {/* Mensaje según permisos */}
+      {!isAdmin && isCoOwner && (
+        <div className="mb-2 text-green-700 text-xs font-semibold">Solo puedes hacer reservas normales porque eres copropietario de esta propiedad.</div>
+      )}
+      {!isAdmin && !isCoOwner && (
+        <div className="mb-2 text-blue-700 text-xs font-semibold">Solo puedes hacer reservas de intercambio porque no eres copropietario de esta propiedad.</div>
+      )}
       <Calendar
         mode="range"
         selected={selectedRange}
