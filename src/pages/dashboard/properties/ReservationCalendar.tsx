@@ -367,7 +367,20 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
           description: 'Reserva de intercambio enviada y puntos descontados. Pendiente de aprobación.',
           variant: 'success'
         });
-        // Recargar reservas (opcional)
+        // Recargar reservas normales y de intercambio tras crear la reserva
+        const [{ data: reservationsData }, { data: exchangeData }] = await Promise.all([
+          supabase.from('property_reservations').select('*, owner:profiles!fk_owner_profile (id, first_name, last_name)').eq('property_id', propiedadSeleccionada.id),
+          supabase.from('exchange_reservations').select('*').eq('property_id', propiedadSeleccionada.id)
+        ]);
+        const allReservations = [
+          ...(reservationsData || []),
+          ...((exchangeData || []).map(r => ({
+            ...r,
+            title: 'Reserva Guest points',
+            isExchange: true
+          })))
+        ];
+        setReservas(allReservations);
         return;
       }
       // --- Lógica normal ---
