@@ -99,11 +99,11 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
       forcedMode = 'exchange';
     }
   }
-  // Si solo hay un modo permitido, forzamos ese modo
+  // Si solo hay un modo permitido, forzamos ese modo (solo para no admin)
   useEffect(() => {
-    if (forcedMode && mode !== forcedMode) setMode(forcedMode);
+    if (!isAdmin && forcedMode && mode !== forcedMode) setMode(forcedMode);
     // eslint-disable-next-line
-  }, [forcedMode]);
+  }, [forcedMode, isAdmin]);
 
   // --- Crear reserva (modal simplificado) ---
   const handleCreateReservation = async () => {
@@ -144,7 +144,8 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
       }
     } else {
       // Intercambio
-      if (!canExchange) {
+      const ownerIdToUse = isAdmin ? selectedOwnerId : user.id;
+      if (!isAdmin && !canExchange) {
         toast({ title: 'Error', description: 'No tienes puntos suficientes.' });
         return;
       }
@@ -152,7 +153,7 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
         .from('exchange_reservations')
         .insert({
           property_id: propiedadSeleccionada.id,
-          owner_id: user.id,
+          owner_id: ownerIdToUse,
           start_date: selectedRange.from,
           end_date: selectedRange.to,
           status: 'pending',
@@ -251,6 +252,22 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
                   value={selectedOwnerId}
                   onChange={e => setSelectedOwnerId(e.target.value)}
                 >
+                  {coOwnerData.map(o => (
+                    <option key={o.id} value={o.id}>{o.id}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {/* Selector de usuario para intercambio (opcional, admin) */}
+            {isAdmin && mode === 'exchange' && (
+              <div className="mb-4">
+                <label className="block text-sm font-semibold mb-1">Usuario:</label>
+                <select
+                  className="w-full border rounded px-2 py-1"
+                  value={selectedOwnerId}
+                  onChange={e => setSelectedOwnerId(e.target.value)}
+                >
+                  {/* Aquí deberías mapear todos los usuarios disponibles, por ahora solo copropietarios como ejemplo */}
                   {coOwnerData.map(o => (
                     <option key={o.id} value={o.id}>{o.id}</option>
                   ))}
