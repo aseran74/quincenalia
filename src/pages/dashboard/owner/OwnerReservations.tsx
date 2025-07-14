@@ -166,8 +166,8 @@ function OwnerReservations() {
         .select(`
           id, property_id, owner_id, start_date, end_date, status, created_at,
           properties ( id, title ),
-          owner:profiles ( id, first_name, last_name )
-        `) // Quitamos !inner para que no falle si falta el perfil del owner (aunque debería existir)
+          owner:profiles!property_reservations_owner_id_fkey ( id, first_name, last_name )
+        `)
         .eq('owner_id', user.id)
         .order('start_date', { ascending: false });
       console.log("[fetchData] Resultado Reservations Query:", { data: reservationsData, error: reservationsError });
