@@ -184,7 +184,7 @@ const AdminReservations: React.FC = () => {
       const { data, error } = await supabase
         .from('property_reservations')
         .insert({ property_id, owner_id, start_date, end_date, status })
-        .select(`*, properties (id, title), profiles (id, first_name, last_name)`).single();
+        .select(`*, properties (id, title), owner:profiles!property_reservations_owner_id_fkey (id, first_name, last_name)`).single();
       if (error) throw error;
       if (data) {
         setReservations(prev => [data, ...prev]);

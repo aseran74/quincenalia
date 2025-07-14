@@ -278,7 +278,7 @@ function OwnerReservations() {
       const { data, error } = await supabase
         .from('property_reservations')
         .insert({ property_id, owner_id: user.id, start_date, end_date, status: 'pendiente' }) // Estado por defecto 'pendiente'
-        .select() // Selecciona para confirmar
+        .select('*, owner:profiles!property_reservations_owner_id_fkey (id, first_name, last_name)')
         .single(); // Espera un solo resultado
 
       if (error) {
@@ -357,7 +357,7 @@ function OwnerReservations() {
       const { data, error } = await supabase
         .from('property_reservations')
         .insert({ property_id: filterProperty, owner_id: user.id, start_date: format(start, 'yyyy-MM-dd'), end_date: format(end, 'yyyy-MM-dd'), status: 'pendiente' })
-        .select()
+        .select('*, owner:profiles!property_reservations_owner_id_fkey (id, first_name, last_name)')
         .single();
       if (error) throw error;
       toast({ title: 'Reserva solicitada', description: 'Tu solicitud de reserva se ha enviado.' });
