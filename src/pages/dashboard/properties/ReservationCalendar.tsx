@@ -186,33 +186,24 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
             .filter((o): o is Owner => Boolean(o));
         }
 
-        // Cargar reservas normales
-        const { data: reservationsData, error: reservationsError } = await supabase
+        // --- Cargar reservas normales y de intercambio juntas ---
+        const { data: normal, error: err1 } = await supabase
           .from('property_reservations')
           .select('*, owner:profiles!fk_owner_profile (id, first_name, last_name)')
           .eq('property_id', propiedadSeleccionada.id);
-        if (reservationsError) throw reservationsError;
-
-        // Cargar reservas de intercambio
-        const { data: exchangeData, error: exchangeError } = await supabase
+        if (err1) throw err1;
+        // Fetch reservas de intercambio
+        const { data: exchange, error: err2 } = await supabase
           .from('exchange_reservations')
           .select('*')
           .eq('property_id', propiedadSeleccionada.id);
-        if (exchangeError) throw exchangeError;
-
-        // Unir ambas reservas (todas las de intercambio y normales, sin filtrar por estado ni owner)
-        const allReservations = [
-          ...(reservationsData || []),
-          ...((exchangeData || []).map(r => ({
-            ...r,
-            title: 'Reserva Guest points',
-            isExchange: true
-          })))
-        ];
-        setReservas(allReservations);
+        if (err2) throw err2;
+        // Unificamos ambas
+        const all = [...(normal || []), ...(exchange || [])];
+        setReservas(all);
 
         // --- Añadir owners de reservas que no estén en propietariosConShare ---
-        const allOwnerIds = Array.from(new Set(allReservations.map(r => r.owner_id)));
+        const allOwnerIds = Array.from(new Set(all.map(r => r.owner_id)));
         const missingOwnerIds = allOwnerIds.filter(id => !propietariosConShare.some(o => o.id === id));
         let extraOwners: any[] = [];
         if (missingOwnerIds.length > 0) {
