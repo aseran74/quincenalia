@@ -189,7 +189,7 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
         // Cargar reservas normales
         const { data: reservationsData, error: reservationsError } = await supabase
           .from('property_reservations')
-          .select('*, owner:profiles!property_reservations_owner_id_fkey (id, first_name, last_name)')
+          .select('*, owner:profiles!fk_owner_profile (id, first_name, last_name)')
           .eq('property_id', propiedadSeleccionada.id);
         if (reservationsError) throw reservationsError;
 
@@ -385,7 +385,7 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
       // Recargar reservas
       const { data: updatedReservations, error: fetchError } = await supabase
         .from('property_reservations')
-        .select('*')
+        .select('*, owner:profiles!fk_owner_profile (id, first_name, last_name)')
         .eq('property_id', propiedadSeleccionada.id);
 
       if (fetchError) throw fetchError;
