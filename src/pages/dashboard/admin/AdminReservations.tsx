@@ -37,6 +37,10 @@ interface Reservation {
 interface Property {
   id: string;
   title: string;
+  share1_owner_id?: string;
+  share2_owner_id?: string;
+  share3_owner_id?: string;
+  share4_owner_id?: string;
 }
 
 interface Owner {
@@ -77,12 +81,12 @@ const AdminReservations: React.FC = () => {
       // Traer reservas solo con relación a properties
       const { data: reservationsData, error: reservationsError } = await supabase
         .from('property_reservations')
-        .select('*, properties (id, title), owner:profiles!property_reservations_owner_id_fkey (id, first_name, last_name)')
+        .select('*, properties (id, title, share1_owner_id, share2_owner_id, share3_owner_id, share4_owner_id), owner:profiles!property_reservations_owner_id_fkey (id, first_name, last_name)')
         .order('created_at', { ascending: false });
       if (reservationsError) throw reservationsError;
       const { data: propertiesData, error: propertiesError } = await supabase
         .from('properties')
-        .select('id, title')
+        .select('id, title, share1_owner_id, share2_owner_id, share3_owner_id, share4_owner_id')
         .order('title');
       if (propertiesError) throw propertiesError;
       const { data: ownersData, error: ownersError } = await supabase
@@ -315,6 +319,20 @@ const AdminReservations: React.FC = () => {
     }
   };
 
+  // Nueva función para obtener los copropietarios de la propiedad seleccionada
+  const getCoOwners = () => {
+    const selectedProperty = properties.find(p => p.id === (formPropertyRef.current?.value || filterProperty));
+    if (!selectedProperty) return [];
+    // Aquí deberías tener los campos share1_owner_id, share2_owner_id, etc. Si no están en properties, hay que hacer un fetch extra
+    const shareIds = [
+      selectedProperty.share1_owner_id,
+      selectedProperty.share2_owner_id,
+      selectedProperty.share3_owner_id,
+      selectedProperty.share4_owner_id
+    ].filter(Boolean);
+    return owners.filter(o => shareIds.includes(o.id));
+  };
+
   if (loading) return <div style={{padding: '2rem', textAlign: 'center'}}>Cargando reservas...</div>;
 
   return (
@@ -534,23 +552,21 @@ const AdminReservations: React.FC = () => {
                 </div>
               </div>
               {/* Selector Propietario */}
-              <div>
-                <label htmlFor="createOwner" className="block text-sm font-medium text-gray-700 mb-1">Propietario *</label>
-                <div className="relative">
-                  <select
-                    id="createOwner"
-                    ref={formOwnerRef}
-                    name="owner_id"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
-                    required
-                    disabled={creatingOrUpdating}
-                    defaultValue=""
-                  >
-                    <option value="" disabled>Selecciona...</option>
-                    {owners.map(o => <option key={o.id} value={o.id}>{o.first_name} {o.last_name}</option>)}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                </div>
+              <label htmlFor="createOwner" className="block text-sm font-medium text-gray-700 mb-1">Propietario *</label>
+              <div className="relative">
+                <select
+                  id="createOwner"
+                  ref={formOwnerRef}
+                  name="owner_id"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                  required
+                  disabled={creatingOrUpdating}
+                  defaultValue=""
+                >
+                  <option value="" disabled>Selecciona...</option>
+                  {getCoOwners().map(o => <option key={o.id} value={o.id}>{o.first_name} {o.last_name}</option>)}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
               </div>
               {/* Fechas */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
