@@ -18,6 +18,19 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
   const [selectedRange, setSelectedRange] = useState({ from: undefined, to: undefined });
   const [ownerPoints, setOwnerPoints] = useState(0);
 
+  // --- Detectar si es admin ---
+  const isAdmin = user?.role === 'admin';
+  // --- Lista de copropietarios ---
+  const coOwners = useMemo(() => [
+    propiedadSeleccionada?.share1_owner_id,
+    propiedadSeleccionada?.share2_owner_id,
+    propiedadSeleccionada?.share3_owner_id,
+    propiedadSeleccionada?.share4_owner_id
+  ].filter(Boolean), [propiedadSeleccionada]);
+  // --- Estado para el copropietario seleccionado (solo admin) ---
+  const [selectedOwnerId, setSelectedOwnerId] = useState(coOwners[0] || '');
+  useEffect(() => { setSelectedOwnerId(coOwners[0] || ''); }, [coOwners]);
+
   // --- Cargar reservas normales y de intercambio juntas ---
   const fetchAllReservations = async () => {
     setLoading(true);
@@ -103,8 +116,9 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
     }
     // Insert según modo
     if (mode === 'normal') {
-      // Solo copropietarios
-      if (!isCoOwner) {
+      // Admin puede reservar para cualquier copropietario
+      const ownerIdToUse = isAdmin ? selectedOwnerId : user.id;
+      if (!isAdmin && !isCoOwner) {
         toast({ title: 'Error', description: 'Solo copropietarios pueden reservar en este modo.' });
         return;
       }
@@ -112,7 +126,7 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
         .from('property_reservations')
         .insert({
           property_id: propiedadSeleccionada.id,
-          owner_id: user.id,
+          owner_id: ownerIdToUse,
           start_date: selectedRange.from,
           end_date: selectedRange.to,
           status: 'pending',
@@ -217,6 +231,21 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
             <p className="mb-2">Propiedad: <span className="font-semibold">{propiedadSeleccionada.title}</span></p>
             <p className="mb-2">Fechas: <span className="font-semibold">{selectedRange.from?.toLocaleDateString()} - {selectedRange.to?.toLocaleDateString()}</span></p>
             <p className="mb-4">Tipo: <span className="font-semibold capitalize">{mode === 'normal' ? 'Normal' : 'Intercambio'}</span></p>
+            {/* Selector de copropietario solo para admin en modo normal */}
+            {isAdmin && mode === 'normal' && (
+              <div className="mb-4">
+                <label className="block text-sm font-semibold mb-1">Copropietario:</label>
+                <select
+                  className="w-full border rounded px-2 py-1"
+                  value={selectedOwnerId}
+                  onChange={e => setSelectedOwnerId(e.target.value)}
+                >
+                  {coOwners.map(id => (
+                    <option key={id} value={id}>{id}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="flex gap-4 mt-6">
               <button className="flex-1 py-2 rounded bg-primary text-white font-semibold" onClick={handleCreateReservation}>Confirmar</button>
               <button className="flex-1 py-2 rounded bg-gray-200 text-gray-700 font-semibold" onClick={() => setModalOpen(false)}>Cancelar</button>
