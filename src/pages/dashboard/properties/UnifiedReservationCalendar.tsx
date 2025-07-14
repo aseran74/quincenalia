@@ -185,19 +185,22 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
           <div className="mt-1 text-red-600 font-semibold">No puedes reservar en modo normal porque no eres copropietario de esta propiedad.</div>
         )}
       </div>
-      <div className="flex gap-4 mb-4 justify-center">
-        {allowedModes.map(opt => (
-          <button
-            key={opt.value}
-            className={`px-4 py-2 rounded ${mode === opt.value ? opt.color + ' ' + opt.text : 'bg-gray-100 text-gray-500'} font-semibold`}
-            onClick={() => setMode(opt.value)}
-            disabled={false}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-      {/* Mensaje según permisos */}
+      {/* Toggle solo para admin, para el resto solo se muestra el modo permitido */}
+      {isAdmin ? (
+        <div className="flex gap-4 mb-4 justify-center">
+          {MODES.map(opt => (
+            <button
+              key={opt.value}
+              className={`px-4 py-2 rounded ${mode === opt.value ? opt.color + ' ' + opt.text : 'bg-gray-100 text-gray-500'} font-semibold`}
+              onClick={() => setMode(opt.value)}
+              disabled={false}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      {/* Mensaje y modo único para no admin */}
       {!isAdmin && isCoOwner && (
         <div className="mb-2 text-green-700 text-xs font-semibold">Solo puedes hacer reservas normales porque eres copropietario de esta propiedad.</div>
       )}
