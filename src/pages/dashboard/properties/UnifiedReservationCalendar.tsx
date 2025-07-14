@@ -38,6 +38,23 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
     return coOwners.includes(String(user.id).trim());
   }, [user, coOwners, propiedadSeleccionada]);
 
+  // --- Lista de todos los usuarios (simulada aquí, deberías cargarla con un fetch real en producción) ---
+  const allUsers = [
+    { id: '2ec29d61-d37e-46bd-aac4-86e55e0d9d49', first_name: 'owner', last_name: 'propietario', email: 'owner@example.com' },
+    { id: '3878d639-95ab-471e-a3a9-2824a3f67f6c', first_name: 'owner2', last_name: 'owner 2', email: 'owner2@example.com' },
+    { id: '05ae9bed-4713-4962-b055-47da137b3bd2', first_name: 'owner 3', last_name: 'owner 3', email: 'owner3@example.com' },
+    { id: 'fcb9e296-dc0c-42b5-b268-94e54c448152', first_name: 'owner4', last_name: 'owner4', email: 'owner4@example.com' },
+    { id: '7b8bc4d1-b1ce-4d32-b873-afe6ea4c42f5', first_name: 'owner5', last_name: 'owner5', email: 'owner5@example.com' },
+    { id: 'e0e162db-2325-4882-82c8-44a23690dcaf', first_name: 'owner6', last_name: '', email: 'owner6@example.com' },
+    { id: '69d76695-51c5-4620-abbe-1a7a5388f742', first_name: 'owner7', last_name: '', email: 'owner7@example.com' },
+    { id: '0939b324-4a08-4e45-807f-462876f45235', first_name: 'owner8', last_name: '', email: 'owner8@example.com' },
+    // ...añade el resto de usuarios relevantes aquí...
+  ];
+  // --- Copropietarios de la propiedad actual ---
+  const coOwnerIds = coOwnerData.map(o => String(o.id).trim());
+  const coOwnerUsers = allUsers.filter(u => coOwnerIds.includes(u.id));
+  const notCoOwnerUsers = allUsers.filter(u => !coOwnerIds.includes(u.id));
+
   // --- Cargar reservas normales y de intercambio juntas ---
   const fetchAllReservations = async () => {
     setLoading(true);
@@ -255,13 +272,13 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
                   value={selectedOwnerId}
                   onChange={e => setSelectedOwnerId(e.target.value)}
                 >
-                  {coOwnerData.map(o => (
-                    <option key={o.id} value={o.id}>{o.id}</option>
+                  {coOwnerUsers.map(u => (
+                    <option key={u.id} value={u.id}>{u.first_name ? `${u.first_name} ${u.last_name}` : u.email} ({u.email})</option>
                   ))}
                 </select>
               </div>
             )}
-            {/* Selector de usuario para intercambio (opcional, admin) */}
+            {/* Selector de usuario para intercambio (admin) */}
             {isAdmin && mode === 'exchange' && (
               <div className="mb-4">
                 <label className="block text-sm font-semibold mb-1">Usuario:</label>
@@ -270,9 +287,8 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
                   value={selectedOwnerId}
                   onChange={e => setSelectedOwnerId(e.target.value)}
                 >
-                  {/* Aquí deberías mapear todos los usuarios disponibles, por ahora solo copropietarios como ejemplo */}
-                  {coOwnerData.map(o => (
-                    <option key={o.id} value={o.id}>{o.id}</option>
+                  {notCoOwnerUsers.map(u => (
+                    <option key={u.id} value={u.id}>{u.first_name ? `${u.first_name} ${u.last_name}` : u.email} ({u.email})</option>
                   ))}
                 </select>
               </div>
