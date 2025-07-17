@@ -62,6 +62,7 @@ interface ReservationCalendarProps {
   ownerIdForReservation?: string; // Añadido para soporte admin
   onReservationCreated?: () => void; // Por si se usa
   onSelectSlot?: (slotInfo: { start: Date, end: Date }) => void; // NUEVO: para selección desde el padre
+  disabledDays?: Date[]; // NUEVO: días ocupados a bloquear visualmente
 }
 
 // --- Configuración del Calendario ---
@@ -85,7 +86,7 @@ const exchangeStatusColors: Record<string, string> = {
   'cancelada': '#cccccc', // gris
 };
 
-const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, exchangeMode = false, pointsConfig, ownerPoints, onPointsChange, selectedDates, onSelectedDatesChange, ownerIdForReservation, onReservationCreated, onSelectSlot }) => {
+const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, exchangeMode = false, pointsConfig, ownerPoints, onPointsChange, selectedDates, onSelectedDatesChange, ownerIdForReservation, onReservationCreated, onSelectSlot, disabledDays = [] }) => {
   const { user } = useAuth();
   const params = useParams();
   const navigate = useNavigate();
@@ -477,7 +478,7 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
       const end = new Date(slotInfo.end);
       let hayOcupado = false;
       while (d <= end) {
-        if (disabledDates.some(disabled => disabled.toDateString() === d.toDateString())) {
+        if (disabledDays.some(disabled => disabled.toDateString() === d.toDateString())) {
           hayOcupado = true;
           break;
         }
@@ -824,6 +825,21 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
                   showMore: total => `+${total} más`,
                 }}
                 culture='es'
+                dayPropGetter={date => {
+                  if (disabledDays.some(d => d.toDateString() === date.toDateString())) {
+                    return {
+                      style: {
+                        backgroundColor: '#ffeaea',
+                        color: '#b91c1c',
+                        opacity: 0.7,
+                        cursor: 'not-allowed',
+                      },
+                      className: 'rbc-day-disabled',
+                      title: 'Día ocupado',
+                    };
+                  }
+                  return {};
+                }}
               />
             </div>
           </div>

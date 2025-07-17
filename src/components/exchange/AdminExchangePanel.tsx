@@ -82,6 +82,33 @@ const AdminExchangePanel: React.FC = () => {
   // No necesitamos filtrar por nombre aquí, ya que filteredOwners ya lo hace.
   const filteredCalendarOwners = filteredOwners;
 
+  // --- NUEVO: Calcular días ocupados (reservas normales + intercambio) para el calendario ---
+  const [bookedDays, setBookedDays] = useState<Date[]>([]);
+  useEffect(() => {
+    async function fetchBookedDays() {
+      if (!selectedProperty) {
+        setBookedDays([]);
+        return;
+      }
+      const [{ data: normal }, { data: exchange }] = await Promise.all([
+        supabase.from('property_reservations').select('start_date, end_date').eq('property_id', selectedProperty),
+        supabase.from('exchange_reservations').select('start_date, end_date').eq('property_id', selectedProperty)
+      ]);
+      const all = [...(normal || []), ...(exchange || [])];
+      const days: Date[] = [];
+      all.forEach(r => {
+        let d = new Date(r.start_date);
+        const end = new Date(r.end_date);
+        while (d <= end) {
+          days.push(new Date(d));
+          d.setDate(d.getDate() + 1);
+        }
+      });
+      setBookedDays(days);
+    }
+    fetchBookedDays();
+  }, [selectedProperty, resMsg]);
+
   // --- EFECTOS ---
 
   useEffect(() => {
@@ -414,6 +441,29 @@ const AdminExchangePanel: React.FC = () => {
       toast({ title: "Advertencia", description: "La fecha de fin debe ser posterior a la fecha de inicio.", variant: "default" });
       return;
     }
+    // Validación: no permitir reservas a copropietarios (refuerzo extra)
+    if (excludedOwnerIds.includes(manualOwnerId)) {
+      toast({ title: 'Error', description: 'No puedes crear reservas de intercambio para copropietarios.', variant: 'destructive' });
+      return;
+    }
+    // Validación: puntos suficientes
+    const { data: pointsData } = await supabase.from('owner_points').select('points').eq('owner_id', manualOwnerId).single();
+    const currentPoints = pointsData?.points || 0;
+    let total = 0;
+    let d = new Date(manualStart);
+    const endDate = new Date(manualEnd);
+    while (d <= endDate) {
+      if ([0, 6].includes(d.getDay())) {
+        total += pointsWeekend;
+      } else {
+        total += pointsWeekday;
+      }
+      d.setDate(d.getDate() + 1);
+    }
+    if (currentPoints < total) {
+      toast({ title: 'Error', description: `El propietario seleccionado no tiene puntos suficientes. Necesita ${total}, tiene ${currentPoints}.`, variant: 'destructive' });
+      return;
+    }
     setLoading(true);
     try {
       // --- FETCH en tiempo real de todas las reservas (normales + intercambio) antes de validar conflicto ---
@@ -500,6 +550,11 @@ const AdminExchangePanel: React.FC = () => {
   // --- NUEVO: Crear reserva desde el calendario usando la lógica habitual ---
   const handleCreateFromCalendar = async (start: Date, end: Date) => {
     if (!calendarOwnerId || !selectedProperty) return;
+    // Validación: no permitir reservas a copropietarios (refuerzo extra)
+    if (excludedOwnerIds.includes(calendarOwnerId)) {
+      toast({ title: 'Error', description: 'No puedes crear reservas de intercambio para copropietarios.', variant: 'destructive' });
+      return;
+    }
     // Calcular puntos
     let total = 0;
     let d = new Date(start);
@@ -511,6 +566,11 @@ const AdminExchangePanel: React.FC = () => {
         total += pointsWeekday;
       }
       d.setDate(d.getDate() + 1);
+    }
+    // Validación: puntos suficientes
+    if (calendarOwnerPoints < total) {
+      toast({ title: 'Error', description: `El propietario seleccionado no tiene puntos suficientes. Necesita ${total}, tiene ${calendarOwnerPoints}.`, variant: 'destructive' });
+      return;
     }
     try {
       // --- FETCH en tiempo real de todas las reservas (normales + intercambio) antes de validar conflicto ---
@@ -601,6 +661,12 @@ const AdminExchangePanel: React.FC = () => {
       {/* Mensajes de éxito o error */}
       {successMsg && <div className="mt-3 text-sm text-green-600 font-medium">{successMsg.split(' ')[0]} {successMsg.split(' ')[1]}</div>}
       {resMsg && <div className="mt-3 text-sm text-green-600 font-medium">{resMsg.split(' ')[0]} {resMsg.split(' ')[1]}</div>}
+
+      {/* --- Mensaje informativo UX --- */}
+      <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm flex items-center gap-2">
+        <svg className="h-5 w-5 text-yellow-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>
+        Solo puedes seleccionar <b>usuarios que no son copropietarios</b> de la propiedad seleccionada. <b>Solo se permiten reservas de intercambio</b> desde este panel.
+      </div>
 
         {/* Card: Configuración de Precios */}
         <Card className="w-full shadow-sm">
@@ -761,6 +827,7 @@ const AdminExchangePanel: React.FC = () => {
                     <option key={o.id} value={o.id}>{o.first_name} {o.last_name}</option>
                   ))}
                 </select>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 ml-2">Intercambio</span>
               Puntos del propietario: <b className="text-gray-900">{calendarOwnerPoints}</b>
               </div>
             <div className="overflow-auto w-full rounded-md border border-gray-200 p-1 mb-6">
@@ -774,6 +841,7 @@ const AdminExchangePanel: React.FC = () => {
                     }}
                     onReservationCreated={handleCalendarReservationUpdate} 
                   onSelectSlot={handleSelectSlot}
+                  disabledDays={bookedDays}
                   />
                 ) : (
                   <div className="text-gray-500 py-10 text-center text-sm">
@@ -834,10 +902,55 @@ const AdminExchangePanel: React.FC = () => {
                   </DialogHeader>
                   <div className="mb-4">
                     <p>¿Deseas reservar la propiedad <b>{properties.find(p => p.id === selectedProperty)?.title}</b> para el propietario <b>{owners.find(o => o.id === calendarOwnerId)?.first_name} {owners.find(o => o.id === calendarOwnerId)?.last_name}</b> del <b>{format(selectedRange.start, 'dd/MM/yyyy')}</b> al <b>{format(selectedRange.end, 'dd/MM/yyyy')}</b>?</p>
+                    {/* Cálculo de puntos necesarios para el rango seleccionado */}
+                    {(() => {
+                      let total = 0;
+                      let d = new Date(selectedRange.start);
+                      const endDate = new Date(selectedRange.end);
+                      while (d <= endDate) {
+                        if ([0, 6].includes(d.getDay())) {
+                          total += pointsWeekend;
+                        } else {
+                          total += pointsWeekday;
+                        }
+                        d.setDate(d.getDate() + 1);
+                      }
+                      return (
+                        <>
+                          <p className="mt-2"><span className="font-semibold">Puntos necesarios:</span> {total}</p>
+                          <p><span className="font-semibold">Puntos disponibles:</span> {calendarOwnerPoints}</p>
+                          {calendarOwnerPoints < total && (
+                            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                              El propietario seleccionado no tiene puntos suficientes para esta reserva.
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setSelectedRange(null)}>Cancelar</Button>
-                    <Button onClick={handleConfirmCalendarReservation}>Confirmar</Button>
+                    {(() => {
+                      let total = 0;
+                      let d = new Date(selectedRange.start);
+                      const endDate = new Date(selectedRange.end);
+                      while (d <= endDate) {
+                        if ([0, 6].includes(d.getDay())) {
+                          total += pointsWeekend;
+                        } else {
+                          total += pointsWeekday;
+                        }
+                        d.setDate(d.getDate() + 1);
+                      }
+                      return (
+                        <Button
+                          onClick={handleConfirmCalendarReservation}
+                          disabled={calendarOwnerPoints < total}
+                        >
+                          Confirmar
+                        </Button>
+                      );
+                    })()}
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
