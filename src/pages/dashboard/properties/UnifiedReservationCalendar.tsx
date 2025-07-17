@@ -57,7 +57,14 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
     // ...añade el resto de usuarios relevantes aquí...
   ];
   // --- Copropietarios de la propiedad actual ---
-  const coOwnerIds = coOwnerData.map(o => String(o.id).trim());
+  const coOwnerIds = [
+    propiedadSeleccionada?.share1_owner_id,
+    propiedadSeleccionada?.share2_owner_id,
+    propiedadSeleccionada?.share3_owner_id,
+    propiedadSeleccionada?.share4_owner_id,
+  ].filter(Boolean);
+
+  // Filtrar los usuarios para mostrar solo los copropietarios
   const coOwnerUsers = allUsers.filter(u => coOwnerIds.includes(u.id));
   const notCoOwnerUsers = allUsers.filter(u => !coOwnerIds.includes(u.id));
 
