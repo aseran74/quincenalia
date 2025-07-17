@@ -136,6 +136,85 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
     // Insert en reservations_unified
     const ownerIdToUse = isAdmin ? selectedOwnerId : user.id;
     const typeToUse = isAdmin ? mode : (isCoOwner ? 'normal' : 'exchange');
+
+    // Si es reserva de intercambio, calcular puntos y restar
+    if (typeToUse === 'exchange') {
+      // Obtener configuración de puntos de la propiedad
+      let pointsConfigDb = pointsConfig;
+      if (!pointsConfigDb) {
+        // Si no viene por props, buscar en la base de datos
+        const { data: configData, error: configError } = await supabase
+          .from('exchange_properties')
+          .select('points_per_day, points_per_day_weekday')
+          .eq('property_id', propiedadSeleccionada.id)
+          .eq('active', true)
+          .single();
+        if (configError || !configData) {
+          toast({ title: 'Error', description: 'No se pudo obtener la configuración de puntos de la propiedad.', variant: 'destructive' });
+          return;
+        }
+        pointsConfigDb = configData;
+      }
+      // Calcular coste
+      let total = 0;
+      let d = new Date(selectedRange.from);
+      const end = new Date(selectedRange.to);
+      while (d <= end) {
+        if ([0, 6].includes(d.getDay())) {
+          total += pointsConfigDb.points_per_day;
+        } else {
+          total += pointsConfigDb.points_per_day_weekday;
+        }
+        d.setDate(d.getDate() + 1);
+      }
+      // Consultar puntos actuales del usuario
+      const { data: pointsData, error: pointsError } = await supabase
+        .from('owner_points')
+        .select('points')
+        .eq('owner_id', ownerIdToUse)
+        .single();
+      const currentPoints = pointsData?.points ?? 0;
+      if (pointsError && pointsError.code !== 'PGRST116') {
+        toast({ title: 'Error', description: 'No se pudieron consultar los puntos del usuario.', variant: 'destructive' });
+        return;
+      }
+      if (total > currentPoints) {
+        toast({ title: 'Error', description: 'No tienes suficientes puntos para esta reserva.', variant: 'destructive' });
+        return;
+      }
+      // Restar puntos
+      const { error: updateError } = await supabase
+        .from('owner_points')
+        .update({ points: currentPoints - total })
+        .eq('owner_id', ownerIdToUse);
+      if (updateError) {
+        toast({ title: 'Error', description: 'No se pudieron restar los puntos.', variant: 'destructive' });
+        return;
+      }
+      // Insertar reserva
+      const { error } = await supabase
+        .from('reservations_unified')
+        .insert({
+          property_id: propiedadSeleccionada.id,
+          user_id: ownerIdToUse,
+          start_date: selectedRange.from,
+          end_date: selectedRange.to,
+          type: typeToUse,
+          status: 'pending',
+        });
+      if (error) {
+        toast({ title: 'Error', description: error.message });
+        // Si falla la reserva, devolver los puntos
+        await supabase.from('owner_points').update({ points: currentPoints }).eq('owner_id', ownerIdToUse);
+        return;
+      }
+      toast({ title: 'Reserva creada', description: `Reserva registrada correctamente. Se han descontado ${total} puntos.` });
+      setModalOpen(false);
+      setSelectedRange({ from: undefined, to: undefined });
+      fetchAllReservations();
+      return;
+    }
+    // Si es reserva normal
     const { error } = await supabase
       .from('reservations_unified')
       .insert({
@@ -235,21 +314,84 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
                     toast({ title: 'Error', description: 'Fechas ocupadas por otra reserva.' });
                     return;
                   }
+                  const ownerIdToUse = adminSelectedUser;
+                  const typeToUse = adminMode;
+
+                  // Si es reserva de intercambio, calcular puntos y restar
+                  if (typeToUse === 'exchange') {
+                    // Obtener configuración de puntos de la propiedad
+                    let pointsConfigDb = pointsConfig;
+                    if (!pointsConfigDb) {
+                      // Si no viene por props, buscar en la base de datos
+                      const { data: configData, error: configError } = await supabase
+                        .from('exchange_properties')
+                        .select('points_per_day, points_per_day_weekday')
+                        .eq('property_id', propiedadSeleccionada.id)
+                        .eq('active', true)
+                        .single();
+                      if (configError || !configData) {
+                        toast({ title: 'Error', description: 'No se pudo obtener la configuración de puntos de la propiedad.', variant: 'destructive' });
+                        return;
+                      }
+                      pointsConfigDb = configData;
+                    }
+                    // Calcular coste
+                    let total = 0;
+                    let d = new Date(selectedRange.from);
+                    const end = new Date(selectedRange.to);
+                    while (d <= end) {
+                      if ([0, 6].includes(d.getDay())) {
+                        total += pointsConfigDb.points_per_day;
+                      } else {
+                        total += pointsConfigDb.points_per_day_weekday;
+                      }
+                      d.setDate(d.getDate() + 1);
+                    }
+                    // Consultar puntos actuales del usuario
+                    const { data: pointsData, error: pointsError } = await supabase
+                      .from('owner_points')
+                      .select('points')
+                      .eq('owner_id', ownerIdToUse)
+                      .single();
+                    const currentPoints = pointsData?.points ?? 0;
+                    if (pointsError && pointsError.code !== 'PGRST116') {
+                      toast({ title: 'Error', description: 'No se pudieron consultar los puntos del usuario.', variant: 'destructive' });
+                      return;
+                    }
+                    if (total > currentPoints) {
+                      toast({ title: 'Error', description: 'No tienes suficientes puntos para esta reserva.', variant: 'destructive' });
+                      return;
+                    }
+                    // Restar puntos
+                    const { error: updateError } = await supabase
+                      .from('owner_points')
+                      .update({ points: currentPoints - total })
+                      .eq('owner_id', ownerIdToUse);
+                    if (updateError) {
+                      toast({ title: 'Error', description: 'No se pudieron restar los puntos.', variant: 'destructive' });
+                      return;
+                    }
+                  }
+
                   const { error } = await supabase
                     .from('reservations_unified')
                     .insert({
                       property_id: propiedadSeleccionada.id,
-                      user_id: adminSelectedUser,
+                      user_id: ownerIdToUse,
                       start_date: selectedRange.from,
                       end_date: selectedRange.to,
-                      type: adminMode,
+                      type: typeToUse,
                       status: 'pending',
                     });
                   if (error) {
                     toast({ title: 'Error', description: error.message });
+                    // Si falla la reserva, devolver los puntos
+                    if (typeToUse === 'exchange') {
+                      await supabase.from('owner_points').update({ points: currentPoints }).eq('owner_id', ownerIdToUse);
+                    }
                     return;
                   }
-                  toast({ title: 'Reserva creada', description: 'Reserva registrada correctamente.' });
+                  toast({ title: 'Reserva creada', description: `Reserva registrada correctamente. Se han descontado ${typeToUse === 'exchange' ? total : 0} puntos.` });
                   setModalOpen(false);
                   setSelectedRange({ from: undefined, to: undefined });
                   setAdminStep(1);
