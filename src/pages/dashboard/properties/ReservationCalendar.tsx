@@ -470,23 +470,39 @@ const ReservationCalendar: React.FC<ReservationCalendarProps> = ({ propertyId, e
 
   // --- Manejar Selección de Slot ---
   const handleSelectSlot = (slotInfo: SlotInfo) => {
-    if (typeof slotInfo.start === 'object' && typeof slotInfo.end === 'object' && onSelectSlot) {
-      onSelectSlot({ start: slotInfo.start, end: slotInfo.end });
-      return;
-    }
-    if (!ownerSeleccionado) {
-      alert('Por favor, selecciona un propietario antes de reservar una semana.');
-      return;
-    }
-    if (typeof slotInfo.start === 'object' && typeof slotInfo.end === 'object' && onSelectedDatesChange) {
+    // Validar si alguna fecha seleccionada está ocupada
+    if (typeof slotInfo.start === 'object' && typeof slotInfo.end === 'object') {
       const dates: Date[] = [];
       let d = new Date(slotInfo.start);
       const end = new Date(slotInfo.end);
+      let hayOcupado = false;
       while (d <= end) {
+        if (disabledDates.some(disabled => disabled.toDateString() === d.toDateString())) {
+          hayOcupado = true;
+          break;
+        }
         dates.push(new Date(d));
         d.setDate(d.getDate() + 1);
       }
-      onSelectedDatesChange(dates);
+      if (hayOcupado) {
+        toast({
+          title: 'Fechas ocupadas',
+          description: 'Has seleccionado al menos un día ya reservado. Por favor, elige un rango libre.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      if (onSelectSlot) {
+        onSelectSlot({ start: slotInfo.start, end: slotInfo.end });
+        return;
+      }
+      if (!ownerSeleccionado) {
+        alert('Por favor, selecciona un propietario antes de reservar una semana.');
+        return;
+      }
+      if (onSelectedDatesChange) {
+        onSelectedDatesChange(dates);
+      }
     }
   };
 

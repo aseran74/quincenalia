@@ -185,23 +185,28 @@ const ExploreExchangeProperties: React.FC = () => {
 
   // Filtrado avanzado
   useEffect(() => {
-    let result = properties; // Start with the list of fully sold, not-owned properties
+    let result = properties;
+
+    // Refuerzo: excluir propiedades donde el usuario sea copropietario
+    if (user?.id) {
+      result = result.filter(p => ![p.share1_owner_id, p.share2_owner_id, p.share3_owner_id, p.share4_owner_id].some((id) => id === user.id));
+    }
 
     // Filtro fechas: Solo mostrar propiedades disponibles en el rango seleccionado
     if (dateRange?.from && dateRange?.to) {
-        const start = dateRange.from;
-        const end = dateRange.to;
-        result = result.filter(prop => {
-            const reservationsForProp = reservas[prop.id] || [];
-            // Verificar si el rango seleccionado se solapa con alguna reserva
-            const isAvailable = reservationsForProp.every(reservation => {
-                const resStart = new Date(reservation.start_date);
-                const resEnd = new Date(reservation.end_date);
-                // No hay solapamiento si el fin seleccionado es antes del inicio de la reserva O si el inicio seleccionado es después del fin de la reserva
-                return end < resStart || start > resEnd;
-            });
-            return isAvailable;
+      const start = dateRange.from;
+      const end = dateRange.to;
+      result = result.filter(prop => {
+        const reservationsForProp = reservas[prop.id] || [];
+        // Verificar si el rango seleccionado se solapa con alguna reserva
+        const isAvailable = reservationsForProp.every(reservation => {
+          const resStart = new Date(reservation.start_date);
+          const resEnd = new Date(reservation.end_date);
+          // No hay solapamiento si el fin seleccionado es antes del inicio de la reserva O si el inicio seleccionado es después del fin de la reserva
+          return end < resStart || start > resEnd;
         });
+        return isAvailable;
+      });
     }
 
     // Filtro habitaciones
@@ -224,7 +229,7 @@ const ExploreExchangeProperties: React.FC = () => {
       });
     }
     setFilteredProperties(result);
-  }, [properties, bedrooms, bathrooms, minPoints, maxPoints, exchangeConfigs, dateRange, reservas]);
+  }, [properties, bedrooms, bathrooms, minPoints, maxPoints, exchangeConfigs, dateRange, reservas, user?.id]);
 
   // Mostrar dos meses a la vista
   const defaultDate = new Date();

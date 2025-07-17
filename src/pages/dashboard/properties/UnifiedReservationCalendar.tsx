@@ -346,7 +346,10 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
       <div className="mt-8">
         <h3 className="text-lg font-semibold mb-2">Reservas existentes</h3>
         <ul className="space-y-2">
-          {reservas.map((res, i) => (
+          {(isAdmin || !isCoOwner
+            ? reservas
+            : reservas.filter(res => coOwners.includes(String(res.user_id).trim()))
+          ).map((res, i) => (
             <li key={i} className={`rounded px-3 py-2 flex items-center gap-2 ${res.type === 'normal' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
               <span className="font-bold">{res.user?.first_name || 'owner'}:</span>
               <span>{new Date(res.start_date).toLocaleDateString()} - {new Date(res.end_date).toLocaleDateString()}</span>
