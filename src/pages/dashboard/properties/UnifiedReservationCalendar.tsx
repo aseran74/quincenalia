@@ -265,7 +265,10 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
               onChange={e => setAdminSelectedUser(e.target.value)}
             >
               <option value="">Selecciona un usuario...</option>
-              {(adminMode === 'normal' ? coOwnerUsers : notCoOwnerUsers).map(u => (
+              {(adminMode === 'normal'
+                ? allUsers.filter(u => coOwners.includes(u.id)) // Solo copropietarios reales
+                : notCoOwnerUsers
+              ).map(u => (
                 <option key={u.id} value={u.id}>{u.first_name ? `${u.first_name} ${u.last_name}` : u.email} ({u.email})</option>
               ))}
             </select>
@@ -319,10 +322,8 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
 
                   // Si es reserva de intercambio, calcular puntos y restar
                   if (typeToUse === 'exchange') {
-                    // Obtener configuración de puntos de la propiedad
                     let pointsConfigDb = pointsConfig;
                     if (!pointsConfigDb) {
-                      // Si no viene por props, buscar en la base de datos
                       const { data: configData, error: configError } = await supabase
                         .from('exchange_properties')
                         .select('points_per_day, points_per_day_weekday')
@@ -335,7 +336,6 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
                       }
                       pointsConfigDb = configData;
                     }
-                    // Calcular coste
                     let total = 0;
                     let d = new Date(selectedRange.from);
                     const end = new Date(selectedRange.to);
@@ -347,7 +347,6 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
                       }
                       d.setDate(d.getDate() + 1);
                     }
-                    // Consultar puntos actuales del usuario
                     const { data: pointsData, error: pointsError } = await supabase
                       .from('owner_points')
                       .select('points')
@@ -362,7 +361,6 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
                       toast({ title: 'Error', description: 'No tienes suficientes puntos para esta reserva.', variant: 'destructive' });
                       return;
                     }
-                    // Restar puntos
                     const { error: updateError } = await supabase
                       .from('owner_points')
                       .update({ points: currentPoints - total })
@@ -371,8 +369,30 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
                       toast({ title: 'Error', description: 'No se pudieron restar los puntos.', variant: 'destructive' });
                       return;
                     }
+                    const { error } = await supabase
+                      .from('reservations_unified')
+                      .insert({
+                        property_id: propiedadSeleccionada.id,
+                        user_id: ownerIdToUse,
+                        start_date: selectedRange.from,
+                        end_date: selectedRange.to,
+                        type: typeToUse,
+                        status: 'pending',
+                      });
+                    if (error) {
+                      toast({ title: 'Error', description: error.message });
+                      await supabase.from('owner_points').update({ points: currentPoints }).eq('owner_id', ownerIdToUse);
+                      return;
+                    }
+                    toast({ title: 'Reserva creada', description: `Reserva registrada correctamente. Se han descontado ${total} puntos.` });
+                    setModalOpen(false);
+                    setSelectedRange({ from: undefined, to: undefined });
+                    setAdminStep(1);
+                    setAdminSelectedUser('');
+                    fetchAllReservations();
+                    return;
                   }
-
+                  // Si es reserva normal
                   const { error } = await supabase
                     .from('reservations_unified')
                     .insert({
@@ -385,13 +405,9 @@ export default function UnifiedReservationCalendar({ propiedadSeleccionada, owne
                     });
                   if (error) {
                     toast({ title: 'Error', description: error.message });
-                    // Si falla la reserva, devolver los puntos
-                    if (typeToUse === 'exchange') {
-                      await supabase.from('owner_points').update({ points: currentPoints }).eq('owner_id', ownerIdToUse);
-                    }
                     return;
                   }
-                  toast({ title: 'Reserva creada', description: `Reserva registrada correctamente. Se han descontado ${typeToUse === 'exchange' ? total : 0} puntos.` });
+                  toast({ title: 'Reserva creada', description: 'Reserva registrada correctamente.' });
                   setModalOpen(false);
                   setSelectedRange({ from: undefined, to: undefined });
                   setAdminStep(1);
