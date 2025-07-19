@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { format } from 'date-fns';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { CalendarDays, Users, Coins, Clock } from 'lucide-react'; // Added lucide-react imports
+import { Badge } from '@/components/ui/badge'; // Added badge import
 
 interface Property {
   id: string;
@@ -77,6 +79,9 @@ const AdminExchangePanel: React.FC = () => {
 
   // --- NUEVO: Estado para fechas seleccionadas desde el calendario ---
   const [selectedRange, setSelectedRange] = useState<{start: Date, end: Date} | null>(null);
+  
+  // --- NUEVO: Estado para el modal de confirmación de reserva ---
+  const [showReservationModal, setShowReservationModal] = useState<boolean>(false);
 
   // --- NUEVO: Filtrar propietarios para el calendario de intercambio (ya incluye filtro principal por dueño) ---
   // No necesitamos filtrar por nombre aquí, ya que filteredOwners ya lo hace.
@@ -542,72 +547,55 @@ const AdminExchangePanel: React.FC = () => {
 
   // --- NUEVO: Confirmar reserva desde el modal ---
   const handleConfirmCalendarReservation = async () => {
-    if (!selectedRange || !calendarOwnerId || !selectedProperty) return;
-    await handleCreateFromCalendar(selectedRange.start, selectedRange.end);
-    setSelectedRange(null);
-  };
-
-  // --- NUEVO: Crear reserva desde el calendario usando la lógica habitual ---
-  const handleCreateFromCalendar = async (start: Date, end: Date) => {
-    if (!calendarOwnerId || !selectedProperty) return;
-    // Validación: no permitir reservas a copropietarios (refuerzo extra)
-    if (excludedOwnerIds.includes(calendarOwnerId)) {
-      toast({ title: 'Error', description: 'No puedes crear reservas de intercambio para copropietarios.', variant: 'destructive' });
+    // Validación robusta del rango seleccionado
+    if (!selectedRange || !selectedRange.start || !selectedRange.end) {
+      toast({ title: 'Error', description: 'Selecciona un rango completo.', variant: 'destructive' });
       return;
     }
-    // Calcular puntos
-    let total = 0;
-    let d = new Date(start);
-    const endDate = new Date(end);
-    while (d <= endDate) {
-      if ([0, 6].includes(d.getDay())) {
-        total += pointsWeekend;
-      } else {
-        total += pointsWeekday;
-      }
-      d.setDate(d.getDate() + 1);
-    }
-    // Validación: puntos suficientes
-    if (calendarOwnerPoints < total) {
-      toast({ title: 'Error', description: `El propietario seleccionado no tiene puntos suficientes. Necesita ${total}, tiene ${calendarOwnerPoints}.`, variant: 'destructive' });
-      return;
-    }
+    const { start, end } = selectedRange;
     try {
-      // --- FETCH en tiempo real de todas las reservas (normales + intercambio) antes de validar conflicto ---
-      const [{ data: reservationsData }, { data: exchangeData }] = await Promise.all([
-        supabase.from('property_reservations').select('start_date, end_date').eq('property_id', selectedProperty),
-        supabase.from('exchange_reservations').select('start_date, end_date').eq('property_id', selectedProperty)
-      ]);
-      const allReservations = [
-        ...(reservationsData || []),
-        ...(exchangeData || [])
-      ];
-      // Validación de conflicto sobre el array fresco
-      const conflictingReservations = allReservations.filter(res => {
-        const resStart = new Date(res.start_date);
-        const resEnd = new Date(res.end_date);
-        return (
-          (start >= resStart && start <= resEnd) ||
-          (end >= resStart && end <= resEnd) ||
-          (start <= resStart && end >= resEnd)
-        );
-      });
-      if (conflictingReservations.length > 0) {
-        toast({ title: 'Error', description: 'Ya existe una reserva (normal o intercambio) en ese rango de fechas', variant: 'destructive' });
+      // Calcular puntos
+      let total = 0;
+      let d = new Date(start);
+      const endDate = new Date(end);
+      while (d <= endDate) {
+        if ([0, 6].includes(d.getDay())) {
+          total += pointsWeekend;
+        } else {
+          total += pointsWeekday;
+        }
+        d.setDate(d.getDate() + 1);
+      }
+      // Validación: puntos suficientes
+      if (calendarOwnerPoints < total) {
+        toast({ title: 'Error', description: `El propietario seleccionado no tiene puntos suficientes. Necesita ${total}, tiene ${calendarOwnerPoints}.`, variant: 'destructive' });
         return;
       }
-      const { error } = await supabase
-        .from('exchange_reservations')
-        .insert({
-          property_id: selectedProperty,
-          owner_id: calendarOwnerId,
-          start_date: format(start, 'yyyy-MM-dd'),
-          end_date: format(end, 'yyyy-MM-dd'),
-          status: 'pendiente',
-          points: total,
-          points_used: total
-        });
+      // Insertar reserva
+      const { error } = await supabase.from('exchange_reservations').insert({
+        property_id: selectedProperty,
+        owner_id: calendarOwnerId,
+        start_date: format(start, 'yyyy-MM-dd'),
+        end_date: format(end, 'yyyy-MM-dd'),
+        status: 'pendiente',
+        points: total,
+        points_used: total
+      });
       if (error) throw error;
+      // RESTAR PUNTOS AL OWNER
+      const { data: pointsData, error: pointsError } = await supabase
+        .from('owner_points')
+        .select('points')
+        .eq('owner_id', calendarOwnerId)
+        .single();
+      if (!pointsError && pointsData) {
+        const currentPoints = pointsData.points || 0;
+        const newPoints = Math.max(0, currentPoints - total);
+        await supabase
+          .from('owner_points')
+          .update({ points: newPoints })
+          .eq('owner_id', calendarOwnerId);
+      }
       toast({ title: 'Reserva de intercambio creada', description: 'La reserva se ha creado correctamente.' });
       setResMsg('Reserva creada');
       setTimeout(() => setResMsg(''), 2000);
@@ -809,46 +797,112 @@ const AdminExchangePanel: React.FC = () => {
         </Card>
 
         {/* Card: Calendario */}
-        <Card className="w-full shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold text-gray-700">Calendario de Intercambio</CardTitle>
-            </CardHeader>
-            <CardContent>
-            <div className="mb-4 text-sm text-gray-700">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Propietario para intercambio:</label>
-                <select
-                className="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 mb-2"
-                  value={calendarOwnerId}
-                  onChange={e => setCalendarOwnerId(e.target.value)}
-                disabled={filteredCalendarOwners.length === 0}
-                >
-                {filteredCalendarOwners.length === 0 && <option value="">No hay propietarios disponibles</option>}
-                {filteredCalendarOwners.map(o => (
-                    <option key={o.id} value={o.id}>{o.first_name} {o.last_name}</option>
-                  ))}
-                </select>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 ml-2">Intercambio</span>
-              Puntos del propietario: <b className="text-gray-900">{calendarOwnerPoints}</b>
-              </div>
-            <div className="overflow-auto w-full rounded-md border border-gray-200 p-1 mb-6">
-              {selectedProperty ? (
-                  <ReservationCalendar
-                    propertyId={selectedProperty}
-                    exchangeMode={true}
-                    pointsConfig={{
-                      points_per_day: pointsWeekend,
-                      points_per_day_weekday: pointsWeekday
-                    }}
-                    onReservationCreated={handleCalendarReservationUpdate} 
-                  onSelectSlot={handleSelectSlot}
-                  disabledDays={bookedDays}
-                  />
-                ) : (
-                  <div className="text-gray-500 py-10 text-center text-sm">
-                  Seleccione una propiedad para ver el calendario.
+        <div className="grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-5 gap-6 lg:gap-8">
+          {/* Calendario */}
+          <div className="lg:col-span-3 xl:col-span-4">
+            <Card className="shadow-lg border-0">
+              <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b p-4 lg:p-6">
+                <CardTitle className="flex items-center gap-2 text-gray-800 text-lg lg:text-xl">
+                  <CalendarDays className="h-5 w-5" />
+                  Calendario de Intercambio
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 lg:p-8">
+                {/* DEBUG VISUAL: Estado de selección y propietario */}
+                <div className="mb-4 p-2 bg-gray-100 rounded text-xs text-gray-700">
+                  <div><b>selectedRange:</b> {selectedRange ? `${selectedRange.start?.toLocaleDateString()} - ${selectedRange.end?.toLocaleDateString()}` : 'Ninguno'}</div>
+                  <div><b>calendarOwnerId:</b> {calendarOwnerId || 'Ninguno'}</div>
+                  <div><b>calendarOwnerPoints:</b> {calendarOwnerPoints}</div>
+                </div>
+                <div className="flex justify-center">
+                  {selectedProperty ? (
+                    <ReservationCalendar
+                      propertyId={selectedProperty}
+                      exchangeMode={true}
+                      pointsConfig={{
+                        points_per_day: pointsWeekend,
+                        points_per_day_weekday: pointsWeekday
+                      }}
+                      ownerIdForReservation={calendarOwnerId}
+                      ownerPoints={calendarOwnerPoints}
+                      selectedDates={selectedRange ? [selectedRange.start, selectedRange.end] : []}
+                      onSelectedDatesChange={dates => {
+                        if (dates.length === 2) setSelectedRange({ start: dates[0], end: dates[1] });
+                        else setSelectedRange(null);
+                      }}
+                      onReservationCreated={handleCalendarReservationUpdate} 
+                      onSelectSlot={handleSelectSlot}
+                      disabledDays={bookedDays}
+                    />
+                  ) : (
+                    <div className="text-gray-500 py-10 text-center text-sm">
+                      Seleccione una propiedad para ver el calendario.
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Panel lateral */}
+          <div className="space-y-4 lg:space-y-6">
+            {/* Selector de propietario */}
+            <Card className="shadow-lg border-0">
+              <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b p-3 lg:p-4">
+                <CardTitle className="flex items-center gap-2 text-gray-800 text-sm lg:text-base">
+                  <Users className="h-4 w-4 lg:h-5 lg:w-5" />
+                  Propietario
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-3 lg:p-4">
+                <div className="space-y-3 lg:space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Propietario para intercambio:</label>
+                    <select
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                      value={calendarOwnerId}
+                      onChange={e => setCalendarOwnerId(e.target.value)}
+                      disabled={filteredCalendarOwners.length === 0}
+                    >
+                      {filteredCalendarOwners.length === 0 && <option value="">No hay propietarios disponibles</option>}
+                      {filteredCalendarOwners.map(o => (
+                        <option key={o.id} value={o.id}>{o.first_name} {o.last_name}</option>
+                      ))}
+                    </select>
                   </div>
-                )}
-            </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Coins className="h-4 w-4 text-gray-500" />
+                      <span className="text-gray-600">Puntos disponibles:</span>
+                    </div>
+                    <Badge variant="outline">{calendarOwnerPoints}</Badge>
+                  </div>
+                  <div className="flex items-center justify-center">
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <Coins className="h-3 w-3" />
+                      Intercambio
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Botón de crear reserva */}
+            <Card className="shadow-lg border-0">
+              <CardContent className="p-3 lg:p-4">
+                <Button 
+                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg"
+                  disabled={!selectedRange?.start || !selectedRange?.end || !calendarOwnerId}
+                  size="default"
+                  onClick={() => setShowReservationModal(true)}
+                >
+                  <CalendarDays className="h-4 w-4 mr-2" />
+                  Crear Reserva
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
             {/* --- Formulario de reserva manual junto al calendario --- */}
             <div className="mb-4 p-4 bg-indigo-50 rounded-md border border-indigo-200">
               <h4 className="font-semibold mb-2 text-indigo-900">Reserva manual de intercambio</h4>
@@ -894,16 +948,39 @@ const AdminExchangePanel: React.FC = () => {
               </Button>
               {manualMsg && <div className="mt-3 text-sm text-green-600 font-medium">{manualMsg.split(' ')[0]} {manualMsg.split(' ')[1]}</div>}
             </div>
-            {selectedRange && (
-              <Dialog open={!!selectedRange} onOpenChange={open => !open && setSelectedRange(null)}>
-                <DialogContent>
+            {/* Modal de confirmación de reserva */}
+            <Dialog open={showReservationModal} onOpenChange={setShowReservationModal}>
+                <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>Confirmar reserva de intercambio</DialogTitle>
+                    <DialogTitle className="flex items-center gap-2">
+                      <CalendarDays className="h-5 w-5" />
+                      Confirmar Reserva de Intercambio
+                    </DialogTitle>
                   </DialogHeader>
                   <div className="mb-4">
-                    <p>¿Deseas reservar la propiedad <b>{properties.find(p => p.id === selectedProperty)?.title}</b> para el propietario <b>{owners.find(o => o.id === calendarOwnerId)?.first_name} {owners.find(o => o.id === calendarOwnerId)?.last_name}</b> del <b>{format(selectedRange.start, 'dd/MM/yyyy')}</b> al <b>{format(selectedRange.end, 'dd/MM/yyyy')}</b>?</p>
+                    {selectedRange && (
+                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 mb-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Clock className="h-4 w-4 text-blue-600" />
+                          <p className="text-sm font-medium text-blue-900">Fechas seleccionadas:</p>
+                        </div>
+                        <p className="text-sm text-blue-800">
+                          {format(selectedRange.start, 'dd/MM/yyyy')} - {format(selectedRange.end, 'dd/MM/yyyy')}
+                        </p>
+                      </div>
+                    )}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">Propiedad:</span>
+                        <span className="text-sm text-gray-900">{properties.find(p => p.id === selectedProperty)?.title}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">Propietario:</span>
+                        <span className="text-sm text-gray-900">{owners.find(o => o.id === calendarOwnerId)?.first_name} {owners.find(o => o.id === calendarOwnerId)?.last_name}</span>
+                      </div>
+                    </div>
                     {/* Cálculo de puntos necesarios para el rango seleccionado */}
-                    {(() => {
+                    {selectedRange && (() => {
                       let total = 0;
                       let d = new Date(selectedRange.start);
                       const endDate = new Date(selectedRange.end);
@@ -916,21 +993,33 @@ const AdminExchangePanel: React.FC = () => {
                         d.setDate(d.getDate() + 1);
                       }
                       return (
-                        <>
-                          <p className="mt-2"><span className="font-semibold">Puntos necesarios:</span> {total}</p>
-                          <p><span className="font-semibold">Puntos disponibles:</span> {calendarOwnerPoints}</p>
+                        <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Coins className="h-4 w-4 text-yellow-600" />
+                            <p className="text-sm font-medium text-yellow-900">Información de Puntos</p>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-sm text-yellow-800">Puntos necesarios:</span>
+                              <span className="text-sm font-bold text-yellow-900">{total}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-sm text-yellow-800">Puntos disponibles:</span>
+                              <span className="text-sm font-bold text-yellow-900">{calendarOwnerPoints}</span>
+                            </div>
+                          </div>
                           {calendarOwnerPoints < total && (
-                            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                            <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
                               El propietario seleccionado no tiene puntos suficientes para esta reserva.
                             </div>
                           )}
-                        </>
+                        </div>
                       );
                     })()}
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setSelectedRange(null)}>Cancelar</Button>
-                    {(() => {
+                    <Button variant="outline" onClick={() => setShowReservationModal(false)}>Cancelar</Button>
+                    {selectedRange && (() => {
                       let total = 0;
                       let d = new Date(selectedRange.start);
                       const endDate = new Date(selectedRange.end);
@@ -944,7 +1033,10 @@ const AdminExchangePanel: React.FC = () => {
                       }
                       return (
                         <Button
-                          onClick={handleConfirmCalendarReservation}
+                          onClick={() => {
+                            handleConfirmCalendarReservation();
+                            setShowReservationModal(false);
+                          }}
                           disabled={calendarOwnerPoints < total}
                         >
                           Confirmar
@@ -954,10 +1046,6 @@ const AdminExchangePanel: React.FC = () => {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-            )}
-            </CardContent>
-        </Card>
-        
 
         {/* Sección: Gestión de Puntos y Asignación Manual (Acordeón) */}
         <Accordion type="multiple" className="w-full space-y-1" defaultValue={['puntos_admin']}>

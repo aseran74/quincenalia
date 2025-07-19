@@ -1,577 +1,802 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
-import { toast } from '@/components/ui/use-toast';
+import { format, addDays, isSameDay, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { CalendarDays, Users, Clock, MapPin, Star, Coins, UserCheck, Building2 } from 'lucide-react';
 
-const MODES = [
-  { value: 'normal', label: 'Reserva normal', color: 'bg-green-200', text: 'text-green-800' },
-  { value: 'exchange', label: 'Intercambio', color: 'bg-blue-200', text: 'text-blue-800' },
-];
-
-export default function UnifiedReservationCalendar({ propiedadSeleccionada, owners, pointsConfig, onPointsChange }) {
-  const { user } = useAuth();
-  const [mode, setMode] = useState('normal');
-  const [reservas, setReservas] = useState([]);
+export default function UnifiedReservationCalendar({ propiedadSeleccionada, pointsConfig }) {
+  const { toast } = useToast();
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [reservas, setReservas] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRange, setSelectedRange] = useState({ from: undefined, to: undefined });
-  const [ownerPoints, setOwnerPoints] = useState(0);
+  const [selectedUser, setSelectedUser] = useState('');
+  const [reservationType, setReservationType] = useState('normal');
+  const [allUsers, setAllUsers] = useState([]);
+  const [coOwners, setCoOwners] = useState([]);
 
-  // Paso 1: Seleccionar propiedad (ya se hace fuera, con propiedadSeleccionada)
-  // Paso 2: Seleccionar tipo de reserva (solo admin)
-  const [adminStep, setAdminStep] = useState(1);
-  const [adminMode, setAdminMode] = useState('normal');
-  const [adminSelectedUser, setAdminSelectedUser] = useState('');
+  // --- NUEVO: Calcular días ocupados (asincrónico) ---
+  const [bookedDays, setBookedDays] = useState([]);
+  useEffect(() => {
+    async function fetchBookedDays() {
+      if (!propiedadSeleccionada?.id) {
+        setBookedDays([]);
+        return;
+      }
+      // Traer reservas normales y de intercambio
+      const [{ data: normal }, { data: exchange }] = await Promise.all([
+        supabase.from('property_reservations').select('start_date, end_date').eq('property_id', propiedadSeleccionada.id),
+        supabase.from('exchange_reservations').select('start_date, end_date').eq('property_id', propiedadSeleccionada.id)
+      ]);
+      const all = [...(normal || []), ...(exchange || [])];
+      const days = [];
+      all.forEach(r => {
+        let d = new Date(r.start_date);
+        const end = new Date(r.end_date);
+        while (d <= end) {
+          days.push(new Date(d));
+          d.setDate(d.getDate() + 1);
+        }
+      });
+      setBookedDays(days);
+    }
+    fetchBookedDays();
+  }, [propiedadSeleccionada?.id, modalOpen]);
 
-  // --- Lista de copropietarios con datos ---
-  const coOwnerData = [
-    { id: propiedadSeleccionada?.share1_owner_id, label: 'share1' },
-    { id: propiedadSeleccionada?.share2_owner_id, label: 'share2' },
-    { id: propiedadSeleccionada?.share3_owner_id, label: 'share3' },
-    { id: propiedadSeleccionada?.share4_owner_id, label: 'share4' },
-  ].filter(o => !!o.id);
-  // --- Lista de IDs de copropietarios (como string, sin espacios) ---
-  const coOwners = coOwnerData.map(o => String(o.id).trim());
-  // --- Estado para el copropietario seleccionado (solo admin) ---
-  const [selectedOwnerId, setSelectedOwnerId] = useState(coOwners[0] || '');
-  useEffect(() => { setSelectedOwnerId(coOwners[0] || ''); }, [coOwners]);
-  // --- Detectar si es admin ---
+  // Cargar usuario actual
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        setUser(profile);
+      }
+    };
+    getUser();
+  }, []);
+
+  // Cargar usuarios (solo owners y copropietarios de la propiedad seleccionada)
+  useEffect(() => {
+    const loadUsers = async () => {
+      if (!propiedadSeleccionada) {
+        setAllUsers([]);
+        return;
+      }
+
+      // Obtener los IDs de copropietarios de la propiedad
+      const coOwnerIds = [
+        propiedadSeleccionada.share1_owner_id,
+        propiedadSeleccionada.share2_owner_id,
+        propiedadSeleccionada.share3_owner_id,
+        propiedadSeleccionada.share4_owner_id,
+      ].filter(id => id && id !== 'null' && id !== 'undefined');
+
+      // Cargar solo los usuarios que son copropietarios de esta propiedad específica
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, email, role')
+        .in('id', coOwnerIds)
+        .order('first_name');
+      
+      setAllUsers(data || []);
+      
+      // Debug: mostrar información de usuarios cargados
+      console.log('=== USUARIOS CARGADOS ===');
+      console.log('IDs de copropietarios de la propiedad:', coOwnerIds);
+      console.log('Usuarios encontrados:', data?.map(u => `${u.first_name} ${u.last_name} (${u.id})`) || []);
+      console.log('========================');
+    };
+    loadUsers();
+  }, [propiedadSeleccionada?.id]); // Recargar cuando cambie la propiedad
+
+  // Determinar copropietarios de la propiedad
+  useEffect(() => {
+    if (propiedadSeleccionada) {
+      const coOwnerIds = [
+        propiedadSeleccionada.share1_owner_id,
+        propiedadSeleccionada.share2_owner_id,
+        propiedadSeleccionada.share3_owner_id,
+        propiedadSeleccionada.share4_owner_id,
+      ].filter(id => id && id !== 'null' && id !== 'undefined');
+      setCoOwners(coOwnerIds);
+      
+      // Debug: mostrar información de la propiedad seleccionada
+      console.log('=== PROPIEDAD SELECCIONADA ===');
+      console.log('Título:', propiedadSeleccionada.title);
+      console.log('ID:', propiedadSeleccionada.id);
+      console.log('Share1 Owner ID:', propiedadSeleccionada.share1_owner_id);
+      console.log('Share2 Owner ID:', propiedadSeleccionada.share2_owner_id);
+      console.log('Share3 Owner ID:', propiedadSeleccionada.share3_owner_id);
+      console.log('Share4 Owner ID:', propiedadSeleccionada.share4_owner_id);
+      console.log('Copropietarios filtrados:', coOwnerIds);
+      console.log('Total de copropietarios:', coOwnerIds.length);
+      console.log('==============================');
+      
+      // Limpiar usuario seleccionado cuando cambia la propiedad
+      setSelectedUser('');
+    } else {
+      setCoOwners([]);
+    }
+  }, [propiedadSeleccionada]);
+
+  // Verificar si el usuario actual es admin
   const isAdmin = user?.role === 'admin';
-  // --- Detectar si el usuario es copropietario (comparando como string, sin espacios) ---
+
+  // Verificar si el usuario actual es copropietario
   const isCoOwner = useMemo(() => {
     if (!user || !propiedadSeleccionada) return false;
-    return coOwners.includes(String(user.id).trim());
+    return coOwners.includes(user.id);
   }, [user, coOwners, propiedadSeleccionada]);
 
-  // --- Lista de todos los usuarios (simulada aquí, deberías cargarla con un fetch real en producción) ---
-  const allUsers = [
-    { id: '2ec29d61-d37e-46bd-aac4-86e55e0d9d49', first_name: 'owner', last_name: 'propietario', email: 'owner@example.com' },
-    { id: '3878d639-95ab-471e-a3a9-2824a3f67f6c', first_name: 'owner2', last_name: 'owner 2', email: 'owner2@example.com' },
-    { id: '05ae9bed-4713-4962-b055-47da137b3bd2', first_name: 'owner 3', last_name: 'owner 3', email: 'owner3@example.com' },
-    { id: 'fcb9e296-dc0c-42b5-b268-94e54c448152', first_name: 'owner4', last_name: 'owner4', email: 'owner4@example.com' },
-    { id: '7b8bc4d1-b1ce-4d32-b873-afe6ea4c42f5', first_name: 'owner5', last_name: 'owner5', email: 'owner5@example.com' },
-    { id: 'e0e162db-2325-4882-82c8-44a23690dcaf', first_name: 'owner6', last_name: '', email: 'owner6@example.com' },
-    { id: '69d76695-51c5-4620-abbe-1a7a5388f742', first_name: 'owner7', last_name: '', email: 'owner7@example.com' },
-    { id: '0939b324-4a08-4e45-807f-462876f45235', first_name: 'owner8', last_name: '', email: 'owner8@example.com' },
-    // ...añade el resto de usuarios relevantes aquí...
-  ];
-  // --- Copropietarios de la propiedad actual ---
-  const coOwnerIds = [
-    propiedadSeleccionada?.share1_owner_id,
-    propiedadSeleccionada?.share2_owner_id,
-    propiedadSeleccionada?.share3_owner_id,
-    propiedadSeleccionada?.share4_owner_id,
-  ].filter(Boolean);
-
-  // Filtrar los usuarios para mostrar solo los copropietarios
-  const coOwnerUsers = allUsers.filter(u => coOwnerIds.includes(u.id));
-  const notCoOwnerUsers = allUsers.filter(u => !coOwnerIds.includes(u.id));
-
-  // --- Cambiar fetch y creación de reservas para usar reservations_unified ---
-  const fetchAllReservations = async () => {
+  // Cargar reservas
+  const fetchReservations = async () => {
+    if (!propiedadSeleccionada?.id) return;
+    
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('reservations_unified')
-        .select('*, user:profiles (id, first_name, last_name, email)')
+        .select('*, user:profiles(id, first_name, last_name, email)')
         .eq('property_id', propiedadSeleccionada.id);
+      
       if (error) throw error;
       setReservas(data || []);
-    } catch (e) {
-      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar las reservas",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (propiedadSeleccionada?.id) fetchAllReservations();
-    // eslint-disable-next-line
+    fetchReservations();
   }, [propiedadSeleccionada?.id]);
 
-  // --- Días ocupados ---
-  const bookedDays = useMemo(() => {
-    const days = [];
-    reservas.forEach(res => {
-      let current = new Date(res.start_date);
-      const end = new Date(res.end_date);
-      while (current <= end) {
-        days.push(new Date(current));
-        current.setDate(current.getDate() + 1);
-      }
-    });
-    return days;
-  }, [reservas]);
-
-  // --- Permisos de modo ---
-  const canExchange = user?.points > 0; // O lógica real de puntos
-
-  // --- Determinar modos permitidos ---
-  let allowedModes = MODES;
-  let forcedMode = null;
-  if (!isAdmin) {
-    if (isCoOwner) {
-      allowedModes = MODES.filter(m => m.value === 'normal');
-      forcedMode = 'normal';
-    } else {
-      allowedModes = MODES.filter(m => m.value === 'exchange');
-      forcedMode = 'exchange';
-    }
-  }
-  // Si solo hay un modo permitido, forzamos ese modo (solo para no admin)
-  useEffect(() => {
-    if (!isAdmin && forcedMode && mode !== forcedMode) setMode(forcedMode);
-    // eslint-disable-next-line
-  }, [forcedMode, isAdmin]);
-
-  // --- Crear reserva (modal simplificado) ---
-  const handleCreateReservation = async () => {
-    if (!selectedRange.from || !selectedRange.to) return;
-    await fetchAllReservations();
-    const conflict = reservas.some(res => {
-      const resStart = new Date(res.start_date);
-      const resEnd = new Date(res.end_date);
-      return (
-        (selectedRange.from <= resEnd && selectedRange.to >= resStart)
-      );
-    });
-    if (conflict) {
-      toast({ title: 'Error', description: 'Fechas ocupadas por otra reserva.' });
-      return;
-    }
-    // Insert en reservations_unified
-    const ownerIdToUse = isAdmin ? selectedOwnerId : user.id;
-    const typeToUse = isAdmin ? mode : (isCoOwner ? 'normal' : 'exchange');
-
-    // Si es reserva de intercambio, calcular puntos y restar
-    if (typeToUse === 'exchange') {
-      // Obtener configuración de puntos de la propiedad
-      let pointsConfigDb = pointsConfig;
-      if (!pointsConfigDb) {
-        // Si no viene por props, buscar en la base de datos
-        const { data: configData, error: configError } = await supabase
-          .from('exchange_properties')
-          .select('points_per_day, points_per_day_weekday')
-          .eq('property_id', propiedadSeleccionada.id)
-          .eq('active', true)
-          .single();
-        if (configError || !configData) {
-          toast({ title: 'Error', description: 'No se pudo obtener la configuración de puntos de la propiedad.', variant: 'destructive' });
-          return;
-        }
-        pointsConfigDb = configData;
-      }
-      // Calcular coste
-      let total = 0;
-      let d = new Date(selectedRange.from);
-      const end = new Date(selectedRange.to);
-      while (d <= end) {
-        if ([0, 6].includes(d.getDay())) {
-          total += pointsConfigDb.points_per_day;
-        } else {
-          total += pointsConfigDb.points_per_day_weekday;
-        }
-        d.setDate(d.getDate() + 1);
-      }
-      // Consultar puntos actuales del usuario
-      const { data: pointsData, error: pointsError } = await supabase
-        .from('owner_points')
-        .select('points')
-        .eq('owner_id', ownerIdToUse)
-        .single();
-      const currentPoints = pointsData?.points ?? 0;
-      if (pointsError && pointsError.code !== 'PGRST116') {
-        toast({ title: 'Error', description: 'No se pudieron consultar los puntos del usuario.', variant: 'destructive' });
-        return;
-      }
-      if (total > currentPoints) {
-        toast({ title: 'Error', description: 'No tienes suficientes puntos para esta reserva.', variant: 'destructive' });
-        return;
-      }
-      // Restar puntos
-      const { error: updateError } = await supabase
-        .from('owner_points')
-        .update({ points: currentPoints - total })
-        .eq('owner_id', ownerIdToUse);
-      if (updateError) {
-        toast({ title: 'Error', description: 'No se pudieron restar los puntos.', variant: 'destructive' });
-        return;
-      }
-      // Insertar reserva
-      const { error } = await supabase
-        .from('reservations_unified')
-        .insert({
-          property_id: propiedadSeleccionada.id,
-          user_id: ownerIdToUse,
-          start_date: selectedRange.from,
-          end_date: selectedRange.to,
-          type: typeToUse,
-          status: 'pending',
-        });
-      if (error) {
-        toast({ title: 'Error', description: error.message });
-        // Si falla la reserva, devolver los puntos
-        await supabase.from('owner_points').update({ points: currentPoints }).eq('owner_id', ownerIdToUse);
-        return;
-      }
-      toast({ title: 'Reserva creada', description: `Reserva registrada correctamente. Se han descontado ${total} puntos.` });
-      setModalOpen(false);
-      setSelectedRange({ from: undefined, to: undefined });
-      fetchAllReservations();
-      return;
-    }
-    // Si es reserva normal
-    const { error } = await supabase
-      .from('reservations_unified')
-      .insert({
-        property_id: propiedadSeleccionada.id,
-        user_id: ownerIdToUse,
-        start_date: selectedRange.from,
-        end_date: selectedRange.to,
-        type: typeToUse,
-        status: 'pending',
-      });
-    if (error) {
-      toast({ title: 'Error', description: error.message });
-      return;
-    }
-    toast({ title: 'Reserva creada', description: 'Reserva registrada correctamente.' });
-    setModalOpen(false);
-    setSelectedRange({ from: undefined, to: undefined });
-    fetchAllReservations();
+  // Verificar si un día está ocupado
+  const isDayBooked = (day) => {
+    return bookedDays.some(bookedDay => isSameDay(bookedDay, day));
   };
 
-  // --- Render paso a paso para admin ---
+  // Verificar si hay conflicto en el rango seleccionado
+  const hasConflict = (from, to) => {
+    // También chequea los días ocupados
+    if (!from || !to) return false;
+    let d = new Date(from);
+    while (d <= to) {
+      if (bookedDays.some(bd => bd.toDateString() === d.toDateString())) {
+        return true;
+      }
+      d.setDate(d.getDate() + 1);
+    }
+    return false;
+  };
+
+  // Calcular puntos necesarios para intercambio
+  const calculatePoints = (from, to) => {
+    if (!pointsConfig) return 0;
+    
+    let total = 0;
+    let current = new Date(from);
+    const end = new Date(to);
+    
+    while (current <= end) {
+      const dayOfWeek = current.getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        total += pointsConfig.points_per_day || 10;
+    } else {
+        total += pointsConfig.points_per_day_weekday || 5;
+      }
+      current.setDate(current.getDate() + 1);
+    }
+    
+    return total;
+  };
+
+  // Crear reserva
+  const createReservation = async () => {
+    if (!selectedRange.from || !selectedRange.to) {
+      toast({
+        title: "Error",
+        description: "Selecciona un rango de fechas",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (hasConflict(selectedRange.from, selectedRange.to)) {
+      toast({
+        title: "Error",
+        description: "Las fechas seleccionadas están ocupadas",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const userId = isAdmin ? selectedUser : user.id;
+    
+    // Validar que el tipo de reserva sea correcto según el usuario
+    let type;
+    if (isAdmin) {
+      // Para admin, verificar que el tipo seleccionado sea válido para el usuario
+      const userIsCoOwner = isUserCoOwner(userId);
+      const validType = userIsCoOwner ? 'normal' : 'exchange';
+      
+      if (reservationType !== validType) {
+        toast({
+          title: "Error",
+          description: `Este usuario ${userIsCoOwner ? 'es copropietario' : 'no es copropietario'}, solo puede hacer reservas ${userIsCoOwner ? 'normales' : 'de intercambio'}`,
+          variant: "destructive"
+        });
+        return;
+      }
+      type = reservationType;
+    } else {
+      // Para usuarios no admin, tipo automático según si es copropietario
+      type = isCoOwner ? 'normal' : 'exchange';
+    }
+
+    // Si es intercambio, verificar y restar puntos
+    if (type === 'exchange') {
+      const pointsNeeded = calculatePoints(selectedRange.from, selectedRange.to);
+      
+      // Obtener puntos actuales del usuario
+      const { data: pointsData } = await supabase
+        .from('owner_points')
+        .select('points')
+        .eq('owner_id', userId)
+        .single();
+
+      const currentPoints = pointsData?.points || 0;
+      
+      if (currentPoints < pointsNeeded) {
+        toast({
+          title: "Error",
+          description: `No tienes suficientes puntos. Necesitas ${pointsNeeded}, tienes ${currentPoints}`,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Restar puntos
+      await supabase
+        .from('owner_points')
+        .update({ points: currentPoints - pointsNeeded })
+        .eq('owner_id', userId);
+    }
+
+    // Crear la reserva
+    try {
+      let error;
+      if (type === 'normal') {
+        // Crear en property_reservations
+        const { error: normalError } = await supabase
+          .from('property_reservations')
+          .insert({
+            property_id: propiedadSeleccionada.id,
+            owner_id: userId,
+            start_date: selectedRange.from,
+            end_date: selectedRange.to,
+            status: 'aprobada'
+          });
+        error = normalError;
+      } else {
+        // Crear en exchange_reservations
+        const pointsNeeded = calculatePoints(selectedRange.from, selectedRange.to);
+        const { error: exchangeError } = await supabase
+          .from('exchange_reservations')
+          .insert({
+            property_id: propiedadSeleccionada.id,
+            owner_id: userId,
+            start_date: selectedRange.from,
+            end_date: selectedRange.to,
+            status: 'aprobada',
+            points: pointsNeeded,
+            points_used: pointsNeeded
+          });
+        error = exchangeError;
+      }
+
+      if (error) throw error;
+
+      toast({
+        title: "Éxito",
+        description: type === 'exchange' 
+          ? `Reserva de intercambio creada. Se descontaron ${calculatePoints(selectedRange.from, selectedRange.to)} puntos.`
+          : "Reserva normal creada exitosamente"
+      });
+
+    setModalOpen(false);
+    setSelectedRange({ from: undefined, to: undefined });
+      fetchReservations();
+      // Forzar actualización de días ocupados
+      setTimeout(() => {
+        const fetchBookedDays = async () => {
+          if (!propiedadSeleccionada?.id) return;
+          const [{ data: normal }, { data: exchange }] = await Promise.all([
+            supabase.from('property_reservations').select('start_date, end_date').eq('property_id', propiedadSeleccionada.id),
+            supabase.from('exchange_reservations').select('start_date, end_date').eq('property_id', propiedadSeleccionada.id)
+          ]);
+          const all = [...(normal || []), ...(exchange || [])];
+          const days = [];
+          all.forEach(r => {
+            let d = new Date(r.start_date);
+            const end = new Date(r.end_date);
+            while (d <= end) {
+              days.push(new Date(d));
+              d.setDate(d.getDate() + 1);
+            }
+          });
+          setBookedDays(days);
+        };
+        fetchBookedDays();
+      }, 500);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo crear la reserva",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Filtrar usuarios según el contexto
+  const getAvailableUsers = () => {
   if (isAdmin) {
+      // Admin puede seleccionar cualquier usuario
+      return allUsers;
+    } else if (isCoOwner) {
+      // Copropietario solo puede reservar como normal
+      return [user];
+    } else {
+      // Usuario no copropietario solo puede hacer intercambio
+      return [user];
+    }
+  };
+
+  // Verificar si un usuario específico es copropietario de la propiedad
+  const isUserCoOwner = (userId) => {
+    if (!propiedadSeleccionada || !userId) return false;
+    
+    // Verificar si el usuario está en la lista de copropietarios
+    const isCoOwner = coOwners.includes(userId);
+    
+    // Debug: mostrar información de verificación
+    console.log(`Verificando si usuario ${userId} es copropietario de ${propiedadSeleccionada.title}:`, isCoOwner);
+    
+    return isCoOwner;
+  };
+
+  // Determinar automáticamente el tipo de reserva según el usuario seleccionado
+  const getAutoReservationType = (userId) => {
+    if (!userId) return 'normal';
+    return isUserCoOwner(userId) ? 'normal' : 'exchange';
+  };
+
+  // Actualizar automáticamente el tipo de reserva cuando cambia el usuario seleccionado
+  useEffect(() => {
+    if (isAdmin && selectedUser) {
+      const autoType = getAutoReservationType(selectedUser);
+      setReservationType(autoType);
+    }
+  }, [selectedUser, isAdmin, coOwners]);
+
+  // Obtener usuarios separados por tipo para el selector
+  const getUsersByType = () => {
+    if (!propiedadSeleccionada || allUsers.length === 0) {
+      return { coOwners: [], nonCoOwners: [] };
+    }
+    
+    // Ahora allUsers solo contiene los copropietarios reales de la propiedad
+    const coOwnerUsers = allUsers; // Todos los usuarios cargados son copropietarios
+    const nonCoOwnerUsers = []; // No hay usuarios no copropietarios en la lista
+    
+    // Debug: mostrar información de copropietarios
+    console.log('Propiedad seleccionada:', propiedadSeleccionada.title);
+    console.log('IDs de copropietarios:', coOwners);
+    console.log('Copropietarios encontrados:', coOwnerUsers.map(u => `${u.first_name} ${u.last_name} (${u.id})`));
+    
+    return {
+      coOwners: coOwnerUsers,
+      nonCoOwners: nonCoOwnerUsers
+    };
+  };
+
+  // Obtener mensaje informativo según el contexto
+  const getContextMessage = () => {
+    if (!isAdmin) {
+      if (isCoOwner) {
+        return {
+          type: 'info',
+          message: 'Como copropietario, solo puedes hacer reservas normales',
+          icon: 'UserCheck'
+        };
+      } else {
+        return {
+          type: 'warning',
+          message: 'Como usuario no propietario, solo puedes hacer reservas de intercambio',
+          icon: 'Coins'
+        };
+      }
+    }
+    return null;
+  };
+
+  const contextMessage = getContextMessage();
+  const usersByType = getUsersByType();
+
+  // Calcular estadísticas
+  const stats = useMemo(() => {
+    const totalReservas = reservas.length;
+    const reservasNormales = reservas.filter(r => r.type === 'normal').length;
+    const reservasIntercambio = reservas.filter(r => r.type === 'exchange').length;
+    const diasOcupados = bookedDays.length;
+    
+    return { totalReservas, reservasNormales, reservasIntercambio, diasOcupados };
+  }, [reservas, bookedDays]);
+
     return (
-      <div className="w-full max-w-3xl mx-auto px-2 md:px-8 lg:px-16 py-4 md:py-8">
-        {/* Paso 1: Seleccionar tipo de reserva */}
-        {adminStep === 1 && (
-          <div className="mb-6">
-            <h2 className="text-lg font-bold mb-2">Paso 1: Selecciona el tipo de reserva</h2>
-            <div className="flex gap-4 mb-4 justify-center">
-              <button
-                className={`px-4 py-2 rounded ${adminMode === 'normal' ? 'bg-green-200 text-green-800' : 'bg-gray-100 text-gray-500'} font-semibold`}
-                onClick={() => { setAdminMode('normal'); setAdminStep(2); }}
-              >Reserva normal</button>
-              <button
-                className={`px-4 py-2 rounded ${adminMode === 'exchange' ? 'bg-blue-200 text-blue-800' : 'bg-gray-100 text-gray-500'} font-semibold`}
-                onClick={() => { setAdminMode('exchange'); setAdminStep(2); }}
-              >Intercambio</button>
+    <div className="space-y-6 w-full max-w-none lg:max-w-7xl xl:max-w-8xl mx-auto px-4 lg:px-8">
+              {/* Header con información de la propiedad */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 lg:p-6 border border-blue-100">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 lg:gap-4 mb-4 lg:mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Building2 className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-lg lg:text-xl font-bold text-gray-900">
+                  {propiedadSeleccionada?.title || 'Propiedad Seleccionada'}
+                </h2>
+                <p className="text-sm text-gray-600 flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  Calendario de Reservas
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant={isCoOwner ? "default" : "secondary"} className="flex items-center gap-1">
+                <UserCheck className="h-3 w-3" />
+                {isCoOwner ? "Copropietario" : "Usuario"}
+              </Badge>
+              {isAdmin && (
+                <Badge variant="outline" className="flex items-center gap-1">
+                  <Star className="h-3 w-3" />
+                  Administrador
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          {/* Mensaje informativo de contexto */}
+          {contextMessage && (
+            <div className={`p-3 rounded-lg border ${
+              contextMessage.type === 'info' 
+                ? 'bg-blue-50 border-blue-200 text-blue-800' 
+                : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+            }`}>
+              <div className="flex items-center gap-2">
+                {contextMessage.icon === 'UserCheck' ? (
+                  <UserCheck className="h-4 w-4" />
+                ) : (
+                  <Coins className="h-4 w-4" />
+                )}
+                <span className="text-sm font-medium">{contextMessage.message}</span>
             </div>
           </div>
         )}
-        {/* Paso 2: Seleccionar usuario */}
-        {adminStep === 2 && (
-          <div className="mb-6">
-            <h2 className="text-lg font-bold mb-2">Paso 2: Selecciona el usuario</h2>
-            <select
-              className="w-full border rounded px-2 py-2 mb-4"
-              value={adminSelectedUser}
-              onChange={e => setAdminSelectedUser(e.target.value)}
-            >
-              <option value="">Selecciona un usuario...</option>
-              {(adminMode === 'normal'
-                ? allUsers.filter(u => coOwners.includes(u.id)) // Solo copropietarios reales
-                : notCoOwnerUsers
-              ).map(u => (
-                <option key={u.id} value={u.id}>{u.first_name ? `${u.first_name} ${u.last_name}` : u.email} ({u.email})</option>
-              ))}
-            </select>
-            <button
-              className="px-6 py-2 bg-primary text-white rounded shadow font-semibold"
-              disabled={!adminSelectedUser}
-              onClick={() => setAdminStep(3)}
-            >
-              Siguiente: Seleccionar fechas
-            </button>
-            <button
-              className="ml-4 px-4 py-2 bg-gray-200 text-gray-700 rounded font-semibold"
-              onClick={() => { setAdminStep(1); setAdminSelectedUser(''); }}
-            >
-              Volver
-            </button>
-          </div>
-        )}
-        {/* Paso 3: Seleccionar fechas y confirmar */}
-        {adminStep === 3 && (
-          <div>
-            <h2 className="text-lg font-bold mb-2">Paso 3: Selecciona las fechas</h2>
-            <Calendar
-              mode="range"
-              selected={selectedRange}
-              onSelect={setSelectedRange}
-              disabled={date => bookedDays.some(bd => bd.toDateString() === date.toDateString())}
-              modifiers={{ booked: bookedDays }}
-              modifiersClassNames={{ booked: 'bg-red-200 text-red-700' }}
-              className="mb-6"
-            />
-            <div className="flex justify-center gap-4">
-              <button
-                className="px-6 py-2 bg-primary text-white rounded shadow font-semibold"
-                onClick={async () => {
-                  // Validación y creación
-                  await fetchAllReservations();
-                  const conflict = reservas.some(res => {
-                    const resStart = new Date(res.start_date);
-                    const resEnd = new Date(res.end_date);
-                    return (
-                      (selectedRange.from <= resEnd && selectedRange.to >= resStart)
-                    );
-                  });
-                  if (conflict) {
-                    toast({ title: 'Error', description: 'Fechas ocupadas por otra reserva.' });
-                    return;
-                  }
-                  const ownerIdToUse = adminSelectedUser;
-                  const typeToUse = adminMode;
 
-                  // Si es reserva de intercambio, calcular puntos y restar
-                  if (typeToUse === 'exchange') {
-                    let pointsConfigDb = pointsConfig;
-                    if (!pointsConfigDb) {
-                      const { data: configData, error: configError } = await supabase
-                        .from('exchange_properties')
-                        .select('points_per_day, points_per_day_weekday')
-                        .eq('property_id', propiedadSeleccionada.id)
-                        .eq('active', true)
-                        .single();
-                      if (configError || !configData) {
-                        toast({ title: 'Error', description: 'No se pudo obtener la configuración de puntos de la propiedad.', variant: 'destructive' });
-                        return;
-                      }
-                      pointsConfigDb = configData;
-                    }
-                    let total = 0;
-                    let d = new Date(selectedRange.from);
-                    const end = new Date(selectedRange.to);
-                    while (d <= end) {
-                      if ([0, 6].includes(d.getDay())) {
-                        total += pointsConfigDb.points_per_day;
-                      } else {
-                        total += pointsConfigDb.points_per_day_weekday;
-                      }
-                      d.setDate(d.getDate() + 1);
-                    }
-                    const { data: pointsData, error: pointsError } = await supabase
-                      .from('owner_points')
-                      .select('points')
-                      .eq('owner_id', ownerIdToUse)
-                      .single();
-                    const currentPoints = pointsData?.points ?? 0;
-                    if (pointsError && pointsError.code !== 'PGRST116') {
-                      toast({ title: 'Error', description: 'No se pudieron consultar los puntos del usuario.', variant: 'destructive' });
-                      return;
-                    }
-                    if (total > currentPoints) {
-                      toast({ title: 'Error', description: 'No tienes suficientes puntos para esta reserva.', variant: 'destructive' });
-                      return;
-                    }
-                    const { error: updateError } = await supabase
-                      .from('owner_points')
-                      .update({ points: currentPoints - total })
-                      .eq('owner_id', ownerIdToUse);
-                    if (updateError) {
-                      toast({ title: 'Error', description: 'No se pudieron restar los puntos.', variant: 'destructive' });
-                      return;
-                    }
-                    const { error } = await supabase
-                      .from('reservations_unified')
-                      .insert({
-                        property_id: propiedadSeleccionada.id,
-                        user_id: ownerIdToUse,
-                        start_date: selectedRange.from,
-                        end_date: selectedRange.to,
-                        type: typeToUse,
-                        status: 'pending',
-                      });
-                    if (error) {
-                      toast({ title: 'Error', description: error.message });
-                      await supabase.from('owner_points').update({ points: currentPoints }).eq('owner_id', ownerIdToUse);
-                      return;
-                    }
-                    toast({ title: 'Reserva creada', description: `Reserva registrada correctamente. Se han descontado ${total} puntos.` });
-                    setModalOpen(false);
-                    setSelectedRange({ from: undefined, to: undefined });
-                    setAdminStep(1);
-                    setAdminSelectedUser('');
-                    fetchAllReservations();
-                    return;
-                  }
-                  // Si es reserva normal
-                  const { error } = await supabase
-                    .from('reservations_unified')
-                    .insert({
-                      property_id: propiedadSeleccionada.id,
-                      user_id: ownerIdToUse,
-                      start_date: selectedRange.from,
-                      end_date: selectedRange.to,
-                      type: typeToUse,
-                      status: 'pending',
-                    });
-                  if (error) {
-                    toast({ title: 'Error', description: error.message });
-                    return;
-                  }
-                  toast({ title: 'Reserva creada', description: 'Reserva registrada correctamente.' });
-                  setModalOpen(false);
-                  setSelectedRange({ from: undefined, to: undefined });
-                  setAdminStep(1);
-                  setAdminSelectedUser('');
-                  fetchAllReservations();
-                }}
-                disabled={!selectedRange.from || !selectedRange.to}
-              >
-                Confirmar reserva
-              </button>
-              <button
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded font-semibold"
-                onClick={() => setAdminStep(2)}
-              >
-                Volver
-              </button>
+        {/* Estadísticas rápidas */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-6">
+          <div className="bg-white rounded-lg p-3 lg:p-5 border border-blue-200">
+            <div className="flex items-center gap-2 mb-1 lg:mb-2">
+              <CalendarDays className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium text-gray-600">Total Reservas</span>
             </div>
+            <p className="text-xl lg:text-3xl font-bold text-gray-900">{stats.totalReservas}</p>
           </div>
-        )}
-        {/* Listado de reservas */}
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-2">Reservas existentes</h3>
-          <ul className="space-y-2">
-            {reservas.map((res, i) => (
-              <li key={i} className={`rounded px-3 py-2 flex items-center gap-2 ${res.type === 'normal' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
-                <span className="font-bold">{res.user?.first_name || 'owner'}:</span>
-                <span>{new Date(res.start_date).toLocaleDateString()} - {new Date(res.end_date).toLocaleDateString()}</span>
-                <span className="ml-auto text-xs px-2 py-1 rounded-full bg-white border font-semibold">{res.type === 'normal' ? 'Normal' : 'Intercambio'}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="bg-white rounded-lg p-3 lg:p-5 border border-green-200">
+            <div className="flex items-center gap-2 mb-1 lg:mb-2">
+              <Users className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium text-gray-600">Normales</span>
+            </div>
+            <p className="text-xl lg:text-3xl font-bold text-gray-900">{stats.reservasNormales}</p>
+          </div>
+          <div className="bg-white rounded-lg p-3 lg:p-5 border border-purple-200">
+            <div className="flex items-center gap-2 mb-1 lg:mb-2">
+              <Coins className="h-4 w-4 text-purple-600" />
+              <span className="text-sm font-medium text-gray-600">Intercambios</span>
+            </div>
+            <p className="text-xl lg:text-3xl font-bold text-gray-900">{stats.reservasIntercambio}</p>
+          </div>
+          <div className="bg-white rounded-lg p-3 lg:p-5 border border-orange-200">
+            <div className="flex items-center gap-2 mb-1 lg:mb-2">
+              <Clock className="h-4 w-4 text-orange-600" />
+              <span className="text-sm font-medium text-gray-600">Días Ocupados</span>
+            </div>
+            <p className="text-xl lg:text-3xl font-bold text-gray-900">{stats.diasOcupados}</p>
+          </div>
         </div>
       </div>
-    );
-  }
 
-  // --- Render ---
-  return (
-    <div className="w-full max-w-3xl mx-auto px-2 md:px-8 lg:px-16 py-4 md:py-8">
-      {/* Debug info copropietarios y usuario */}
-      <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-        <div><b>Copropietarios:</b> {[
-          propiedadSeleccionada?.share1_owner_id,
-          propiedadSeleccionada?.share2_owner_id,
-          propiedadSeleccionada?.share3_owner_id,
-          propiedadSeleccionada?.share4_owner_id
-        ].filter(Boolean).join(', ') || 'Ninguno'}</div>
-        <div><b>Tu ID:</b> {user?.id || 'No logueado'}</div>
-        {!isCoOwner && mode === 'normal' && (
-          <div className="mt-1 text-red-600 font-semibold">No puedes reservar en modo normal porque no eres copropietario de esta propiedad.</div>
-        )}
-      </div>
-      {/* Toggle solo para admin, para el resto solo se muestra el modo permitido */}
-      {isAdmin ? (
-        <div className="flex gap-4 mb-4 justify-center">
-          {MODES.map(opt => (
-            <button
-              key={opt.value}
-              className={`px-4 py-2 rounded ${mode === opt.value ? opt.color + ' ' + opt.text : 'bg-gray-100 text-gray-500'} font-semibold`}
-              onClick={() => setMode(opt.value)}
-              disabled={false}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
-      {/* Mensaje y modo único para no admin */}
-      {!isAdmin && isCoOwner && (
-        <div className="mb-2 text-green-700 text-xs font-semibold">Solo puedes hacer reservas normales porque eres copropietario de esta propiedad.</div>
-      )}
-      {!isAdmin && !isCoOwner && (
-        <div className="mb-2 text-blue-700 text-xs font-semibold">Solo puedes hacer reservas de intercambio porque no eres copropietario de esta propiedad.</div>
-      )}
+      {/* Contenido principal */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-5 gap-6 lg:gap-8">
+        {/* Calendario */}
+        <div className="lg:col-span-3 xl:col-span-4">
+          <Card className="shadow-lg border-0">
+            <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b p-4 lg:p-6">
+              <CardTitle className="flex items-center gap-2 text-gray-800 text-lg lg:text-xl">
+                <CalendarDays className="h-5 w-5" />
+                Selecciona tus fechas
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 lg:p-8">
+              <div className="flex justify-center">
       <Calendar
         mode="range"
         selected={selectedRange}
         onSelect={setSelectedRange}
-        disabled={date => bookedDays.some(bd => bd.toDateString() === date.toDateString())}
-        modifiers={{ booked: bookedDays }}
-        modifiersClassNames={{ booked: 'bg-red-200 text-red-700' }}
-        className="mb-6"
-      />
-      <div className="flex justify-center">
-        <button
-          className="px-6 py-2 bg-primary text-white rounded shadow font-semibold"
-          onClick={() => setModalOpen(true)}
-          disabled={!selectedRange.from || !selectedRange.to}
-        >
-          Reservar semana seleccionada
-        </button>
+                  disabled={date => bookedDays.some(d => d.toDateString() === date.toDateString())}
+                  className="rounded-lg border-0 shadow-sm"
+                  locale={es}
+                  classNames={{
+                    day_selected: "bg-blue-600 text-white hover:bg-blue-700",
+                    day_today: "bg-blue-100 text-blue-900 font-bold",
+                    day_disabled: "bg-red-100 text-red-400 cursor-not-allowed",
+                    day_range_middle: "bg-blue-100 text-blue-900",
+                    day_range_end: "bg-blue-600 text-white",
+                    day_range_start: "bg-blue-600 text-white",
+                  }}
+                />
+              </div>
+              
+              {/* Leyenda */}
+              <div className="mt-6 lg:mt-8 p-4 lg:p-6 bg-gray-50 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-3 lg:mb-4 text-sm lg:text-base">Leyenda del Calendario</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-red-100 rounded border border-red-300"></div>
+                    <span className="text-sm text-gray-600">Ocupados</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-blue-100 rounded border border-blue-300"></div>
+                    <span className="text-sm text-gray-600">Disponibles</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-blue-600 rounded"></div>
+                    <span className="text-sm text-gray-600">Seleccionados</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-blue-100 rounded border-2 border-blue-600"></div>
+                    <span className="text-sm text-gray-600">Hoy</span>
       </div>
-      {/* Listado de reservas */}
-      <div className="mt-8">
-        <h3 className="text-lg font-semibold mb-2">Reservas existentes</h3>
-        <ul className="space-y-2">
-          {(isAdmin || !isCoOwner
-            ? reservas
-            : reservas.filter(res => coOwners.includes(String(res.user_id).trim()))
-          ).map((res, i) => (
-            <li key={i} className={`rounded px-3 py-2 flex items-center gap-2 ${res.type === 'normal' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
-              <span className="font-bold">{res.user?.first_name || 'owner'}:</span>
-              <span>{new Date(res.start_date).toLocaleDateString()} - {new Date(res.end_date).toLocaleDateString()}</span>
-              <span className="ml-auto text-xs px-2 py-1 rounded-full bg-white border font-semibold">{res.type === 'normal' ? 'Normal' : 'Intercambio'}</span>
-            </li>
-          ))}
-        </ul>
       </div>
-      {/* Modal simplificado */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 shadow-lg max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">Confirmar reserva</h2>
-            <p className="mb-2">Propiedad: <span className="font-semibold">{propiedadSeleccionada.title}</span></p>
-            <p className="mb-2">Fechas: <span className="font-semibold">{selectedRange.from?.toLocaleDateString()} - {selectedRange.to?.toLocaleDateString()}</span></p>
-            <p className="mb-4">Tipo: <span className="font-semibold capitalize">{mode === 'normal' ? 'Normal' : 'Intercambio'}</span></p>
-            {/* Selector de copropietario solo para admin en modo normal */}
-            {isAdmin && mode === 'normal' && (
-              <div className="mb-4">
-                <label className="block text-sm font-semibold mb-1">Copropietario:</label>
-                <select
-                  className="w-full border rounded px-2 py-1"
-                  value={selectedOwnerId}
-                  onChange={e => setSelectedOwnerId(e.target.value)}
-                >
-                  {coOwnerUsers.map(u => (
-                    <option key={u.id} value={u.id}>{u.first_name ? `${u.first_name} ${u.last_name}` : u.email} ({u.email})</option>
-                  ))}
-                </select>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Panel lateral */}
+        <div className="space-y-4 lg:space-y-6">
+          {/* Información de la propiedad */}
+          <Card className="shadow-lg border-0">
+            <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b p-3 lg:p-4">
+              <CardTitle className="flex items-center gap-2 text-gray-800 text-sm lg:text-base">
+                <Building2 className="h-4 w-4 lg:h-5 lg:w-5" />
+                Información
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 lg:p-4">
+              <div className="space-y-3 lg:space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Users className="h-4 w-4 text-gray-500" />
+                    <span className="text-gray-600">Copropietarios:</span>
+                  </div>
+                  <Badge variant="outline">{coOwners.length}</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm">
+                    <CalendarDays className="h-4 w-4 text-gray-500" />
+                    <span className="text-gray-600">Reservas activas:</span>
+                  </div>
+                  <Badge variant="outline">{reservas.length}</Badge>
+                </div>
+                {pointsConfig && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Coins className="h-4 w-4 text-gray-500" />
+                      <span className="text-gray-600">Puntos fin de semana:</span>
+                    </div>
+                    <Badge variant="outline">{pointsConfig.points_per_day || 10}</Badge>
               </div>
             )}
-            {/* Selector de usuario para intercambio (admin) */}
-            {isAdmin && mode === 'exchange' && (
-              <div className="mb-4">
-                <label className="block text-sm font-semibold mb-1">Usuario:</label>
-                <select
-                  className="w-full border rounded px-2 py-1"
-                  value={selectedOwnerId}
-                  onChange={e => setSelectedOwnerId(e.target.value)}
-                >
-                  {notCoOwnerUsers.map(u => (
-                    <option key={u.id} value={u.id}>{u.first_name ? `${u.first_name} ${u.last_name}` : u.email} ({u.email})</option>
-                  ))}
-                </select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Reservas recientes */}
+          <Card className="shadow-lg border-0">
+            <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b p-3 lg:p-4">
+              <CardTitle className="flex items-center gap-2 text-gray-800 text-sm lg:text-base">
+                <Clock className="h-4 w-4 lg:h-5 lg:w-5" />
+                Reservas Recientes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 lg:p-4">
+              <div className="space-y-2 lg:space-y-3 max-h-40 lg:max-h-48 overflow-y-auto">
+                {reservas.length === 0 ? (
+                  <div className="text-center py-3 lg:py-4">
+                    <CalendarDays className="h-6 w-6 lg:h-8 lg:w-8 text-gray-400 mx-auto mb-1 lg:mb-2" />
+                    <p className="text-xs lg:text-sm text-gray-500">No hay reservas activas</p>
+                  </div>
+                ) : (
+                  reservas.slice(0, 4).map((reserva, index) => (
+                    <div key={index} className="p-2 lg:p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex justify-between items-start mb-1 lg:mb-2">
+                        <div className="flex items-center gap-1 lg:gap-2">
+                          <div className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-blue-500"></div>
+                          <span className="text-xs lg:text-sm font-medium text-gray-900 truncate">
+                            {reserva.user?.first_name} {reserva.user?.last_name}
+                          </span>
+                        </div>
+                        <Badge 
+                          variant={reserva.type === 'exchange' ? 'secondary' : 'default'}
+                          className="text-xs flex-shrink-0"
+                        >
+                          {reserva.type === 'exchange' ? 'Intercambio' : 'Normal'}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {format(new Date(reserva.start_date), 'dd/MM/yyyy')} - {format(new Date(reserva.end_date), 'dd/MM/yyyy')}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Botón de crear reserva */}
+          <Card className="shadow-lg border-0">
+            <CardContent className="p-3 lg:p-4">
+              <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg"
+                    disabled={!selectedRange.from || !selectedRange.to}
+                    size="default"
+                  >
+                    <CalendarDays className="h-4 w-4 mr-2" />
+                    Crear Reserva
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2 text-lg lg:text-xl">
+                      <CalendarDays className="h-5 w-5 lg:h-6 lg:w-6" />
+                      Crear Nueva Reserva
+                    </DialogTitle>
+                  </DialogHeader>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Columna izquierda - Formulario */}
+                    <div className="space-y-4">
+                      {/* Rango seleccionado */}
+                      {selectedRange.from && selectedRange.to && (
+                        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Clock className="h-4 w-4 text-blue-600" />
+                            <p className="text-sm font-medium text-blue-900">Fechas seleccionadas:</p>
+                          </div>
+                          <p className="text-sm text-blue-800">
+                            {format(selectedRange.from, 'dd/MM/yyyy')} - {format(selectedRange.to, 'dd/MM/yyyy')}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Selector de usuario (solo para admin) */}
+                      {isAdmin && (
+                        <div>
+                          <Label htmlFor="user-select" className="flex items-center gap-2 text-sm font-medium">
+                            <Users className="h-4 w-4" />
+                            Copropietario de {propiedadSeleccionada?.title}
+                          </Label>
+                          <div className="text-xs text-gray-500 mt-1 mb-2">
+                            {usersByType.coOwners.length} copropietario{usersByType.coOwners.length !== 1 ? 's' : ''} de esta propiedad
+                          </div>
+                          <Select value={selectedUser} onValueChange={setSelectedUser}>
+                            <SelectTrigger className="mt-2 h-12">
+                              <SelectValue placeholder="Seleccionar copropietario" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {usersByType.coOwners.length === 0 && (
+                                <SelectItem value="" disabled>No hay copropietarios en esta propiedad</SelectItem>
+                              )}
+                              {usersByType.coOwners.map((u) => (
+                                <SelectItem key={u.id} value={u.id}>
+                                  {u.first_name} {u.last_name} ({u.email})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
               </div>
             )}
-            {/* Mensaje de ayuda si el usuario es copropietario pero no se detecta */}
-            {!isAdmin && !isCoOwner && mode === 'normal' && (
-              <div className="mb-2 text-red-600 text-xs font-semibold">Si eres copropietario y no puedes reservar, revisa que tu usuario esté correctamente asignado en la propiedad.</div>
-            )}
-            <div className="flex gap-4 mt-6">
-              <button className="flex-1 py-2 rounded bg-primary text-white font-semibold" onClick={handleCreateReservation}>Confirmar</button>
-              <button className="flex-1 py-2 rounded bg-gray-200 text-gray-700 font-semibold" onClick={() => setModalOpen(false)}>Cancelar</button>
+
+                      {/* Información de puntos para intercambio */}
+                      {((isAdmin && reservationType === 'exchange') || (!isAdmin && !isCoOwner)) && (
+                        <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Coins className="h-4 w-4 text-yellow-600" />
+                            <p className="text-sm font-medium text-yellow-900">Reserva de Intercambio</p>
+                          </div>
+                          <p className="text-sm text-yellow-800">
+                            Puntos necesarios: <span className="font-bold">{calculatePoints(selectedRange.from, selectedRange.to)}</span>
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Botones */}
+                      <div className="flex gap-3 pt-4">
+                        <Button 
+                          onClick={createReservation}
+                          className="flex-1 h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium"
+                        >
+                          Confirmar Reserva
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setModalOpen(false)}
+                          className="h-12 px-6"
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Columna derecha - Calendario */}
+                    <div className="flex justify-center">
+                      <Calendar
+                        mode="range"
+                        selected={selectedRange}
+                        onSelect={setSelectedRange}
+                        disabled={date => bookedDays.some(d => d.toDateString() === date.toDateString())}
+                        className="rounded-lg border shadow-sm"
+                        locale={es}
+                        classNames={{
+                          day_selected: "bg-blue-600 text-white hover:bg-blue-700",
+                          day_today: "bg-blue-100 text-blue-900 font-bold",
+                          day_disabled: "bg-red-100 text-red-400 cursor-not-allowed",
+                          day_range_middle: "bg-blue-100 text-blue-900",
+                          day_range_end: "bg-blue-600 text-white",
+                          day_range_start: "bg-blue-600 text-white",
+                        }}
+                      />
             </div>
           </div>
+                </DialogContent>
+              </Dialog>
+            </CardContent>
+          </Card>
         </div>
-      )}
+      </div>
     </div>
   );
 } 
