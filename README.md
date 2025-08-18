@@ -1,5 +1,7 @@
 # Quincenalia
 
+www.quincenalia.com 
+
 **Quincenalia** es una plataforma para gestionar la copropiedad de **segundas residencias compartidas**, ofreciendo una experiencia ordenada, legal y accesible.
 
 Permite que varias personas compartan una misma vivienda —como una casa en la playa, el campo o un entorno rural— dividiendo su uso, gastos y decisiones de forma equitativa y transparente.
