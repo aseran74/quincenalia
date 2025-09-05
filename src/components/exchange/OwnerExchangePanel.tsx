@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 import { Sparkles, MapPin, Calendar as CalendarIcon, Users, Star } from 'lucide-react';
@@ -248,17 +247,35 @@ const OwnerExchangePanel: React.FC = () => {
               Elige las fechas de tu estancia
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Calendar
-              mode="range"
-              selected={selectedDates.length === 2 ? { from: selectedDates[0], to: selectedDates[1] } : undefined}
-              onSelect={(range) => {
-                if (range?.from && range?.to) {
-                  setSelectedDates([range.from, range.to]);
-                }
-              }}
-              className="rounded-md border"
-            />
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Fecha de entrada</label>
+              <input
+                type="date"
+                value={selectedDates[0]?.toISOString().split('T')[0] || ''}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    const newDate = new Date(e.target.value);
+                    setSelectedDates([newDate, selectedDates[1] || newDate]);
+                  }
+                }}
+                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">Fecha de salida</label>
+              <input
+                type="date"
+                value={selectedDates[1]?.toISOString().split('T')[0] || ''}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    const newDate = new Date(e.target.value);
+                    setSelectedDates([selectedDates[0] || newDate, newDate]);
+                  }
+                }}
+                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
           </CardContent>
         </Card>
       </div>
