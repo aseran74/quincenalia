@@ -1,10 +1,15 @@
 {
-  "devDependencies": {
-    "@types/react-calendar": "^3.9.0"
+  "name": "quincenalia",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "cd quincenalia && npm run dev",
+    "build": "cd quincenalia && npm run build",
+    "preview": "cd quincenalia && npm run preview",
+    "install": "cd quincenalia && npm install"
   },
-  "dependencies": {
-    "primeicons": "^7.0.0",
-    "primereact": "^10.9.6",
-    "react-calendar": "^6.0.0"
-  }
+  "workspaces": [
+    "quincenalia"
+  ]
 }

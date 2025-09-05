@@ -1,4 +1,7 @@
 {
+  "buildCommand": "cd quincenalia && npm run build",
+  "outputDirectory": "quincenalia/dist",
+  "installCommand": "cd quincenalia && npm install",
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
   ]
