@@ -18,18 +18,11 @@ interface Property {
   description: string;
 }
 
-interface OwnerPoints {
-  id: string;
-  owner_id: string;
-  points: number;
-  created_at: string;
-  updated_at: string;
-}
-
 const OwnerExchangePanel: React.FC = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [points, setPoints] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [reservationCost, setReservationCost] = useState(0);
@@ -92,15 +85,15 @@ const OwnerExchangePanel: React.FC = () => {
 
   // Calcular costo de la reserva
   useEffect(() => {
-    if (selectedProperty && selectedDates.length >= 2) {
-      const startDate = selectedDates[0];
-      const endDate = selectedDates[1];
-      const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (selectedProperty && startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
       
       let totalCost = 0;
       for (let i = 0; i < nights; i++) {
-        const currentDate = new Date(startDate);
-        currentDate.setDate(startDate.getDate() + i);
+        const currentDate = new Date(start);
+        currentDate.setDate(start.getDate() + i);
         const dayOfWeek = currentDate.getDay();
         
         // 0 = Domingo, 6 = Sábado (fin de semana)
@@ -113,10 +106,10 @@ const OwnerExchangePanel: React.FC = () => {
       
       setReservationCost(totalCost);
     }
-  }, [selectedProperty, selectedDates]);
+  }, [selectedProperty, startDate, endDate]);
 
   const handleReserve = async () => {
-    if (!selectedProperty || selectedDates.length < 2) {
+    if (!selectedProperty || !startDate || !endDate) {
       toast({
         title: 'Error',
         description: 'Selecciona una propiedad y fechas válidas',
@@ -142,8 +135,8 @@ const OwnerExchangePanel: React.FC = () => {
       // Llamar a la función RPC para crear la reserva
       const { data, error } = await supabase.rpc('create_exchange_reservation', {
         property_id: selectedProperty.id,
-        start_date: selectedDates[0].toISOString().split('T')[0],
-        end_date: selectedDates[1].toISOString().split('T')[0],
+        start_date: startDate,
+        end_date: endDate,
         points_to_use: reservationCost
       });
 
@@ -151,7 +144,8 @@ const OwnerExchangePanel: React.FC = () => {
 
       // Actualizar puntos localmente
       setPoints(points - reservationCost);
-      setSelectedDates([]);
+      setStartDate('');
+      setEndDate('');
       setSelectedProperty(null);
       
       toast({
@@ -171,6 +165,9 @@ const OwnerExchangePanel: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const nights = startDate && endDate ? 
+    Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
   return (
     <div className="space-y-6">
@@ -252,13 +249,8 @@ const OwnerExchangePanel: React.FC = () => {
               <label className="text-sm font-medium text-gray-700">Fecha de entrada</label>
               <input
                 type="date"
-                value={selectedDates[0]?.toISOString().split('T')[0] || ''}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    const newDate = new Date(e.target.value);
-                    setSelectedDates([newDate, selectedDates[1] || newDate]);
-                  }
-                }}
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
                 className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -266,13 +258,8 @@ const OwnerExchangePanel: React.FC = () => {
               <label className="text-sm font-medium text-gray-700">Fecha de salida</label>
               <input
                 type="date"
-                value={selectedDates[1]?.toISOString().split('T')[0] || ''}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    const newDate = new Date(e.target.value);
-                    setSelectedDates([selectedDates[0] || newDate, newDate]);
-                  }
-                }}
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
                 className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -281,7 +268,7 @@ const OwnerExchangePanel: React.FC = () => {
       </div>
 
       {/* Resumen de Reserva */}
-      {selectedProperty && selectedDates.length >= 2 && (
+      {selectedProperty && startDate && endDate && (
         <Card>
           <CardHeader>
             <CardTitle>Resumen de la Reserva</CardTitle>
@@ -295,14 +282,12 @@ const OwnerExchangePanel: React.FC = () => {
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Fechas:</span>
                 <span className="font-medium">
-                  {selectedDates[0].toLocaleDateString()} - {selectedDates[1].toLocaleDateString()}
+                  {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Noches:</span>
-                <span className="font-medium">
-                  {Math.ceil((selectedDates[1].getTime() - selectedDates[0].getTime()) / (1000 * 60 * 60 * 24))}
-                </span>
+                <span className="font-medium">{nights}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Costo total:</span>
