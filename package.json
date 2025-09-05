@@ -6,10 +6,6 @@
   "scripts": {
     "dev": "cd quincenalia && npm run dev",
     "build": "cd quincenalia && npm run build",
-    "preview": "cd quincenalia && npm run preview",
-    "install": "cd quincenalia && npm install"
-  },
-  "workspaces": [
-    "quincenalia"
-  ]
+    "preview": "cd quincenalia && npm run preview"
+  }
 }
