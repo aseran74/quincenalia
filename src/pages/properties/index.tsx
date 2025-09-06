@@ -349,6 +349,65 @@ export const PropertiesPage = () => {
     );
   };
 
+  const PropertyCardCompact = ({ property }: { property: Property }) => {
+    const [imgIdx, setImgIdx] = useState(0);
+    const totalImgs = property.images && property.images.length > 0 ? property.images.length : 0;
+    let imageUrl = property.images && property.images.length > 0 ? property.images[imgIdx] : '/placeholder-property.jpg';
+    // Si la zona es Marruecos y no hay imágenes, usar marruecos.jpeg
+    if ((!property.images || property.images.length === 0) && (property.zona?.toLowerCase().includes('marruecos') || property.zona?.toLowerCase().includes('marrueco'))) {
+      imageUrl = '/marruecos.jpeg';
+    }
+    const minShare = getMinSharePrice(property);
+    
+    return (
+      <Link to={`/properties/${property.id}`} className="group block">
+        <Card className="overflow-hidden border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 bg-card p-0">
+          <div className="flex">
+            <div className="w-24 h-20 flex-shrink-0">
+              <img
+                src={imageUrl}
+                alt={`Imagen de ${property.title}`}
+                className="w-full h-full object-cover"
+                onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
+              />
+            </div>
+            <div className="flex-1 p-3 min-w-0">
+              <h3 className="font-semibold text-sm text-foreground line-clamp-2 mb-1 group-hover:text-primary transition-colors">
+                {property.title}
+              </h3>
+              <div className="flex items-center text-xs text-muted-foreground mb-2">
+                <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
+                <span className="truncate">{property.location}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                <div className="flex items-center space-x-2">
+                  <div className="flex items-center">
+                    <Bed className="w-3 h-3 mr-1" />
+                    <span>{property.bedrooms}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Bath className="w-3 h-3 mr-1" />
+                    <span>{property.bathrooms}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <SquareArrowUp className="w-3 h-3 mr-1" />
+                    <span>{property.area} m²</span>
+                  </div>
+                </div>
+              </div>
+              {minShare && (
+                <div className="text-sm font-bold text-primary">
+                  {formatPriceSimple(minShare)}
+                  <span className="text-xs font-normal text-muted-foreground ml-1">/copropiedad</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+      </Link>
+    );
+  };
+
   // --- AJUSTADO FilterSection ---
   const FilterSection = () => {
     const handlePlaceSelected = () => {
@@ -699,10 +758,12 @@ export const PropertiesPage = () => {
           <FilterSection />
         </div>
 
-        <div className="mb-6 text-sm text-muted-foreground">
-          {filteredProperties.length} {filteredProperties.length === 1 ? 'propiedad encontrada' : 'propiedades encontradas'}
-          {numActiveFilters > 0 && <span className='ml-1'>(con {numActiveFilters} {numActiveFilters === 1 ? 'filtro aplicado' : 'filtros aplicados'})</span>}
-        </div>
+        {view === 'grid' && (
+          <div className="mb-6 text-sm text-muted-foreground">
+            {filteredProperties.length} {filteredProperties.length === 1 ? 'propiedad encontrada' : 'propiedades encontradas'}
+            {numActiveFilters > 0 && <span className='ml-1'>(con {numActiveFilters} {numActiveFilters === 1 ? 'filtro aplicado' : 'filtros aplicados'})</span>}
+          </div>
+        )}
 
         {view === 'grid' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -721,70 +782,112 @@ export const PropertiesPage = () => {
           </div>
         ) : (
           isAutocompleteLoaded && ( 
-            <div className="w-full h-[400px] md:h-[500px] rounded-lg overflow-hidden border shadow-sm relative bg-muted">
-              <GoogleMap
-                mapContainerStyle={{ width: '100%', height: '100%' }}
-                center={{ lat: 40.4637, lng: -3.7492 }} 
-                zoom={5}
-                options={{ mapTypeControl: false, streetViewControl: false, fullscreenControl: false, styles: [ ] }}
-                onClick={() => setSelectedMapProperty(null)}
-              >
-                {filteredProperties
-                  .filter(p => p.latitude && p.longitude)
-                  .map((property) => (
-                    <Marker
-                      key={property.id}
-                      position={{ lat: Number(property.latitude), lng: Number(property.longitude) }}
-                      title={property.title}
-                      onClick={() => setSelectedMapProperty(property)}
-                      icon={getMarkerIcon()}
-                    />
-                  ))}
-                {selectedMapProperty && selectedMapProperty.latitude && selectedMapProperty.longitude && (
-                  <InfoWindow
-                    position={{ lat: Number(selectedMapProperty.latitude), lng: Number(selectedMapProperty.longitude) }}
-                    onCloseClick={() => setSelectedMapProperty(null)}
-                    options={{ pixelOffset: typeof window !== "undefined" && window.google ? new window.google.maps.Size(0, -40) : undefined }} 
-                  >
-                    <div className="relative w-[240px] h-[210px] bg-card rounded-md shadow-xl overflow-hidden font-sans">
-                      <a
-                        href={`${window.location.origin}/properties/${selectedMapProperty.id}`}
-                        target="_blank" rel="noopener noreferrer"
-                        className="block w-full h-[130px] overflow-hidden"
-                        aria-label={`Ver detalles de ${selectedMapProperty.title}`}
-                      >
-                        {selectedMapProperty.images && selectedMapProperty.images.length > 0 ? (
-                          <img
-                            src={selectedMapProperty.images[carouselIndex]}
-                            alt={`Imagen de ${selectedMapProperty.title}`}
-                            className="w-full h-full object-cover transition-opacity duration-300"
-                            onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
-                          />
-                        ) : (
-                          <img src="/placeholder-property.jpg" alt="Propiedad sin imagen" className="w-full h-full object-cover" />
-                        )}
-                      </a>
-                      <div className="p-3">
-                        <a
-                          href={`${window.location.origin}/properties/${selectedMapProperty.id}`}
-                          className="font-semibold text-sm block hover:underline truncate text-card-foreground"
-                          target="_blank" rel="noopener noreferrer"
-                          onClick={(e) => { e.stopPropagation(); }}
+            <div className="flex flex-col lg:flex-row gap-6">
+              {/* Sidebar con cards de propiedades */}
+              <div className="lg:w-1/3 xl:w-1/4">
+                <div className="sticky top-6">
+                  <h3 className="text-lg font-semibold mb-4 text-foreground">
+                    Propiedades ({filteredProperties.length})
+                  </h3>
+                  <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+                    {filteredProperties.length > 0 ? (
+                      filteredProperties.map((property) => (
+                        <div 
+                          key={property.id}
+                          className={`cursor-pointer transition-all duration-200 ${
+                            selectedMapProperty?.id === property.id 
+                              ? 'ring-2 ring-primary shadow-lg' 
+                              : 'hover:shadow-md'
+                          }`}
+                          onClick={() => setSelectedMapProperty(property)}
                         >
-                          {selectedMapProperty.title}
-                        </a>
-                        <div className="text-base font-bold mt-0.5 text-primary">
-                          {getMinSharePrice(selectedMapProperty) ? formatPriceSimple(getMinSharePrice(selectedMapProperty)!) : 'N/A'}
-                          <span className="text-xs font-normal text-muted-foreground ml-1">/copropiedad</span>
+                          <PropertyCardCompact property={property} />
                         </div>
-                         <div className="text-xs text-muted-foreground mt-1">
-                            {selectedMapProperty.bedrooms} hab. • {selectedMapProperty.bathrooms} baños • {selectedMapProperty.area} m²
-                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground bg-card border rounded-lg">
+                        <Search className="mx-auto h-8 w-8 text-gray-400 mb-3" />
+                        <p className="font-semibold text-sm">No hay propiedades que coincidan</p>
+                        <p className="text-xs mt-1">Prueba a modificar o limpiar los filtros.</p>
+                        {numActiveFilters > 0 && (
+                          <Button variant="link" size="sm" onClick={resetFilters} className="mt-2 text-primary text-xs">
+                            Limpiar filtros
+                          </Button>
+                        )}
                       </div>
-                    </div>
-                  </InfoWindow>
-                )}
-              </GoogleMap>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Mapa más grande */}
+              <div className="lg:w-2/3 xl:w-3/4">
+                <div className="w-full h-[500px] lg:h-[600px] xl:h-[700px] rounded-lg overflow-hidden border shadow-sm relative bg-muted">
+                  <GoogleMap
+                    mapContainerStyle={{ width: '100%', height: '100%' }}
+                    center={{ lat: 40.4637, lng: -3.7492 }} 
+                    zoom={5}
+                    options={{ mapTypeControl: false, streetViewControl: false, fullscreenControl: false, styles: [ ] }}
+                    onClick={() => setSelectedMapProperty(null)}
+                  >
+                    {filteredProperties
+                      .filter(p => p.latitude && p.longitude)
+                      .map((property) => (
+                        <Marker
+                          key={property.id}
+                          position={{ lat: Number(property.latitude), lng: Number(property.longitude) }}
+                          title={property.title}
+                          onClick={() => setSelectedMapProperty(property)}
+                          icon={getMarkerIcon()}
+                        />
+                      ))}
+                    {selectedMapProperty && selectedMapProperty.latitude && selectedMapProperty.longitude && (
+                      <InfoWindow
+                        position={{ lat: Number(selectedMapProperty.latitude), lng: Number(selectedMapProperty.longitude) }}
+                        onCloseClick={() => setSelectedMapProperty(null)}
+                        options={{ pixelOffset: typeof window !== "undefined" && window.google ? new window.google.maps.Size(0, -40) : undefined }} 
+                      >
+                        <div className="relative w-[240px] h-[210px] bg-card rounded-md shadow-xl overflow-hidden font-sans">
+                          <a
+                            href={`${window.location.origin}/properties/${selectedMapProperty.id}`}
+                            target="_blank" rel="noopener noreferrer"
+                            className="block w-full h-[130px] overflow-hidden"
+                            aria-label={`Ver detalles de ${selectedMapProperty.title}`}
+                          >
+                            {selectedMapProperty.images && selectedMapProperty.images.length > 0 ? (
+                              <img
+                                src={selectedMapProperty.images[carouselIndex]}
+                                alt={`Imagen de ${selectedMapProperty.title}`}
+                                className="w-full h-full object-cover transition-opacity duration-300"
+                                onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
+                              />
+                            ) : (
+                              <img src="/placeholder-property.jpg" alt="Propiedad sin imagen" className="w-full h-full object-cover" />
+                            )}
+                          </a>
+                          <div className="p-3">
+                            <a
+                              href={`${window.location.origin}/properties/${selectedMapProperty.id}`}
+                              className="font-semibold text-sm block hover:underline truncate text-card-foreground"
+                              target="_blank" rel="noopener noreferrer"
+                              onClick={(e) => { e.stopPropagation(); }}
+                            >
+                              {selectedMapProperty.title}
+                            </a>
+                            <div className="text-base font-bold mt-0.5 text-primary">
+                              {getMinSharePrice(selectedMapProperty) ? formatPriceSimple(getMinSharePrice(selectedMapProperty)!) : 'N/A'}
+                              <span className="text-xs font-normal text-muted-foreground ml-1">/copropiedad</span>
+                            </div>
+                             <div className="text-xs text-muted-foreground mt-1">
+                                {selectedMapProperty.bedrooms} hab. • {selectedMapProperty.bathrooms} baños • {selectedMapProperty.area} m²
+                            </div>
+                          </div>
+                        </div>
+                      </InfoWindow>
+                    )}
+                  </GoogleMap>
+                </div>
+              </div>
             </div>
           )
         )}
