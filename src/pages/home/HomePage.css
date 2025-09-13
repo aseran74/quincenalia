@@ -17,12 +17,14 @@
 
 @keyframes hero-zoom {
   0% { transform: scale(1); }
-  50% { transform: scale(1.08); }
+  25% { transform: scale(1.02); }
+  50% { transform: scale(1.05); }
+  75% { transform: scale(1.02); }
   100% { transform: scale(1); }
 }
 
 .animate-hero-zoom {
-  animation: hero-zoom 8s ease-in-out infinite;
+  animation: hero-zoom 15s ease-in-out infinite;
 }
 
 /* Oculta la barra de scroll en todos los navegadores */
