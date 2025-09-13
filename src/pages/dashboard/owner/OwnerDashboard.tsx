@@ -165,7 +165,7 @@ const OwnerDashboard: React.FC = () => {
         {/* Cabecera del Sidebar - Solo visible en desktop */}
         <div className="hidden lg:flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-700">
            {/* Logo */}
-           <div className="flex items-center gap-3 mr-4">
+           <div className="flex items-center justify-center mr-4">
              <img 
                src={`${window.location.origin}/logo.png`} 
                alt="Quincenalia" 
@@ -175,9 +175,6 @@ const OwnerDashboard: React.FC = () => {
                  e.currentTarget.style.display = 'none';
                }}
              />
-             <span className="text-lg font-bold text-gray-800 dark:text-gray-200">
-               Quincenalia
-             </span>
            </div>
            
            <Avatar className="h-10 w-10">
