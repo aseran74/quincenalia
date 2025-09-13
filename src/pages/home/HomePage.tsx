@@ -341,6 +341,7 @@ const HomePage = () => {
   const [aceptaCondiciones, setAceptaCondiciones] = useState(false);
   const navigate = useNavigate();
   const [showCookieBanner, setShowCookieBanner] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
     const handleResize = () => {
@@ -353,6 +354,16 @@ const HomePage = () => {
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Efecto de scroll para el zoom de la imagen hero
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
@@ -411,13 +422,22 @@ const HomePage = () => {
     <div className="min-h-screen bg-background font-poppins">
       <Navbar />
       <section className="relative h-[85vh] sm:h-screen flex items-center justify-center overflow-hidden">
-        {/* Imagen hero única con efecto zoom in/zoom out */}
-        <div className="absolute inset-0 z-0 w-full h-full">
+        {/* Imagen hero con efecto zoom basado en scroll */}
+        <div className="absolute inset-0 z-0 w-full h-full hero-image-container">
           <img
             src="/hero.jpg"
             alt="Hero principal"
-            className="w-full h-full object-cover transition-opacity duration-1000 animate-hero-zoom"
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+            className={`w-full h-full object-cover transition-opacity duration-1000 ${
+              scrollY > 50 ? 'hero-image-zoom' : ''
+            }`}
+            style={{ 
+              position: 'absolute', 
+              inset: 0, 
+              width: '100%', 
+              height: '100%',
+              transform: `scale(${1 + scrollY * 0.0005})`,
+              transition: 'transform 0.1s ease-out'
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
         </div>

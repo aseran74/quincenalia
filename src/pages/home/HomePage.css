@@ -15,16 +15,13 @@
   }
 }
 
-@keyframes hero-zoom {
-  0% { transform: scale(1); }
-  25% { transform: scale(1.02); }
-  50% { transform: scale(1.05); }
-  75% { transform: scale(1.02); }
-  100% { transform: scale(1); }
+.hero-image-container {
+  transform-origin: center;
+  transition: transform 0.1s ease-out;
 }
 
-.animate-hero-zoom {
-  animation: hero-zoom 15s ease-in-out infinite;
+.hero-image-zoom {
+  transform: scale(1.1);
 }
 
 /* Oculta la barra de scroll en todos los navegadores */
