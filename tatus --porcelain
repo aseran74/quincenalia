@@ -1,0 +1,261 @@
+[1mdiff --git a/src/pages/properties/index.tsx b/src/pages/properties/index.tsx[m
+[1mindex e6739c0..7fda458 100644[m
+[1m--- a/src/pages/properties/index.tsx[m
+[1m+++ b/src/pages/properties/index.tsx[m
+[36m@@ -349,6 +349,65 @@[m [mexport const PropertiesPage = () => {[m
+     );[m
+   };[m
+ [m
+[32m+[m[32m  const PropertyCardCompact = ({ property }: { property: Property }) => {[m
+[32m+[m[32m    const [imgIdx, setImgIdx] = useState(0);[m
+[32m+[m[32m    const totalImgs = property.images && property.images.length > 0 ? property.images.length : 0;[m
+[32m+[m[32m    let imageUrl = property.images && property.images.length > 0 ? property.images[imgIdx] : '/placeholder-property.jpg';[m
+[32m+[m[32m    // Si la zona es Marruecos y no hay imágenes, usar marruecos.jpeg[m
+[32m+[m[32m    if ((!property.images || property.images.length === 0) && (property.zona?.toLowerCase().includes('marruecos') || property.zona?.toLowerCase().includes('marrueco'))) {[m
+[32m+[m[32m      imageUrl = '/marruecos.jpeg';[m
+[32m+[m[32m    }[m
+[32m+[m[32m    const minShare = getMinSharePrice(property);[m
+[32m+[m[41m    [m
+[32m+[m[32m    return ([m
+[32m+[m[32m      <Link to={`/properties/${property.id}`} className="group block">[m
+[32m+[m[32m        <Card className="overflow-hidden border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 bg-card p-0">[m
+[32m+[m[32m          <div className="flex">[m
+[32m+[m[32m            <div className="w-24 h-20 flex-shrink-0">[m
+[32m+[m[32m              <img[m
+[32m+[m[32m                src={imageUrl}[m
+[32m+[m[32m                alt={`Imagen de ${property.title}`}[m
+[32m+[m[32m                className="w-full h-full object-cover"[m
+[32m+[m[32m                onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}[m
+[32m+[m[32m              />[m
+[32m+[m[32m            </div>[m
+[32m+[m[32m            <div className="flex-1 p-3 min-w-0">[m
+[32m+[m[32m              <h3 className="font-semibold text-sm text-foreground line-clamp-2 mb-1 group-hover:text-primary transition-colors">[m
+[32m+[m[32m                {property.title}[m
+[32m+[m[32m              </h3>[m
+[32m+[m[32m              <div className="flex items-center text-xs text-muted-foreground mb-2">[m
+[32m+[m[32m                <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />[m
+[32m+[m[32m                <span className="truncate">{property.location}</span>[m
+[32m+[m[32m              </div>[m
+[32m+[m[32m              <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">[m
+[32m+[m[32m                <div className="flex items-center space-x-2">[m
+[32m+[m[32m                  <div className="flex items-center">[m
+[32m+[m[32m                    <Bed className="w-3 h-3 mr-1" />[m
+[32m+[m[32m                    <span>{property.bedrooms}</span>[m
+[32m+[m[32m                  </div>[m
+[32m+[m[32m                  <div className="flex items-center">[m
+[32m+[m[32m                    <Bath className="w-3 h-3 mr-1" />[m
+[32m+[m[32m                    <span>{property.bathrooms}</span>[m
+[32m+[m[32m                  </div>[m
+[32m+[m[32m                  <div className="flex items-center">[m
+[32m+[m[32m                    <SquareArrowUp className="w-3 h-3 mr-1" />[m
+[32m+[m[32m                    <span>{property.area} m²</span>[m
+[32m+[m[32m                  </div>[m
+[32m+[m[32m                </div>[m
+[32m+[m[32m              </div>[m
+[32m+[m[32m              {minShare && ([m
+[32m+[m[32m                <div className="text-sm font-bold text-primary">[m
+[32m+[m[32m                  {formatPriceSimple(minShare)}[m
+[32m+[m[32m                  <span className="text-xs font-normal text-muted-foreground ml-1">/copropiedad</span>[m
+[32m+[m[32m                </div>[m
+[32m+[m[32m              )}[m
+[32m+[m[32m            </div>[m
+[32m+[m[32m          </div>[m
+[32m+[m[32m        </Card>[m
+[32m+[m[32m      </Link>[m
+[32m+[m[32m    );[m
+[32m+[m[32m  };[m
+[32m+[m
+   // --- AJUSTADO FilterSection ---[m
+   const FilterSection = () => {[m
+     const handlePlaceSelected = () => {[m
+[36m@@ -699,10 +758,12 @@[m [mexport const PropertiesPage = () => {[m
+           <FilterSection />[m
+         </div>[m
+ [m
+[31m-        <div className="mb-6 text-sm text-muted-foreground">[m
+[31m-          {filteredProperties.length} {filteredProperties.length === 1 ? 'propiedad encontrada' : 'propiedades encontradas'}[m
+[31m-          {numActiveFilters > 0 && <span className='ml-1'>(con {numActiveFilters} {numActiveFilters === 1 ? 'filtro aplicado' : 'filtros aplicados'})</span>}[m
+[31m-        </div>[m
+[32m+[m[32m        {view === 'grid' && ([m
+[32m+[m[32m          <div className="mb-6 text-sm text-muted-foreground">[m
+[32m+[m[32m            {filteredProperties.length} {filteredProperties.length === 1 ? 'propiedad encontrada' : 'propiedades encontradas'}[m
+[32m+[m[32m            {numActiveFilters > 0 && <span className='ml-1'>(con {numActiveFilters} {numActiveFilters === 1 ? 'filtro aplicado' : 'filtros aplicados'})</span>}[m
+[32m+[m[32m          </div>[m
+[32m+[m[32m        )}[m
+ [m
+         {view === 'grid' ? ([m
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">[m
+[36m@@ -721,70 +782,112 @@[m [mexport const PropertiesPage = () => {[m
+           </div>[m
+         ) : ([m
+           isAutocompleteLoaded && ( [m
+[31m-            <div className="w-full h-[400px] md:h-[500px] rounded-lg overflow-hidden border shadow-sm relative bg-muted">[m
+[31m-              <GoogleMap[m
+[31m-                mapContainerStyle={{ width: '100%', height: '100%' }}[m
+[31m-                center={{ lat: 40.4637, lng: -3.7492 }} [m
+[31m-                zoom={5}[m
+[31m-                options={{ mapTypeControl: false, streetViewControl: false, fullscreenControl: false, styles: [ ] }}[m
+[31m-                onClick={() => setSelectedMapProperty(null)}[m
+[31m-              >[m
+[31m-                {filteredProperties[m
+[31m-                  .filter(p => p.latitude && p.longitude)[m
+[31m-                  .map((property) => ([m
+[31m-                    <Marker[m
+[31m-                      key={property.id}[m
+[31m-                      position={{ lat: Number(property.latitude), lng: Number(property.longitude) }}[m
+[31m-                      title={property.title}[m
+[31m-                      onClick={() => setSelectedMapProperty(property)}[m
+[31m-                      icon={getMarkerIcon()}[m
+[31m-                    />[m
+[31m-                  ))}[m
+[31m-                {selectedMapProperty && selectedMapProperty.latitude && selectedMapProperty.longitude && ([m
+[31m-                  <InfoWindow[m
+[31m-                    position={{ lat: Number(selectedMapProperty.latitude), lng: Number(selectedMapProperty.longitude) }}[m
+[31m-                    onCloseClick={() => setSelectedMapProperty(null)}[m
+[31m-                    options={{ pixelOffset: typeof window !== "undefined" && window.google ? new window.google.maps.Size(0, -40) : undefined }} [m
+[31m-                  >[m
+[31m-                    <div className="relative w-[240px] h-[210px] bg-card rounded-md shadow-xl overflow-hidden font-sans">[m
+[31m-                      <a[m
+[31m-                        href={`${window.location.origin}/properties/${selectedMapProperty.id}`}[m
+[31m-                        target="_blank" rel="noopener noreferrer"[m
+[31m-                        className="block w-full h-[130px] overflow-hidden"[m
+[31m-                        aria-label={`Ver detalles de ${selectedMapProperty.title}`}[m
+[31m-                      >[m
+[31m-                        {selectedMapProperty.images && selectedMapProperty.images.length > 0 ? ([m
+[31m-                          <img[m
+[31m-                            src={selectedMapProperty.images[carouselIndex]}[m
+[31m-                            alt={`Imagen de ${selectedMapProperty.title}`}[m
+[31m-                            className="w-full h-full object-cover transition-opacity duration-300"[m
+[31m-                            onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}[m
+[31m-                          />[m
+[31m-                        ) : ([m
+[31m-                          <img src="/placeholder-property.jpg" alt="Propiedad sin imagen" className="w-full h-full object-cover" />[m
+[31m-                        )}[m
+[31m-                      </a>[m
+[31m-                      <div className="p-3">[m
+[31m-                        <a[m
+[31m-                          href={`${window.location.origin}/properties/${selectedMapProperty.id}`}[m
+[31m-                          className="font-semibold text-sm block hover:underline truncate text-card-foreground"[m
+[31m-                          target="_blank" rel="noopener noreferrer"[m
+[31m-                          onClick={(e) => { e.stopPropagation(); }}[m
+[32m+[m[32m            <div className="flex flex-col lg:flex-row gap-6">[m
+[32m+[m[32m              {/* Sidebar con cards de propiedades */}[m
+[32m+[m[32m              <div className="lg:w-1/3 xl:w-1/4">[m
+[32m+[m[32m                <div className="sticky top-6">[m
+[32m+[m[32m                  <h3 className="text-lg font-semibold mb-4 text-foreground">[m
+[32m+[m[32m                    Propiedades ({filteredProperties.length})[m
+[32m+[m[32m                  </h3>[m
+[32m+[m[32m                  <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">[m
+[32m+[m[32m                    {filteredProperties.length > 0 ? ([m
+[32m+[m[32m                      filteredProperties.map((property) => ([m
+[32m+[m[32m                        <div[m[41m [m
+[32m+[m[32m                          key={property.id}[m
+[32m+[m[32m                          className={`cursor-pointer transition-all duration-200 ${[m
+[32m+[m[32m                            selectedMapProperty?.id === property.id[m[41m [m
+[32m+[m[32m                              ? 'ring-2 ring-primary shadow-lg'[m[41m [m
+[32m+[m[32m                              : 'hover:shadow-md'[m
+[32m+[m[32m                          }`}[m
+[32m+[m[32m                          onClick={() => setSelectedMapProperty(property)}[m
+                         >[m
+[31m-                          {selectedMapProperty.title}[m
+[31m-                        </a>[m
+[31m-                        <div className="text-base font-bold mt-0.5 text-primary">[m
+[31m-                          {getMinSharePrice(selectedMapProperty) ? formatPriceSimple(getMinSharePrice(selectedMapProperty)!) : 'N/A'}[m
+[31m-                          <span className="text-xs font-normal text-muted-foreground ml-1">/copropiedad</span>[m
+[31m-                        </div>[m
+[31m-                         <div className="text-xs text-muted-foreground mt-1">[m
+[31m-                            {selectedMapProperty.bedrooms} hab. • {selectedMapProperty.bathrooms} baños • {selectedMapProperty.area} m²[m
+[32m+[m[32m                          <PropertyCardCompact property={property} />[m
+                         </div>[m
+[32m+[m[32m                      ))[m
+[32m+[m[32m                    ) : ([m
+[32m+[m[32m                      <div className="text-center py-8 text-muted-foreground bg-card border rounded-lg">[m
+[32m+[m[32m                        <Search className="mx-auto h-8 w-8 text-gray-400 mb-3" />[m
+[32m+[m[32m                        <p className="font-semibold text-sm">No hay propiedades que coincidan</p>[m
+[32m+[m[32m                        <p className="text-xs mt-1">Prueba a modificar o limpiar los filtros.</p>[m
+[32m+[m[32m                        {numActiveFilters > 0 && ([m
+[32m+[m[32m                          <Button variant="link" size="sm" onClick={resetFilters} className="mt-2 text-primary text-xs">[m
+[32m+[m[32m                            Limpiar filtros[m
+[32m+[m[32m                          </Button>[m
+[32m+[m[32m                        )}[m
+                       </div>[m
+[31m-                    </div>[m
+[31m-                  </InfoWindow>[m
+[31m-                )}[m
+[31m-              </GoogleMap>[m
+[32m+[m[32m                    )}[m
+[32m+[m[32m                  </div>[m
+[32m+[m[32m                </div>[m
+[32m+[m[32m              </div>[m
+[32m+[m
+[32m+[m[32m              {/* Mapa más grande */}[m
+[32m+[m[32m              <div className="lg:w-2/3 xl:w-3/4">[m
+[32m+[m[32m                <div className="w-full h-[500px] lg:h-[600px] xl:h-[700px] rounded-lg overflow-hidden border shadow-sm relative bg-muted">[m
+[32m+[m[32m                  <GoogleMap[m
+[32m+[m[32m                    mapContainerStyle={{ width: '100%', height: '100%' }}[m
+[32m+[m[32m                    center={{ lat: 40.4637, lng: -3.7492 }}[m[41m [m
+[32m+[m[32m                    zoom={5}[m
+[32m+[m[32m                    options={{ mapTypeControl: false, streetViewControl: false, fullscreenControl: false, styles: [ ] }}[m
+[32m+[m[32m                    onClick={() => setSelectedMapProperty(null)}[m
+[32m+[m[32m                  >[m
+[32m+[m[32m                    {filteredProperties[m
+[32m+[m[32m                      .filter(p => p.latitude && p.longitude)[m
+[32m+[m[32m                      .map((property) => ([m
+[32m+[m[32m                        <Marker[m
+[32m+[m[32m                          key={property.id}[m
+[32m+[m[32m                          position={{ lat: Number(property.latitude), lng: Number(property.longitude) }}[m
+[32m+[m[32m                          title={property.title}[m
+[32m+[m[32m                          onClick={() => setSelectedMapProperty(property)}[m
+[32m+[m[32m                          icon={getMarkerIcon()}[m
+[32m+[m[32m                        />[m
+[32m+[m[32m                      ))}[m
+[32m+[m[32m                    {selectedMapProperty && selectedMapProperty.latitude && selectedMapProperty.longitude && ([m
+[32m+[m[32m                      <InfoWindow[m
+[32m+[m[32m                        position={{ lat: Number(selectedMapProperty.latitude), lng: Number(selectedMapProperty.longitude) }}[m
+[32m+[m[32m                        onCloseClick={() => setSelectedMapProperty(null)}[m
+[32m+[m[32m                        options={{ pixelOffset: typeof window !== "undefined" && window.google ? new window.google.maps.Size(0, -40) : undefined }}[m[41m [m
+[32m+[m[32m                      >[m
+[32m+[m[32m                        <div className="relative w-[240px] h-[210px] bg-card rounded-md shadow-xl overflow-hidden font-sans">[m
+[32m+[m[32m                          <a[m
+[32m+[m[32m                            href={`${window.location.origin}/properties/${selectedMapProperty.id}`}[m
+[32m+[m[32m                            target="_blank" rel="noopener noreferrer"[m
+[32m+[m[32m                            className="block w-full h-[130px] overflow-hidden"[m
+[32m+[m[32m                            aria-label={`Ver detalles de ${selectedMapProperty.title}`}[m
+[32m+[m[32m                          >[m
+[32m+[m[32m                            {selectedMapProperty.images && selectedMapProperty.images.length > 0 ? ([m
+[32m+[m[32m                              <img[m
+[32m+[m[32m                                src={selectedMapProperty.images[carouselIndex]}[m
+[32m+[m[32m                                alt={`Imagen de ${selectedMapProperty.title}`}[m
+[32m+[m[32m                                className="w-full h-full object-cover transition-opacity duration-300"[m
+[32m+[m[32m                                onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}[m
+[32m+[m[32m                              />[m
+[32m+[m[32m                            ) : ([m
+[32m+[m[32m                              <img src="/placeholder-property.jpg" alt="Propiedad sin imagen" className="w-full h-full object-cover" />[m
+[32m+[m[32m                            )}[m
+[32m+[m[32m                          </a>[m
+[32m+[m[32m                          <div className="p-3">[m
+[32m+[m[32m                            <a[m
+[32m+[m[32m                              href={`${window.location.origin}/properties/${selectedMapProperty.id}`}[m
+[32m+[m[32m                              className="font-semibold text-sm block hover:underline truncate text-card-foreground"[m
+[32m+[m[32m                              target="_blank" rel="noopener noreferrer"[m
+[32m+[m[32m                              onClick={(e) => { e.stopPropagation(); }}[m
+[32m+[m[32m                            >[m
+[32m+[m[32m                              {selectedMapProperty.title}[m
+[32m+[m[32m                            </a>[m
+[32m+[m[32m                            <div className="text-base font-bold mt-0.5 text-primary">[m
+[32m+[m[32m                              {getMinSharePrice(selectedMapProperty) ? formatPriceSimple(getMinSharePrice(selectedMapProperty)!) : 'N/A'}[m
+[32m+[m[32m                              <span className="text-xs font-normal text-muted-foreground ml-1">/copropiedad</span>[m
+[32m+[m[32m                            </div>[m
+[32m+[m[32m                             <div className="text-xs text-muted-foreground mt-1">[m
+[32m+[m[32m                                {selectedMapProperty.bedrooms} hab. • {selectedMapProperty.bathrooms} baños • {selectedMapProperty.area} m²[m
+[32m+[m[32m                            </div>[m
+[32m+[m[32m                          </div>[m
+[32m+[m[32m                        </div>[m
+[32m+[m[32m                      </InfoWindow>[m
+[32m+[m[32m                    )}[m
+[32m+[m[32m                  </GoogleMap>[m
+[32m+[m[32m                </div>[m
+[32m+[m[32m              </div>[m
+             </div>[m
+           )[m
+         )}[m

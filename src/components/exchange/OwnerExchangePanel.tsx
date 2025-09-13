@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/components/ui/use-toast';
 import { Sparkles, MapPin, Calendar as CalendarIcon, Users, Star } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useExchangeNavigation } from '@/hooks/useExchangeNavigation';
 
 interface Property {
   id: string;
@@ -19,6 +20,7 @@ interface Property {
 }
 
 const OwnerExchangePanel: React.FC = () => {
+  const { getSelectedProperty, getSelectedDateRange, hasNavigationData } = useExchangeNavigation();
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [startDate, setStartDate] = useState<string>('');
@@ -26,6 +28,32 @@ const OwnerExchangePanel: React.FC = () => {
   const [points, setPoints] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [reservationCost, setReservationCost] = useState(0);
+
+  // Manejar datos de navegación desde explorar propiedades
+  useEffect(() => {
+    if (hasNavigationData()) {
+      const navProperty = getSelectedProperty();
+      const navDateRange = getSelectedDateRange();
+      
+      if (navProperty && navDateRange?.from && navDateRange?.to) {
+        // Buscar la propiedad en la lista cargada
+        const foundProperty = properties.find(p => p.id === navProperty.id);
+        if (foundProperty) {
+          setSelectedProperty(foundProperty);
+        }
+        
+        // Establecer las fechas
+        setStartDate(navDateRange.from.toISOString().split('T')[0]);
+        setEndDate(navDateRange.to.toISOString().split('T')[0]);
+        
+        toast({
+          title: 'Datos cargados',
+          description: `Propiedad "${navProperty.title}" y fechas seleccionadas cargadas desde explorar.`,
+          icon: <Sparkles className="h-4 w-4" />,
+        });
+      }
+    }
+  }, [hasNavigationData, getSelectedProperty, getSelectedDateRange, properties]);
 
   // Cargar propiedades disponibles para intercambio
   useEffect(() => {

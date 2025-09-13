@@ -18,6 +18,7 @@ import 'react-day-picker/dist/style.css';
 import { Select } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
+import { useExchangeNavigation } from '@/hooks/useExchangeNavigation';
 
 const locales = { 'es': es };
 const localizer = dateFnsLocalizer({
@@ -63,6 +64,7 @@ interface Reservation {
 const ExploreExchangeProperties: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { navigateToExchange } = useExchangeNavigation();
   const [properties, setProperties] = useState<Property[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
   const [reservas, setReservas] = useState<Record<string, Reservation[]>>({});
@@ -556,10 +558,10 @@ const ExploreExchangeProperties: React.FC = () => {
                       <Button
                         className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
                         onClick={() => {
-                          navigate('/dashboard/owner/exchange', { state: { property: prop, dateRange } });
+                          navigateToExchange(prop, dateRange!);
                           toast({
-                            title: '¡Intercambio solicitado!',
-                            description: 'Tu solicitud de intercambio ha sido enviada correctamente. Pronto recibirás una respuesta.',
+                            title: '¡Navegando al intercambio!',
+                            description: 'Las fechas seleccionadas se han pasado al panel de intercambio.',
                             variant: 'custom-exchange',
                             icon: <Sparkles className="h-6 w-6 text-purple-500" />,
                             className: 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-0 shadow-xl',
@@ -568,7 +570,7 @@ const ExploreExchangeProperties: React.FC = () => {
                         disabled={!dateRange?.from || !dateRange?.to}
                       >
                         <Sparkles className="h-4 w-4 mr-2" />
-                        Solicitar intercambio
+                        Ir a intercambio
                 </Button>
                     </div>
 
