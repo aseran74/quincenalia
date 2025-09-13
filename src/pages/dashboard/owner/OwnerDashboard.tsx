@@ -163,6 +163,18 @@ const OwnerDashboard: React.FC = () => {
       >
         {/* Cabecera del Sidebar - Solo visible en desktop */}
         <div className="hidden lg:flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-700">
+           {/* Logo */}
+           <div className="flex items-center gap-3 mr-4">
+             <img 
+               src="/logo.png" 
+               alt="Quincenalia" 
+               className="h-8 w-auto object-contain"
+             />
+             <span className="text-lg font-bold text-gray-800 dark:text-gray-200">
+               Quincenalia
+             </span>
+           </div>
+           
            <Avatar className="h-10 w-10">
                 <AvatarImage src={user?.profileImage || undefined} alt={user?.name || 'P'} />
                 <AvatarFallback className="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">
@@ -243,8 +255,17 @@ const OwnerDashboard: React.FC = () => {
              <div className="flex items-center justify-between px-4 py-3 w-full">
                  {/* Espacio para el botón de menú en móvil */}
                  <div className="w-10 h-10"></div>
-                 {/* Podrías poner aquí el título de la sección actual si quisieras */}
-                 <span className="text-lg font-semibold text-gray-700 dark:text-gray-200">Panel Propietario</span>
+                 
+                 {/* Logo en móvil */}
+                 <div className="flex items-center gap-2">
+                   <img 
+                     src="/logo.png" 
+                     alt="Quincenalia" 
+                     className="h-6 w-auto object-contain"
+                   />
+                   <span className="text-lg font-semibold text-gray-700 dark:text-gray-200">Panel Propietario</span>
+                 </div>
+                 
                  {/* Espacio derecho (o iconos adicionales si los hubiera) */}
                  <div className="w-10"></div>
              </div>

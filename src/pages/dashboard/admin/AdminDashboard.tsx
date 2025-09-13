@@ -101,6 +101,26 @@ const AdminDashboard = () => {
               "flex items-center p-4 border-b",
               isSidebarOpen ? "justify-between" : "justify-center md:justify-between"
           )}>
+            {/* Logo */}
+            <div className={cn(
+              "flex items-center gap-3",
+              !isSidebarOpen && !isMobile && "justify-center"
+            )}>
+              <img 
+                src="/logo.png" 
+                alt="Quincenalia" 
+                className={cn(
+                  "h-8 w-auto object-contain",
+                  !isSidebarOpen && !isMobile && "h-6"
+                )}
+              />
+              {isSidebarOpen && (
+                <span className="text-lg font-bold text-gray-800 dark:text-gray-200">
+                  Quincenalia
+                </span>
+              )}
+            </div>
+
             {(isSidebarOpen || !isMobile) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
