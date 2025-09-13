@@ -108,14 +108,14 @@ const AdminDashboard = () => {
               !isSidebarOpen && !isMobile && "justify-center"
             )}>
               <img 
-                src="http://localhost:8080/logo.png" 
+                src={`${window.location.origin}/logo.png`} 
                 alt="Quincenalia" 
                 className={cn(
                   "h-8 w-auto object-contain",
                   !isSidebarOpen && !isMobile && "h-6"
                 )}
                 onError={(e) => {
-                  console.log('Error loading logo:', e);
+                  console.log('Error loading logo, using fallback');
                   e.currentTarget.style.display = 'none';
                 }}
               />

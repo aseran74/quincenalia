@@ -167,11 +167,11 @@ const OwnerDashboard: React.FC = () => {
            {/* Logo */}
            <div className="flex items-center gap-3 mr-4">
              <img 
-               src="http://localhost:8080/logo.png" 
+               src={`${window.location.origin}/logo.png`} 
                alt="Quincenalia" 
                className="h-8 w-auto object-contain"
                onError={(e) => {
-                 console.log('Error loading logo:', e);
+                 console.log('Error loading logo, using fallback');
                  e.currentTarget.style.display = 'none';
                }}
              />
@@ -264,11 +264,11 @@ const OwnerDashboard: React.FC = () => {
                  {/* Logo en móvil */}
                  <div className="flex items-center gap-2">
                    <img 
-                     src="http://localhost:8080/logo.png" 
+                     src={`${window.location.origin}/logo.png`} 
                      alt="Quincenalia" 
                      className="h-6 w-auto object-contain"
                      onError={(e) => {
-                       console.log('Error loading logo:', e);
+                       console.log('Error loading logo, using fallback');
                        e.currentTarget.style.display = 'none';
                      }}
                    />
