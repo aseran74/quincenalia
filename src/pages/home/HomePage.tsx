@@ -435,8 +435,8 @@ const HomePage = () => {
               inset: 0, 
               width: '100%', 
               height: '100%',
-              transform: `scale(${1 + scrollY * 0.0005})`,
-              transition: 'transform 0.1s ease-out'
+              transform: `scale(${1 + scrollY * 0.0002})`,
+              transition: 'transform 0.3s ease-out'
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
