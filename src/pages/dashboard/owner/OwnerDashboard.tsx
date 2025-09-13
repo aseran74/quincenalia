@@ -163,9 +163,9 @@ const OwnerDashboard: React.FC = () => {
         aria-hidden={isMobile ? !isSidebarOpen : undefined}
       >
         {/* Cabecera del Sidebar - Solo visible en desktop */}
-        <div className="hidden lg:flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="hidden lg:flex items-center justify-center p-4 border-b border-gray-200 dark:border-gray-700">
            {/* Logo */}
-           <div className="flex items-center justify-center mr-4">
+           <div className="flex items-center justify-center">
              <img 
                src={`${window.location.origin}/logo.png`} 
                alt="Quincenalia" 
@@ -176,28 +176,6 @@ const OwnerDashboard: React.FC = () => {
                }}
              />
            </div>
-           
-           <Avatar className="h-10 w-10">
-                <AvatarImage src={user?.profileImage || undefined} alt={user?.name || 'P'} />
-                <AvatarFallback className="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">
-                    {user?.name ? user.name.substring(0, 1).toUpperCase() : (user?.email ? user.email.substring(0, 1).toUpperCase() : 'P')}
-                </AvatarFallback>
-           </Avatar>
-           <div className="flex flex-col overflow-hidden flex-grow">
-                <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100 truncate">{user?.name || 'Propietario'}</h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
-           </div>
-
-           {/* Display user points here in the sidebar header */}
-           {!authLoading && user && user.role === 'owner' && 'points' in user && (
-              <div className="flex-shrink-0 ml-2">
-                 {/* You might want a smaller card or just text for the sidebar */}
-                 <div className="text-center bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-md px-2 py-1 text-sm font-bold">
-                    {(user as Owner).points} Pts
-                 </div>
-              </div>
-           )}
-
         </div>
 
         {/* Navegación */}
@@ -231,14 +209,34 @@ const OwnerDashboard: React.FC = () => {
             })}
           </div>
 
-          {/* Botón de Logout (usando react-icons) */}
-          <div className="p-2 mt-auto border-t border-gray-200 dark:border-gray-700">
+          {/* Perfil del usuario y Logout */}
+          <div className="p-2 mt-auto border-t border-gray-200 dark:border-gray-700 space-y-2">
+            {/* Perfil del usuario */}
+            <div className="flex items-center gap-3 px-3 py-2 rounded-md bg-gray-50 dark:bg-gray-700">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user?.profileImage || undefined} alt={user?.name || 'P'} />
+                <AvatarFallback className="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-sm">
+                  {user?.name ? user.name.substring(0, 1).toUpperCase() : (user?.email ? user.email.substring(0, 1).toUpperCase() : 'P')}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col overflow-hidden flex-grow min-w-0">
+                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{user?.name || 'Propietario'}</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                {/* Display user points */}
+                {!authLoading && user && user.role === 'owner' && 'points' in user && (
+                  <div className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded px-1 py-0.5 mt-1 inline-block">
+                    {(user as Owner).points} Pts
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Botón de Logout */}
             <Button
               variant="ghost"
               className="w-full justify-start gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-300"
               onClick={handleLogout}
             >
-              {/* === CAMBIO DE ICONO === */}
               <FaSignOutAlt className="w-5 h-5 flex-shrink-0" />
               <span className="truncate">Cerrar Sesión</span>
             </Button>
