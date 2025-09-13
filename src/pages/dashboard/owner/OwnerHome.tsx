@@ -24,7 +24,7 @@ const OwnerHome = () => {
         const { data, error } = await supabase
           .from('owner_points')
           .select('points')
-          .eq('user_id', user.id)
+          .eq('owner_id', user.id)
           .single();
 
         if (error) {

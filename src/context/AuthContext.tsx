@@ -65,6 +65,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         profileImage: data.profile_image || undefined
       };
 
+      // Si es un owner, cargar sus puntos
+      if (data.role === 'owner') {
+        try {
+          const { data: pointsData, error: pointsError } = await supabase
+            .from('owner_points')
+            .select('points')
+            .eq('owner_id', userId)
+            .single();
+
+          if (!pointsError && pointsData) {
+            (userProfile as any).points = pointsData.points || 0;
+          } else {
+            (userProfile as any).points = 0;
+          }
+        } catch (pointsError) {
+          console.error('Error fetching owner points:', pointsError);
+          (userProfile as any).points = 0;
+        }
+      }
+
       const session = await supabase.auth.getSession();
       userProfile.email = session.data.session?.user.email || '';
 
