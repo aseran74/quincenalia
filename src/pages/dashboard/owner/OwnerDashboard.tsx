@@ -262,17 +262,16 @@ const OwnerDashboard: React.FC = () => {
                  <div className="w-10 h-10"></div>
                  
                  {/* Logo en móvil */}
-                 <div className="flex items-center gap-2">
+                 <div className="flex items-center justify-center">
                    <img 
                      src={`${window.location.origin}/logo.png`} 
                      alt="Quincenalia" 
-                     className="h-6 w-auto object-contain"
+                     className="h-8 w-auto object-contain"
                      onError={(e) => {
                        console.log('Error loading logo, using fallback');
                        e.currentTarget.style.display = 'none';
                      }}
                    />
-                   <span className="text-lg font-semibold text-gray-700 dark:text-gray-200">Panel Propietario</span>
                  </div>
                  
                  {/* Espacio derecho (o iconos adicionales si los hubiera) */}
