@@ -35,18 +35,41 @@ const OwnerExchangePanel: React.FC = () => {
           .from('exchange_properties')
           .select(`
             id,
-            title,
-            location,
-            points_per_night,
-            weekend_points_per_night,
-            max_guests,
-            images,
-            description
+            property_id,
+            points_per_day,
+            points_per_day_weekday,
+            active,
+            properties!inner(
+              id,
+              title,
+              location,
+              images,
+              description,
+              bedrooms,
+              bathrooms,
+              area
+            )
           `)
-          .eq('available', true);
+          .eq('active', true);
 
         if (error) throw error;
-        setProperties(data || []);
+        
+        // Transformar los datos para que coincidan con la interfaz Property
+        const transformedData = data?.map(item => ({
+          id: item.property_id,
+          title: item.properties.title,
+          location: item.properties.location,
+          points_per_night: item.points_per_day,
+          weekend_points_per_night: item.points_per_day,
+          max_guests: item.properties.bedrooms * 2, // Estimación basada en habitaciones
+          images: item.properties.images || [],
+          description: item.properties.description,
+          bedrooms: item.properties.bedrooms,
+          bathrooms: item.properties.bathrooms,
+          area: item.properties.area
+        })) || [];
+        
+        setProperties(transformedData);
       } catch (error) {
         console.error('Error fetching properties:', error);
         toast({
