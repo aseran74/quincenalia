@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import MessagesBoard from '@/pages/dashboard/mensajes/MessagesBoard';
 import { Owner } from '@/types/user'; // Import Owner type
+// import logoImage from '/logo.png';
 
 // Importamos TODOS los iconos necesarios de react-icons/fa
 import {
@@ -166,9 +167,13 @@ const OwnerDashboard: React.FC = () => {
            {/* Logo */}
            <div className="flex items-center gap-3 mr-4">
              <img 
-               src="/logo.png" 
+               src="http://localhost:8080/logo.png" 
                alt="Quincenalia" 
                className="h-8 w-auto object-contain"
+               onError={(e) => {
+                 console.log('Error loading logo:', e);
+                 e.currentTarget.style.display = 'none';
+               }}
              />
              <span className="text-lg font-bold text-gray-800 dark:text-gray-200">
                Quincenalia
@@ -259,9 +264,13 @@ const OwnerDashboard: React.FC = () => {
                  {/* Logo en móvil */}
                  <div className="flex items-center gap-2">
                    <img 
-                     src="/logo.png" 
+                     src="http://localhost:8080/logo.png" 
                      alt="Quincenalia" 
                      className="h-6 w-auto object-contain"
+                     onError={(e) => {
+                       console.log('Error loading logo:', e);
+                       e.currentTarget.style.display = 'none';
+                     }}
                    />
                    <span className="text-lg font-semibold text-gray-700 dark:text-gray-200">Panel Propietario</span>
                  </div>

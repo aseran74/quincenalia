@@ -16,6 +16,7 @@ import {
 import { cn } from '@/lib/utils';
 import AddProperty2 from '../AddProperty2';
 import DashboardCharts from './DashboardCharts';
+// import logoImage from '/logo.png';
 
 const menuItems = [
   { icon: <Home className="w-5 h-5" />, label: 'Panel de Control', path: '/dashboard/admin' },
@@ -107,12 +108,16 @@ const AdminDashboard = () => {
               !isSidebarOpen && !isMobile && "justify-center"
             )}>
               <img 
-                src="/logo.png" 
+                src="http://localhost:8080/logo.png" 
                 alt="Quincenalia" 
                 className={cn(
                   "h-8 w-auto object-contain",
                   !isSidebarOpen && !isMobile && "h-6"
                 )}
+                onError={(e) => {
+                  console.log('Error loading logo:', e);
+                  e.currentTarget.style.display = 'none';
+                }}
               />
               {isSidebarOpen && (
                 <span className="text-lg font-bold text-gray-800 dark:text-gray-200">
