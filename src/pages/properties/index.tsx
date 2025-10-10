@@ -157,6 +157,8 @@ export const PropertiesPage = () => {
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const locationInputRef = useRef<HTMLInputElement | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [showMobileFiltersModal, setShowMobileFiltersModal] = useState(false);
+  const [showMobileResultsModal, setShowMobileResultsModal] = useState(false);
 
   const { isLoaded: isAutocompleteLoaded, loadError: autocompleteLoadError } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
@@ -719,14 +721,15 @@ export const PropertiesPage = () => {
 
   return (
     <>
-      <div className="container mx-auto px-4 py-6">
-        <div className="mb-6">
+      <div className={`${view === 'map' ? 'lg:container lg:mx-auto lg:px-4 lg:py-6' : 'container mx-auto px-4 py-6'}`}>
+        {/* Header - Oculto en móvil cuando está en vista mapa */}
+        <div className={`${view === 'map' ? 'hidden lg:block' : 'block'} mb-6`}>
           <Button asChild variant="secondary" className="flex items-center gap-2">
             <Link to="/"> <ArrowLeft className="w-4 h-4" /> Volver a inicio </Link>
           </Button>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-4">
+        <div className={`${view === 'map' ? 'hidden lg:flex' : 'flex'} flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-4`}>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Propiedades</h1>
           <Tabs defaultValue={view} onValueChange={(v) => setView(v as 'grid' | 'map')} className="w-full sm:w-auto">
             <TabsList className="grid w-full grid-cols-2 sm:w-auto">
@@ -736,7 +739,8 @@ export const PropertiesPage = () => {
           </Tabs>
         </div>
 
-        <div className="block sm:hidden mb-4">
+        {/* Botón de filtros móvil - Solo en vista grid */}
+        <div className={`${view === 'grid' ? 'block' : 'hidden'} sm:hidden mb-4`}>
           <Button
             className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
             onClick={() => setShowFilters((v) => !v)}
@@ -751,9 +755,10 @@ export const PropertiesPage = () => {
           </Button>
         </div>
 
+        {/* Sección de filtros - Oculta en móvil cuando está en vista mapa */}
         <div 
           id="filtros-busqueda" 
-          className={`transition-all duration-300 ease-in-out ${showFilters ? 'max-h-[2000px] opacity-100 mb-6' : 'max-h-0 opacity-0 mb-0'} overflow-hidden sm:max-h-none sm:opacity-100 sm:mb-6`}
+          className={`${view === 'map' ? 'hidden lg:block' : 'block'} transition-all duration-300 ease-in-out ${showFilters || view === 'map' ? 'max-h-[2000px] opacity-100 mb-6' : 'max-h-0 opacity-0 mb-0'} overflow-hidden sm:max-h-none sm:opacity-100 sm:mb-6`}
         >
           <FilterSection />
         </div>
@@ -782,113 +787,301 @@ export const PropertiesPage = () => {
           </div>
         ) : (
           isAutocompleteLoaded && ( 
-            <div className="flex flex-col lg:flex-row gap-6">
-              {/* Sidebar con cards de propiedades */}
-              <div className="lg:w-1/3 xl:w-1/4">
-                <div className="sticky top-6">
-                  <h3 className="text-lg font-semibold mb-4 text-foreground">
-                    Propiedades ({filteredProperties.length})
-                  </h3>
-                  <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-                    {filteredProperties.length > 0 ? (
-                      filteredProperties.map((property) => (
-                        <div 
-                          key={property.id}
-                          className={`cursor-pointer transition-all duration-200 ${
-                            selectedMapProperty?.id === property.id 
-                              ? 'ring-2 ring-primary shadow-lg' 
-                              : 'hover:shadow-md'
-                          }`}
-                          onClick={() => setSelectedMapProperty(property)}
-                        >
-                          <PropertyCardCompact property={property} />
+            <>
+              {/* Vista Desktop - Layout original */}
+              <div className="hidden lg:flex flex-col lg:flex-row gap-6">
+                {/* Sidebar con cards de propiedades */}
+                <div className="lg:w-1/3 xl:w-1/4">
+                  <div className="sticky top-6">
+                    <h3 className="text-lg font-semibold mb-4 text-foreground">
+                      Propiedades ({filteredProperties.length})
+                    </h3>
+                    <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+                      {filteredProperties.length > 0 ? (
+                        filteredProperties.map((property) => (
+                          <div 
+                            key={property.id}
+                            className={`cursor-pointer transition-all duration-200 ${
+                              selectedMapProperty?.id === property.id 
+                                ? 'ring-2 ring-primary shadow-lg' 
+                                : 'hover:shadow-md'
+                            }`}
+                            onClick={() => setSelectedMapProperty(property)}
+                          >
+                            <PropertyCardCompact property={property} />
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground bg-card border rounded-lg">
+                          <Search className="mx-auto h-8 w-8 text-gray-400 mb-3" />
+                          <p className="font-semibold text-sm">No hay propiedades que coincidan</p>
+                          <p className="text-xs mt-1">Prueba a modificar o limpiar los filtros.</p>
+                          {numActiveFilters > 0 && (
+                            <Button variant="link" size="sm" onClick={resetFilters} className="mt-2 text-primary text-xs">
+                              Limpiar filtros
+                            </Button>
+                          )}
                         </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground bg-card border rounded-lg">
-                        <Search className="mx-auto h-8 w-8 text-gray-400 mb-3" />
-                        <p className="font-semibold text-sm">No hay propiedades que coincidan</p>
-                        <p className="text-xs mt-1">Prueba a modificar o limpiar los filtros.</p>
-                        {numActiveFilters > 0 && (
-                          <Button variant="link" size="sm" onClick={resetFilters} className="mt-2 text-primary text-xs">
-                            Limpiar filtros
-                          </Button>
-                        )}
-                      </div>
-                    )}
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mapa más grande */}
+                <div className="lg:w-2/3 xl:w-3/4">
+                  <div className="w-full h-[500px] lg:h-[600px] xl:h-[700px] rounded-lg overflow-hidden border shadow-sm relative bg-muted">
+                    <GoogleMap
+                      mapContainerStyle={{ width: '100%', height: '100%' }}
+                      center={{ lat: 40.4637, lng: -3.7492 }} 
+                      zoom={5}
+                      options={{ mapTypeControl: false, streetViewControl: false, fullscreenControl: false, styles: [ ] }}
+                      onClick={() => setSelectedMapProperty(null)}
+                    >
+                      {filteredProperties
+                        .filter(p => p.latitude && p.longitude)
+                        .map((property) => (
+                          <Marker
+                            key={property.id}
+                            position={{ lat: Number(property.latitude), lng: Number(property.longitude) }}
+                            title={property.title}
+                            onClick={() => setSelectedMapProperty(property)}
+                            icon={getMarkerIcon()}
+                          />
+                        ))}
+                      {selectedMapProperty && selectedMapProperty.latitude && selectedMapProperty.longitude && (
+                        <InfoWindow
+                          position={{ lat: Number(selectedMapProperty.latitude), lng: Number(selectedMapProperty.longitude) }}
+                          onCloseClick={() => setSelectedMapProperty(null)}
+                          options={{ pixelOffset: typeof window !== "undefined" && window.google ? new window.google.maps.Size(0, -40) : undefined }} 
+                        >
+                          <div className="relative w-[240px] h-[210px] bg-card rounded-md shadow-xl overflow-hidden font-sans">
+                            <a
+                              href={`${window.location.origin}/properties/${selectedMapProperty.id}`}
+                              target="_blank" rel="noopener noreferrer"
+                              className="block w-full h-[130px] overflow-hidden"
+                              aria-label={`Ver detalles de ${selectedMapProperty.title}`}
+                            >
+                              {selectedMapProperty.images && selectedMapProperty.images.length > 0 ? (
+                                <img
+                                  src={selectedMapProperty.images[carouselIndex]}
+                                  alt={`Imagen de ${selectedMapProperty.title}`}
+                                  className="w-full h-full object-cover transition-opacity duration-300"
+                                  onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
+                                />
+                              ) : (
+                                <img src="/placeholder-property.jpg" alt="Propiedad sin imagen" className="w-full h-full object-cover" />
+                              )}
+                            </a>
+                            <div className="p-3">
+                              <a
+                                href={`${window.location.origin}/properties/${selectedMapProperty.id}`}
+                                className="font-semibold text-sm block hover:underline truncate text-card-foreground"
+                                target="_blank" rel="noopener noreferrer"
+                                onClick={(e) => { e.stopPropagation(); }}
+                              >
+                                {selectedMapProperty.title}
+                              </a>
+                              <div className="text-base font-bold mt-0.5 text-primary">
+                                {getMinSharePrice(selectedMapProperty) ? formatPriceSimple(getMinSharePrice(selectedMapProperty)!) : 'N/A'}
+                                <span className="text-xs font-normal text-muted-foreground ml-1">/copropiedad</span>
+                              </div>
+                               <div className="text-xs text-muted-foreground mt-1">
+                                  {selectedMapProperty.bedrooms} hab. • {selectedMapProperty.bathrooms} baños • {selectedMapProperty.area} m²
+                              </div>
+                            </div>
+                          </div>
+                        </InfoWindow>
+                      )}
+                    </GoogleMap>
                   </div>
                 </div>
               </div>
 
-              {/* Mapa más grande */}
-              <div className="lg:w-2/3 xl:w-3/4">
-                <div className="w-full h-[500px] lg:h-[600px] xl:h-[700px] rounded-lg overflow-hidden border shadow-sm relative bg-muted">
-                  <GoogleMap
-                    mapContainerStyle={{ width: '100%', height: '100%' }}
-                    center={{ lat: 40.4637, lng: -3.7492 }} 
-                    zoom={5}
-                    options={{ mapTypeControl: false, streetViewControl: false, fullscreenControl: false, styles: [ ] }}
-                    onClick={() => setSelectedMapProperty(null)}
-                  >
-                    {filteredProperties
-                      .filter(p => p.latitude && p.longitude)
-                      .map((property) => (
-                        <Marker
-                          key={property.id}
-                          position={{ lat: Number(property.latitude), lng: Number(property.longitude) }}
-                          title={property.title}
-                          onClick={() => setSelectedMapProperty(property)}
-                          icon={getMarkerIcon()}
-                        />
-                      ))}
-                    {selectedMapProperty && selectedMapProperty.latitude && selectedMapProperty.longitude && (
-                      <InfoWindow
-                        position={{ lat: Number(selectedMapProperty.latitude), lng: Number(selectedMapProperty.longitude) }}
-                        onCloseClick={() => setSelectedMapProperty(null)}
-                        options={{ pixelOffset: typeof window !== "undefined" && window.google ? new window.google.maps.Size(0, -40) : undefined }} 
-                      >
-                        <div className="relative w-[240px] h-[210px] bg-card rounded-md shadow-xl overflow-hidden font-sans">
+              {/* Vista Móvil - Mapa en pantalla completa con botones flotantes */}
+              <div className="lg:hidden fixed inset-0 top-16 left-0 right-0 bottom-0 z-30">
+                <GoogleMap
+                  mapContainerStyle={{ width: '100%', height: 'calc(100vh - 64px)' }}
+                  center={{ lat: 40.4637, lng: -3.7492 }} 
+                  zoom={5}
+                  options={{ mapTypeControl: false, streetViewControl: false, fullscreenControl: false, styles: [ ] }}
+                  onClick={() => setSelectedMapProperty(null)}
+                >
+                  {filteredProperties
+                    .filter(p => p.latitude && p.longitude)
+                    .map((property) => (
+                      <Marker
+                        key={property.id}
+                        position={{ lat: Number(property.latitude), lng: Number(property.longitude) }}
+                        title={property.title}
+                        onClick={() => setSelectedMapProperty(property)}
+                        icon={getMarkerIcon()}
+                      />
+                    ))}
+                  {selectedMapProperty && selectedMapProperty.latitude && selectedMapProperty.longitude && (
+                    <InfoWindow
+                      position={{ lat: Number(selectedMapProperty.latitude), lng: Number(selectedMapProperty.longitude) }}
+                      onCloseClick={() => setSelectedMapProperty(null)}
+                      options={{ pixelOffset: typeof window !== "undefined" && window.google ? new window.google.maps.Size(0, -40) : undefined }} 
+                    >
+                      <div className="relative w-[240px] h-[210px] bg-card rounded-md shadow-xl overflow-hidden font-sans">
+                        <a
+                          href={`${window.location.origin}/properties/${selectedMapProperty.id}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="block w-full h-[130px] overflow-hidden"
+                          aria-label={`Ver detalles de ${selectedMapProperty.title}`}
+                        >
+                          {selectedMapProperty.images && selectedMapProperty.images.length > 0 ? (
+                            <img
+                              src={selectedMapProperty.images[carouselIndex]}
+                              alt={`Imagen de ${selectedMapProperty.title}`}
+                              className="w-full h-full object-cover transition-opacity duration-300"
+                              onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
+                            />
+                          ) : (
+                            <img src="/placeholder-property.jpg" alt="Propiedad sin imagen" className="w-full h-full object-cover" />
+                          )}
+                        </a>
+                        <div className="p-3">
                           <a
                             href={`${window.location.origin}/properties/${selectedMapProperty.id}`}
+                            className="font-semibold text-sm block hover:underline truncate text-card-foreground"
                             target="_blank" rel="noopener noreferrer"
-                            className="block w-full h-[130px] overflow-hidden"
-                            aria-label={`Ver detalles de ${selectedMapProperty.title}`}
+                            onClick={(e) => { e.stopPropagation(); }}
                           >
-                            {selectedMapProperty.images && selectedMapProperty.images.length > 0 ? (
-                              <img
-                                src={selectedMapProperty.images[carouselIndex]}
-                                alt={`Imagen de ${selectedMapProperty.title}`}
-                                className="w-full h-full object-cover transition-opacity duration-300"
-                                onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
-                              />
-                            ) : (
-                              <img src="/placeholder-property.jpg" alt="Propiedad sin imagen" className="w-full h-full object-cover" />
-                            )}
+                            {selectedMapProperty.title}
                           </a>
-                          <div className="p-3">
-                            <a
-                              href={`${window.location.origin}/properties/${selectedMapProperty.id}`}
-                              className="font-semibold text-sm block hover:underline truncate text-card-foreground"
-                              target="_blank" rel="noopener noreferrer"
-                              onClick={(e) => { e.stopPropagation(); }}
-                            >
-                              {selectedMapProperty.title}
-                            </a>
-                            <div className="text-base font-bold mt-0.5 text-primary">
-                              {getMinSharePrice(selectedMapProperty) ? formatPriceSimple(getMinSharePrice(selectedMapProperty)!) : 'N/A'}
-                              <span className="text-xs font-normal text-muted-foreground ml-1">/copropiedad</span>
-                            </div>
-                             <div className="text-xs text-muted-foreground mt-1">
-                                {selectedMapProperty.bedrooms} hab. • {selectedMapProperty.bathrooms} baños • {selectedMapProperty.area} m²
-                            </div>
+                          <div className="text-base font-bold mt-0.5 text-primary">
+                            {getMinSharePrice(selectedMapProperty) ? formatPriceSimple(getMinSharePrice(selectedMapProperty)!) : 'N/A'}
+                            <span className="text-xs font-normal text-muted-foreground ml-1">/copropiedad</span>
+                          </div>
+                           <div className="text-xs text-muted-foreground mt-1">
+                              {selectedMapProperty.bedrooms} hab. • {selectedMapProperty.bathrooms} baños • {selectedMapProperty.area} m²
                           </div>
                         </div>
-                      </InfoWindow>
+                      </div>
+                    </InfoWindow>
+                  )}
+                </GoogleMap>
+
+                {/* Botones flotantes para móvil */}
+                <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 px-4 z-50">
+                  {/* Botón de Filtros */}
+                  <Button
+                    onClick={() => setShowMobileFiltersModal(true)}
+                    className="bg-white text-gray-900 hover:bg-gray-100 shadow-lg rounded-full px-5 py-6 flex items-center gap-2 font-semibold"
+                  >
+                    <SlidersHorizontal className="w-5 h-5" />
+                    Filtros
+                    {numActiveFilters > 0 && (
+                      <span className="bg-primary text-white rounded-full px-2 py-0.5 text-xs font-bold ml-1">
+                        {numActiveFilters}
+                      </span>
                     )}
-                  </GoogleMap>
+                  </Button>
+
+                  {/* Botón de Resultados */}
+                  <Button
+                    onClick={() => setShowMobileResultsModal(true)}
+                    className="bg-white text-gray-900 hover:bg-gray-100 shadow-lg rounded-full px-5 py-6 flex items-center gap-2 font-semibold"
+                  >
+                    <LayoutGrid className="w-5 h-5" />
+                    <span className="text-sm">{filteredProperties.length}</span>
+                  </Button>
+
+                  {/* Botón de Vista Lista */}
+                  <Button
+                    onClick={() => setView('grid')}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg rounded-full px-5 py-6 flex items-center gap-2 font-semibold"
+                  >
+                    <LayoutGrid className="w-5 h-5" />
+                    Lista
+                  </Button>
                 </div>
               </div>
-            </div>
+
+              {/* Modal de Filtros para Móvil */}
+              {showMobileFiltersModal && (
+                <div className="lg:hidden fixed inset-0 bg-black/50 z-50 flex items-end">
+                  <div className="bg-background w-full max-h-[90vh] rounded-t-2xl overflow-y-auto animate-slide-up">
+                    <div className="sticky top-0 bg-background border-b px-4 py-3 flex items-center justify-between z-10">
+                      <h2 className="text-lg font-bold">Filtros</h2>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowMobileFiltersModal(false)}
+                      >
+                        <X className="w-5 h-5" />
+                      </Button>
+                    </div>
+                    <div className="p-4">
+                      <FilterSection />
+                      <div className="mt-4 sticky bottom-0 bg-background pt-4 border-t">
+                        <Button
+                          onClick={() => setShowMobileFiltersModal(false)}
+                          className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                        >
+                          Aplicar filtros
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Modal de Resultados para Móvil */}
+              {showMobileResultsModal && (
+                <div className="lg:hidden fixed inset-0 bg-black/50 z-50 flex items-end">
+                  <div className="bg-background w-full max-h-[90vh] rounded-t-2xl overflow-hidden flex flex-col">
+                    <div className="sticky top-0 bg-background border-b px-4 py-3 flex items-center justify-between z-10">
+                      <h2 className="text-lg font-bold">Propiedades ({filteredProperties.length})</h2>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowMobileResultsModal(false)}
+                      >
+                        <X className="w-5 h-5" />
+                      </Button>
+                    </div>
+                    <div className="overflow-y-auto flex-1 p-4">
+                      {filteredProperties.length > 0 ? (
+                        <div className="space-y-3">
+                          {filteredProperties.map((property) => (
+                            <div 
+                              key={property.id}
+                              onClick={() => {
+                                setSelectedMapProperty(property);
+                                setShowMobileResultsModal(false);
+                              }}
+                            >
+                              <PropertyCardCompact property={property} />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12 text-muted-foreground">
+                          <Search className="mx-auto h-10 w-10 text-gray-400 mb-3" />
+                          <p className="font-semibold">No hay propiedades que coincidan</p>
+                          <p className="text-sm mt-1">Prueba a modificar o limpiar los filtros.</p>
+                          {numActiveFilters > 0 && (
+                            <Button 
+                              variant="link" 
+                              size="sm" 
+                              onClick={() => {
+                                resetFilters();
+                                setShowMobileResultsModal(false);
+                              }} 
+                              className="mt-2 text-primary"
+                            >
+                              Limpiar filtros
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )
         )}
       </div>

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import PropertyFilters from '@/components/properties/PropertyFilters';
 import { DateRange } from 'react-day-picker';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarIcon, MapPin, Bed, Bath, Square, Home, Star, Filter, Eye, EyeOff, Sparkles, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Calendar as CalendarIcon, MapPin, Bed, Bath, Square, Home, Star, Filter, Eye, EyeOff, Sparkles, ArrowLeft, ArrowRight, LayoutGrid, Map as MapIcon, SlidersHorizontal, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
@@ -19,6 +19,8 @@ import { Select } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import { useExchangeNavigation } from '@/hooks/useExchangeNavigation';
+import { GoogleMap, Marker, InfoWindow, useLoadScript } from '@react-google-maps/api';
+import type { Libraries } from '@react-google-maps/api';
 
 const locales = { 'es': es };
 const localizer = dateFnsLocalizer({
@@ -28,6 +30,19 @@ const localizer = dateFnsLocalizer({
   getDay,
   locales,
 });
+
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+const GOOGLE_MAPS_LIBRARIES: Libraries = ['places'];
+
+const getMarkerIcon = () => {
+  if (typeof window !== 'undefined' && window.google && window.google.maps) {
+    return {
+      url: '/map-marker-svgrepo-com.svg',
+      scaledSize: new window.google.maps.Size(40, 40),
+    };
+  }
+  return undefined;
+};
 
 interface Property {
   id: string;
@@ -49,6 +64,8 @@ interface Property {
   share2_status?: string;
   share3_status?: string;
   share4_status?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface Reservation {
@@ -82,6 +99,18 @@ const ExploreExchangeProperties: React.FC = () => {
 
   // Estado para rastrear la imagen actual para cada propiedad
   const [propertyImageIndexes, setPropertyImageIndexes] = useState<Record<string, number>>({});
+
+  // Estados para vista de mapa
+  const [view, setView] = useState<'grid' | 'map'>('grid');
+  const [selectedMapProperty, setSelectedMapProperty] = useState<Property | null>(null);
+  const [showMobileFiltersModal, setShowMobileFiltersModal] = useState(false);
+  const [showMobileResultsModal, setShowMobileResultsModal] = useState(false);
+
+  // Cargar Google Maps
+  const { isLoaded: isMapLoaded } = useLoadScript({
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: GOOGLE_MAPS_LIBRARIES,
+  });
 
   // Manejador genérico para cambiar la imagen de una propiedad específica
   const updateImageIndex = (propertyId: string, direction: 'prev' | 'next', totalImages: number) => {
@@ -239,23 +268,49 @@ const ExploreExchangeProperties: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50">
-      {/* Header con gradiente */}
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white py-8 px-4">
+      {/* Header con gradiente - Oculto en móvil cuando está en vista mapa */}
+      <div className={`${view === 'map' ? 'hidden lg:block' : 'block'} bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white py-8 px-4`}>
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-3 mb-2">
-            <Sparkles className="h-8 w-8 text-yellow-300" />
-            <h1 className="text-3xl sm:text-4xl font-bold">Explorar Intercambios</h1>
-          </div>
-          <p className="text-blue-100 text-lg">Descubre propiedades únicas para tu próximo intercambio</p>
-          <div className="mt-4 text-sm bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 inline-block">
-            {filteredProperties.length} propiedades disponibles
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <Sparkles className="h-8 w-8 text-yellow-300" />
+                <h1 className="text-3xl sm:text-4xl font-bold">Explorar Intercambios</h1>
+              </div>
+              <p className="text-blue-100 text-lg">Descubre propiedades únicas para tu próximo intercambio</p>
+              <div className="mt-4 text-sm bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 inline-block">
+                {filteredProperties.length} propiedades disponibles
+              </div>
+            </div>
+            
+            {/* Toggle de vista */}
+            <div className="flex gap-2 bg-white/10 backdrop-blur-sm rounded-lg p-1">
+              <Button
+                variant={view === 'grid' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setView('grid')}
+                className={`${view === 'grid' ? 'bg-white text-indigo-600 hover:bg-white/90' : 'text-white hover:bg-white/20'}`}
+              >
+                <LayoutGrid className="h-4 w-4 mr-2" />
+                Lista
+              </Button>
+              <Button
+                variant={view === 'map' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setView('map')}
+                className={`${view === 'map' ? 'bg-white text-indigo-600 hover:bg-white/90' : 'text-white hover:bg-white/20'}`}
+              >
+                <MapIcon className="h-4 w-4 mr-2" />
+                Mapa
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 -mt-4 relative z-10">
-        {/* Panel de filtros mejorado */}
-        <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-white/50 p-6 mb-8">
+      <div className={`${view === 'map' ? 'lg:max-w-7xl lg:mx-auto lg:px-4 lg:-mt-4 lg:relative lg:z-10' : 'max-w-7xl mx-auto px-4 -mt-4 relative z-10'}`}>
+        {/* Panel de filtros mejorado - Oculto en móvil cuando está en vista mapa */}
+        <div className={`${view === 'map' ? 'hidden lg:block' : 'block'} bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-white/50 p-6 mb-8`}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Filter className="h-5 w-5 text-indigo-600" />
@@ -413,7 +468,7 @@ const ExploreExchangeProperties: React.FC = () => {
               </Button>
             </div>
           </div>
-        ) : (
+        ) : view === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-8">
             {filteredProperties.map(prop => {
               const config = exchangeConfigs[prop.id];
@@ -646,7 +701,334 @@ const ExploreExchangeProperties: React.FC = () => {
               );
             })}
         </div>
-      )}
+        ) : (
+          // Vista de Mapa
+          isMapLoaded && (
+            <>
+              {/* Vista Desktop - Mapa con sidebar */}
+              <div className="hidden lg:block pb-8">
+                <div className="w-full h-[700px] rounded-2xl overflow-hidden border shadow-lg relative bg-muted">
+                  <GoogleMap
+                    mapContainerStyle={{ width: '100%', height: '100%' }}
+                    center={{ lat: 40.4637, lng: -3.7492 }}
+                    zoom={5}
+                    options={{ mapTypeControl: false, streetViewControl: false, fullscreenControl: false }}
+                    onClick={() => setSelectedMapProperty(null)}
+                  >
+                    {filteredProperties
+                      .filter(p => p.latitude && p.longitude)
+                      .map((property) => (
+                        <Marker
+                          key={property.id}
+                          position={{ lat: Number(property.latitude), lng: Number(property.longitude) }}
+                          title={property.title}
+                          onClick={() => setSelectedMapProperty(property)}
+                          icon={getMarkerIcon()}
+                        />
+                      ))}
+                    {selectedMapProperty && selectedMapProperty.latitude && selectedMapProperty.longitude && (
+                      <InfoWindow
+                        position={{ lat: Number(selectedMapProperty.latitude), lng: Number(selectedMapProperty.longitude) }}
+                        onCloseClick={() => setSelectedMapProperty(null)}
+                        options={{ pixelOffset: typeof window !== "undefined" && window.google ? new window.google.maps.Size(0, -40) : undefined }}
+                      >
+                        <div className="relative w-[280px] bg-white rounded-lg shadow-xl overflow-hidden font-sans">
+                          <div className="relative h-[150px]">
+                            {selectedMapProperty.images && selectedMapProperty.images.length > 0 ? (
+                              <img
+                                src={selectedMapProperty.images[0]}
+                                alt={selectedMapProperty.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
+                              />
+                            ) : (
+                              <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-100 to-gray-200">
+                                <Home className="h-12 w-12 text-gray-400" />
+                              </div>
+                            )}
+                            {exchangeConfigs[selectedMapProperty.id] && (
+                              <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
+                                {exchangeConfigs[selectedMapProperty.id].points_per_day} pts/día
+                              </div>
+                            )}
+                          </div>
+                          <div className="p-3">
+                            <h3 className="font-bold text-sm text-gray-900 mb-1 line-clamp-2">
+                              {selectedMapProperty.title}
+                            </h3>
+                            {selectedMapProperty.location && (
+                              <div className="flex items-center gap-1 text-gray-600 text-xs mb-2">
+                                <MapPin className="h-3 w-3" />
+                                <span className="line-clamp-1">{selectedMapProperty.location}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-3 text-xs text-gray-600 mb-3">
+                              <div className="flex items-center gap-1">
+                                <Bed className="h-3 w-3" />
+                                <span>{selectedMapProperty.bedrooms || '—'}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Bath className="h-3 w-3" />
+                                <span>{selectedMapProperty.bathrooms || '—'}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Square className="h-3 w-3" />
+                                <span>{selectedMapProperty.area ? `${selectedMapProperty.area}m²` : '—'}</span>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs"
+                              onClick={() => {
+                                navigateToExchange(selectedMapProperty, dateRange!);
+                                toast({
+                                  title: '¡Navegando al intercambio!',
+                                  description: 'Las fechas seleccionadas se han pasado al panel de intercambio.',
+                                  variant: 'custom-exchange',
+                                  icon: <Sparkles className="h-6 w-6 text-purple-500" />,
+                                  className: 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-0 shadow-xl',
+                                });
+                              }}
+                              disabled={!dateRange?.from || !dateRange?.to}
+                            >
+                              <Sparkles className="h-3 w-3 mr-1" />
+                              Ir a intercambio
+                            </Button>
+                          </div>
+                        </div>
+                      </InfoWindow>
+                    )}
+                  </GoogleMap>
+                </div>
+              </div>
+
+              {/* Vista Móvil - Mapa en pantalla completa con botones flotantes */}
+              <div className="lg:hidden fixed inset-0 top-16 left-0 right-0 bottom-0 z-30">
+                <GoogleMap
+                  mapContainerStyle={{ width: '100%', height: 'calc(100vh - 64px)' }}
+                  center={{ lat: 40.4637, lng: -3.7492 }}
+                  zoom={5}
+                  options={{ mapTypeControl: false, streetViewControl: false, fullscreenControl: false }}
+                  onClick={() => setSelectedMapProperty(null)}
+                >
+                  {filteredProperties
+                    .filter(p => p.latitude && p.longitude)
+                    .map((property) => (
+                      <Marker
+                        key={property.id}
+                        position={{ lat: Number(property.latitude), lng: Number(property.longitude) }}
+                        title={property.title}
+                        onClick={() => setSelectedMapProperty(property)}
+                        icon={getMarkerIcon()}
+                      />
+                    ))}
+                  {selectedMapProperty && selectedMapProperty.latitude && selectedMapProperty.longitude && (
+                    <InfoWindow
+                      position={{ lat: Number(selectedMapProperty.latitude), lng: Number(selectedMapProperty.longitude) }}
+                      onCloseClick={() => setSelectedMapProperty(null)}
+                      options={{ pixelOffset: typeof window !== "undefined" && window.google ? new window.google.maps.Size(0, -40) : undefined }}
+                    >
+                      <div className="relative w-[240px] bg-white rounded-lg shadow-xl overflow-hidden font-sans">
+                        <div className="relative h-[120px]">
+                          {selectedMapProperty.images && selectedMapProperty.images.length > 0 ? (
+                            <img
+                              src={selectedMapProperty.images[0]}
+                              alt={selectedMapProperty.title}
+                              className="w-full h-full object-cover"
+                              onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-100 to-gray-200">
+                              <Home className="h-10 w-10 text-gray-400" />
+                            </div>
+                          )}
+                          {exchangeConfigs[selectedMapProperty.id] && (
+                            <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
+                              {exchangeConfigs[selectedMapProperty.id].points_per_day} pts/día
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-2">
+                          <h3 className="font-bold text-xs text-gray-900 mb-1 line-clamp-2">
+                            {selectedMapProperty.title}
+                          </h3>
+                          <div className="flex items-center gap-2 text-xs text-gray-600">
+                            <div className="flex items-center gap-1">
+                              <Bed className="h-3 w-3" />
+                              <span>{selectedMapProperty.bedrooms || '—'}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Bath className="h-3 w-3" />
+                              <span>{selectedMapProperty.bathrooms || '—'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </InfoWindow>
+                  )}
+                </GoogleMap>
+
+                {/* Botones flotantes para móvil */}
+                <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 px-4 z-50">
+                  {/* Botón de Filtros */}
+                  <Button
+                    onClick={() => setShowMobileFiltersModal(true)}
+                    className="bg-white text-gray-900 hover:bg-gray-100 shadow-lg rounded-full px-5 py-6 flex items-center gap-2 font-semibold"
+                  >
+                    <SlidersHorizontal className="w-5 h-5" />
+                    Filtros
+                  </Button>
+
+                  {/* Botón de Resultados */}
+                  <Button
+                    onClick={() => setShowMobileResultsModal(true)}
+                    className="bg-white text-gray-900 hover:bg-gray-100 shadow-lg rounded-full px-5 py-6 flex items-center gap-2 font-semibold"
+                  >
+                    <LayoutGrid className="w-5 h-5" />
+                    <span className="text-sm">{filteredProperties.length}</span>
+                  </Button>
+
+                  {/* Botón de Vista Lista */}
+                  <Button
+                    onClick={() => setView('grid')}
+                    className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg rounded-full px-5 py-6 flex items-center gap-2 font-semibold"
+                  >
+                    <LayoutGrid className="w-5 h-5" />
+                    Lista
+                  </Button>
+                </div>
+              </div>
+
+              {/* Modal de Filtros para Móvil */}
+              {showMobileFiltersModal && (
+                <div className="lg:hidden fixed inset-0 bg-black/50 z-50 flex items-end" onClick={() => setShowMobileFiltersModal(false)}>
+                  <div className="bg-white w-full max-h-[90vh] rounded-t-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                    <div className="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between z-10">
+                      <h2 className="text-lg font-bold">Filtros</h2>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowMobileFiltersModal(false)}
+                      >
+                        <X className="w-5 h-5" />
+                      </Button>
+                    </div>
+                    <div className="p-4">
+                      {/* Contenido de filtros simplificado para móvil */}
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 mb-2 block">Habitaciones mín.</label>
+                          <select
+                            value={bedrooms}
+                            onChange={e => setBedrooms(e.target.value)}
+                            className="w-full h-11 border border-gray-200 rounded-lg px-3 text-sm"
+                          >
+                            <option value="">Todas</option>
+                            {[1, 2, 3, 4, 5].map(num => (
+                              <option key={num} value={num}>{num}+ habitaciones</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 mb-2 block">Baños mín.</label>
+                          <select
+                            value={bathrooms}
+                            onChange={e => setBathrooms(e.target.value)}
+                            className="w-full h-11 border border-gray-200 rounded-lg px-3 text-sm"
+                          >
+                            <option value="">Todos</option>
+                            {[1, 2, 3, 4, 5].map(num => (
+                              <option key={num} value={num}>{num}+ baños</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="mt-6 sticky bottom-0 bg-white pt-4 border-t">
+                        <Button
+                          onClick={() => setShowMobileFiltersModal(false)}
+                          className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
+                        >
+                          Aplicar filtros
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Modal de Resultados para Móvil */}
+              {showMobileResultsModal && (
+                <div className="lg:hidden fixed inset-0 bg-black/50 z-50 flex items-end" onClick={() => setShowMobileResultsModal(false)}>
+                  <div className="bg-white w-full max-h-[90vh] rounded-t-2xl overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+                    <div className="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between z-10">
+                      <h2 className="text-lg font-bold">Propiedades ({filteredProperties.length})</h2>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowMobileResultsModal(false)}
+                      >
+                        <X className="w-5 h-5" />
+                      </Button>
+                    </div>
+                    <div className="overflow-y-auto flex-1 p-4">
+                      <div className="space-y-3">
+                        {filteredProperties.map((property) => {
+                          const config = exchangeConfigs[property.id];
+                          const pointsPerDay = config?.points_per_day || 0;
+                          return (
+                            <Card
+                              key={property.id}
+                              className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                              onClick={() => {
+                                setSelectedMapProperty(property);
+                                setShowMobileResultsModal(false);
+                              }}
+                            >
+                              <div className="flex">
+                                <div className="w-24 h-20 flex-shrink-0 relative">
+                                  {property.images && property.images.length > 0 ? (
+                                    <img
+                                      src={property.images[0]}
+                                      alt={property.title}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
+                                    />
+                                  ) : (
+                                    <div className="flex items-center justify-center h-full bg-gray-100">
+                                      <Home className="h-8 w-8 text-gray-400" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex-1 p-3 min-w-0">
+                                  <h3 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-1">
+                                    {property.title}
+                                  </h3>
+                                  <div className="flex items-center gap-3 text-xs text-gray-600 mb-1">
+                                    <div className="flex items-center gap-1">
+                                      <Bed className="h-3 w-3" />
+                                      <span>{property.bedrooms || '—'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Bath className="h-3 w-3" />
+                                      <span>{property.bathrooms || '—'}</span>
+                                    </div>
+                                  </div>
+                                  <div className="text-xs font-bold text-orange-600">
+                                    {pointsPerDay} pts/día
+                                  </div>
+                                </div>
+                              </div>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )
+        )}
       </div>
     </div>
   );
