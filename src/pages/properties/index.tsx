@@ -871,6 +871,17 @@ export const PropertiesPage = () => {
 
               {/* Vista Móvil - Mapa en pantalla completa con botones flotantes */}
               <div className="lg:hidden fixed top-16 left-0 right-0 bottom-0 z-30">
+                {/* Botón Volver arriba */}
+                <div className="absolute top-4 left-4 z-40">
+                  <Button
+                    onClick={() => window.history.back()}
+                    className="bg-white/90 backdrop-blur-sm text-gray-900 hover:bg-white shadow-lg rounded-full px-4 py-3 flex items-center gap-2 font-semibold"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                    Volver
+                  </Button>
+                </div>
+
                 <GoogleMap
                   mapContainerStyle={{ width: '100%', height: 'calc(100vh - 64px)' }}
                   center={{ lat: 40.4637, lng: -3.7492 }} 
@@ -908,15 +919,6 @@ export const PropertiesPage = () => {
 
                 {/* Botones flotantes para móvil */}
                 <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 px-4 z-50">
-                  {/* Botón de Volver */}
-                  <Button
-                    onClick={() => window.history.back()}
-                    className="bg-gray-600 text-white hover:bg-gray-700 shadow-lg rounded-full px-5 py-6 flex items-center gap-2 font-semibold"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                    Volver
-                  </Button>
-
                   {/* Botón de Filtros */}
                   <Button
                     onClick={() => setShowMobileFiltersModal(true)}
