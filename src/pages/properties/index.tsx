@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import type { Property } from '@/types/property';
 import { Input as ShadInput } from '@/components/ui/input'; // Renombrado para evitar conflicto
 import type { Libraries } from '@react-google-maps/api';
+import PropertyMapCard from '@/components/PropertyMapCard';
 
 // --- Tipos y Constantes ---
 type Filters = {
@@ -854,42 +855,13 @@ export const PropertiesPage = () => {
                           onCloseClick={() => setSelectedMapProperty(null)}
                           options={{ pixelOffset: typeof window !== "undefined" && window.google ? new window.google.maps.Size(0, -40) : undefined }} 
                         >
-                          <div className="relative w-[240px] h-[210px] bg-card rounded-md shadow-xl overflow-hidden font-sans">
-                            <a
-                              href={`${window.location.origin}/properties/${selectedMapProperty.id}`}
-                              target="_blank" rel="noopener noreferrer"
-                              className="block w-full h-[130px] overflow-hidden"
-                              aria-label={`Ver detalles de ${selectedMapProperty.title}`}
-                            >
-                              {selectedMapProperty.images && selectedMapProperty.images.length > 0 ? (
-                                <img
-                                  src={selectedMapProperty.images[carouselIndex]}
-                                  alt={`Imagen de ${selectedMapProperty.title}`}
-                                  className="w-full h-full object-cover transition-opacity duration-300"
-                                  onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
-                                />
-                              ) : (
-                                <img src="/placeholder-property.jpg" alt="Propiedad sin imagen" className="w-full h-full object-cover" />
-                              )}
-                            </a>
-                            <div className="p-3">
-                              <a
-                                href={`${window.location.origin}/properties/${selectedMapProperty.id}`}
-                                className="font-semibold text-sm block hover:underline truncate text-card-foreground"
-                                target="_blank" rel="noopener noreferrer"
-                                onClick={(e) => { e.stopPropagation(); }}
-                              >
-                                {selectedMapProperty.title}
-                              </a>
-                              <div className="text-base font-bold mt-0.5 text-primary">
-                                {getMinSharePrice(selectedMapProperty) ? formatPriceSimple(getMinSharePrice(selectedMapProperty)!) : 'N/A'}
-                                <span className="text-xs font-normal text-muted-foreground ml-1">/copropiedad</span>
-                              </div>
-                               <div className="text-xs text-muted-foreground mt-1">
-                                  {selectedMapProperty.bedrooms} hab. • {selectedMapProperty.bathrooms} baños • {selectedMapProperty.area} m²
-                              </div>
-                            </div>
-                          </div>
+                          <PropertyMapCard
+                            property={selectedMapProperty}
+                            minSharePrice={getMinSharePrice(selectedMapProperty)}
+                            currentImageIndex={carouselIndex}
+                            formatPrice={formatPriceSimple}
+                            isMobile={false}
+                          />
                         </InfoWindow>
                       )}
                     </GoogleMap>
@@ -923,42 +895,13 @@ export const PropertiesPage = () => {
                       onCloseClick={() => setSelectedMapProperty(null)}
                       options={{ pixelOffset: typeof window !== "undefined" && window.google ? new window.google.maps.Size(0, -40) : undefined }} 
                     >
-                      <div className="relative w-[240px] h-[210px] bg-card rounded-md shadow-xl overflow-hidden font-sans">
-                        <a
-                          href={`${window.location.origin}/properties/${selectedMapProperty.id}`}
-                          target="_blank" rel="noopener noreferrer"
-                          className="block w-full h-[130px] overflow-hidden"
-                          aria-label={`Ver detalles de ${selectedMapProperty.title}`}
-                        >
-                          {selectedMapProperty.images && selectedMapProperty.images.length > 0 ? (
-                            <img
-                              src={selectedMapProperty.images[carouselIndex]}
-                              alt={`Imagen de ${selectedMapProperty.title}`}
-                              className="w-full h-full object-cover transition-opacity duration-300"
-                              onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
-                            />
-                          ) : (
-                            <img src="/placeholder-property.jpg" alt="Propiedad sin imagen" className="w-full h-full object-cover" />
-                          )}
-                        </a>
-                        <div className="p-3">
-                          <a
-                            href={`${window.location.origin}/properties/${selectedMapProperty.id}`}
-                            className="font-semibold text-sm block hover:underline truncate text-card-foreground"
-                            target="_blank" rel="noopener noreferrer"
-                            onClick={(e) => { e.stopPropagation(); }}
-                          >
-                            {selectedMapProperty.title}
-                          </a>
-                          <div className="text-base font-bold mt-0.5 text-primary">
-                            {getMinSharePrice(selectedMapProperty) ? formatPriceSimple(getMinSharePrice(selectedMapProperty)!) : 'N/A'}
-                            <span className="text-xs font-normal text-muted-foreground ml-1">/copropiedad</span>
-                          </div>
-                           <div className="text-xs text-muted-foreground mt-1">
-                              {selectedMapProperty.bedrooms} hab. • {selectedMapProperty.bathrooms} baños • {selectedMapProperty.area} m²
-                          </div>
-                        </div>
-                      </div>
+                      <PropertyMapCard
+                        property={selectedMapProperty}
+                        minSharePrice={getMinSharePrice(selectedMapProperty)}
+                        currentImageIndex={carouselIndex}
+                        formatPrice={formatPriceSimple}
+                        isMobile={true}
+                      />
                     </InfoWindow>
                   )}
                 </GoogleMap>

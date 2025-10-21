@@ -21,6 +21,7 @@ import { toast } from '@/components/ui/use-toast';
 import { useExchangeNavigation } from '@/hooks/useExchangeNavigation';
 import { GoogleMap, Marker, InfoWindow, useLoadScript } from '@react-google-maps/api';
 import type { Libraries } from '@react-google-maps/api';
+import ExchangeMapCard from '@/components/ExchangeMapCard';
 
 const locales = { 'es': es };
 const localizer = dateFnsLocalizer({
@@ -732,70 +733,12 @@ const ExploreExchangeProperties: React.FC = () => {
                         onCloseClick={() => setSelectedMapProperty(null)}
                         options={{ pixelOffset: typeof window !== "undefined" && window.google ? new window.google.maps.Size(0, -40) : undefined }}
                       >
-                        <div className="relative w-[280px] bg-white rounded-lg shadow-xl overflow-hidden font-sans">
-                          <div className="relative h-[150px]">
-                            {selectedMapProperty.images && selectedMapProperty.images.length > 0 ? (
-                              <img
-                                src={selectedMapProperty.images[0]}
-                                alt={selectedMapProperty.title}
-                                className="w-full h-full object-cover"
-                                onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
-                              />
-                            ) : (
-                              <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-100 to-gray-200">
-                                <Home className="h-12 w-12 text-gray-400" />
-                              </div>
-                            )}
-                            {exchangeConfigs[selectedMapProperty.id] && (
-                              <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
-                                {exchangeConfigs[selectedMapProperty.id].points_per_day} pts/día
-                              </div>
-                            )}
-                          </div>
-                          <div className="p-3">
-                            <h3 className="font-bold text-sm text-gray-900 mb-1 line-clamp-2">
-                              {selectedMapProperty.title}
-                            </h3>
-                            {selectedMapProperty.location && (
-                              <div className="flex items-center gap-1 text-gray-600 text-xs mb-2">
-                                <MapPin className="h-3 w-3" />
-                                <span className="line-clamp-1">{selectedMapProperty.location}</span>
-                              </div>
-                            )}
-                            <div className="flex items-center gap-3 text-xs text-gray-600 mb-3">
-                              <div className="flex items-center gap-1">
-                                <Bed className="h-3 w-3" />
-                                <span>{selectedMapProperty.bedrooms || '—'}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Bath className="h-3 w-3" />
-                                <span>{selectedMapProperty.bathrooms || '—'}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Square className="h-3 w-3" />
-                                <span>{selectedMapProperty.area ? `${selectedMapProperty.area}m²` : '—'}</span>
-                              </div>
-                            </div>
-                            <Button
-                              size="sm"
-                              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs"
-                              onClick={() => {
-                                navigateToExchange(selectedMapProperty, dateRange!);
-                                toast({
-                                  title: '¡Navegando al intercambio!',
-                                  description: 'Las fechas seleccionadas se han pasado al panel de intercambio.',
-                                  variant: 'custom-exchange',
-                                  icon: <Sparkles className="h-6 w-6 text-purple-500" />,
-                                  className: 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-0 shadow-xl',
-                                });
-                              }}
-                              disabled={!dateRange?.from || !dateRange?.to}
-                            >
-                              <Sparkles className="h-3 w-3 mr-1" />
-                              Ir a intercambio
-                            </Button>
-                          </div>
-                        </div>
+                        <ExchangeMapCard
+                          property={selectedMapProperty}
+                          pointsPerDay={exchangeConfigs[selectedMapProperty.id]?.points_per_day}
+                          currentImageIndex={0}
+                          isMobile={false}
+                        />
                       </InfoWindow>
                     )}
                   </GoogleMap>
@@ -828,42 +771,12 @@ const ExploreExchangeProperties: React.FC = () => {
                       onCloseClick={() => setSelectedMapProperty(null)}
                       options={{ pixelOffset: typeof window !== "undefined" && window.google ? new window.google.maps.Size(0, -40) : undefined }}
                     >
-                      <div className="relative w-[240px] bg-white rounded-lg shadow-xl overflow-hidden font-sans">
-                        <div className="relative h-[120px]">
-                          {selectedMapProperty.images && selectedMapProperty.images.length > 0 ? (
-                            <img
-                              src={selectedMapProperty.images[0]}
-                              alt={selectedMapProperty.title}
-                              className="w-full h-full object-cover"
-                              onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
-                            />
-                          ) : (
-                            <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-100 to-gray-200">
-                              <Home className="h-10 w-10 text-gray-400" />
-                            </div>
-                          )}
-                          {exchangeConfigs[selectedMapProperty.id] && (
-                            <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
-                              {exchangeConfigs[selectedMapProperty.id].points_per_day} pts/día
-                            </div>
-                          )}
-                        </div>
-                        <div className="p-2">
-                          <h3 className="font-bold text-xs text-gray-900 mb-1 line-clamp-2">
-                            {selectedMapProperty.title}
-                          </h3>
-                          <div className="flex items-center gap-2 text-xs text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <Bed className="h-3 w-3" />
-                              <span>{selectedMapProperty.bedrooms || '—'}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Bath className="h-3 w-3" />
-                              <span>{selectedMapProperty.bathrooms || '—'}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      <ExchangeMapCard
+                        property={selectedMapProperty}
+                        pointsPerDay={exchangeConfigs[selectedMapProperty.id]?.points_per_day}
+                        currentImageIndex={0}
+                        isMobile={true}
+                      />
                     </InfoWindow>
                   )}
                 </GoogleMap>
