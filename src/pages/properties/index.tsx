@@ -870,7 +870,7 @@ export const PropertiesPage = () => {
               </div>
 
               {/* Vista Móvil - Mapa en pantalla completa con botones flotantes */}
-              <div className="lg:hidden fixed inset-0 top-16 left-0 right-0 bottom-0 z-30">
+              <div className="lg:hidden fixed top-16 left-0 right-0 bottom-0 z-30">
                 <GoogleMap
                   mapContainerStyle={{ width: '100%', height: 'calc(100vh - 64px)' }}
                   center={{ lat: 40.4637, lng: -3.7492 }} 
