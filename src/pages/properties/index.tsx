@@ -908,6 +908,15 @@ export const PropertiesPage = () => {
 
                 {/* Botones flotantes para móvil */}
                 <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 px-4 z-50">
+                  {/* Botón de Volver */}
+                  <Button
+                    onClick={() => window.history.back()}
+                    className="bg-gray-600 text-white hover:bg-gray-700 shadow-lg rounded-full px-5 py-6 flex items-center gap-2 font-semibold"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                    Volver
+                  </Button>
+
                   {/* Botón de Filtros */}
                   <Button
                     onClick={() => setShowMobileFiltersModal(true)}
