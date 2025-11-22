@@ -87,16 +87,6 @@ function App() {
           <Route path="/proteccion-datos" element={<ProteccionDatos />} />
           <Route path="/politica-privacidad" element={<PoliticaPrivacidad />} />
           
-          {/* Ruta por defecto del dashboard que redirige según el rol */}
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <DashboardRedirect />
-              </ProtectedRoute>
-            } 
-          />
-
           {/* Dashboard de Propietarios */}
           <Route path="/dashboard/owner" element={<ProtectedRoute><OwnerDashboard /></ProtectedRoute>}>
             <Route index element={<OwnerHome />} />
@@ -117,6 +107,8 @@ function App() {
             <Route path="reservations" element={<ReservationCalendar />} />
             <Route path="properties/:id/reservations" element={<ReservationCalendar />} />
             <Route path="properties/reservas" element={<ReservationCalendar />} />
+            {/* Ruta de perfil del usuario */}
+            <Route path="profile" element={<ProfilePanel />} />
             {/* Ruta de favoritos del usuario */}
             <Route path="profile/favorites" element={<Favorites />} />
           </Route>
