@@ -27,7 +27,11 @@ const ChatSidebarOwners: React.FC<ChatSidebarOwnersProps> = ({ onSelectOwner, se
         console.error('Error fetching owners:', error);
         setOwners([]);
       } else {
-        setOwners(data || []);
+        // Si user_id no existe, usar id como user_id
+        setOwners((data || []).map(owner => ({
+          ...owner,
+          user_id: owner.user_id || owner.id
+        })));
       }
       setLoading(false);
     };

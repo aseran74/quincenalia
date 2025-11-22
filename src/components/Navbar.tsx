@@ -3,6 +3,16 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils'; // Asumo que usas ShadCN y tienes esta utilidad para classnames
+import { useAuth } from '@/context/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // --- Constantes ---
 const SCROLL_THRESHOLD = 20;
@@ -88,6 +98,7 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout, isAuthenticated } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -126,6 +137,25 @@ const Navbar = () => {
     }
     // Si no es sectionId (ej. /propiedades o /login), Link se encarga de la navegación.
   }, [location.pathname, navigate, scrollToSection, closeMobileMenu]);
+
+  // Función helper para obtener la ruta del dashboard según el rol
+  const getDashboardPath = useCallback((role: string) => {
+    switch (role) {
+      case 'admin':
+        return '/dashboard/admin/reservations';
+      case 'owner':
+        return '/dashboard/owner/reservations';
+      case 'agency':
+        return '/dashboard/agencies';
+      case 'agent':
+        return '/dashboard/admin/agents';
+      default:
+        return '/dashboard';
+    }
+  }, []);
+
+  // Verificar si el usuario tiene acceso al dashboard
+  const hasDashboardAccess = user && ['admin', 'agency', 'agent', 'owner'].includes(user.role);
   
   const navContainerClasses = cn(
     "fixed w-full z-50 transition-all",
@@ -181,11 +211,62 @@ const Navbar = () => {
 
           {/* Botones de Acción y Menú Móvil */}
           <div className="flex items-center space-x-4">
-            <Link to="/login" className="hidden md:inline-flex">
-              <Button variant={isScrolled ? "outline" : "secondary"}>
-                Iniciar Sesión
-              </Button>
-            </Link>
+            {isAuthenticated && user ? (
+              <>
+                {/* Menú de usuario en desktop */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild className="hidden md:flex">
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "relative h-10 w-10 rounded-full",
+                        isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
+                      )}
+                    >
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={user.profileImage} alt={user.name} />
+                        <AvatarFallback className={isScrolled ? 'bg-blue-600 text-white' : 'bg-white text-blue-800'}>
+                          {user.name?.charAt(0).toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user.name}</p>
+                        <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {hasDashboardAccess && (
+                      <DropdownMenuItem asChild>
+                        <Link to={getDashboardPath(user.role)}>Dashboard</Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem asChild>
+                      <Link to="/properties">Ver Propiedades</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard/profile/favorites">Mis Favoritos</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard/profile">Mi Perfil</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={logout}>
+                      Cerrar Sesión
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <Link to="/login" className="hidden md:inline-flex">
+                <Button variant={isScrolled ? "outline" : "secondary"}>
+                  Iniciar Sesión
+                </Button>
+              </Link>
+            )}
             <Button
               onClick={toggleMobileMenu}
               className={cn(
@@ -221,18 +302,77 @@ const Navbar = () => {
               {item.label}
             </NavLinkItem>
           ))}
-          <Link
-            to="/login"
-            className="block pt-4"
-            onClick={closeMobileMenu}
-          >
-            <Button
-              variant={isScrolled ? "outline" : "secondary"}
-              className="w-full"
+          {isAuthenticated && user ? (
+            <>
+              <div className="pt-4 border-t border-white/20">
+                <div className="flex items-center space-x-3 px-2 py-2">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={user.profileImage} alt={user.name} />
+                    <AvatarFallback className="bg-blue-600 text-white">
+                      {user.name?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-white">{user.name}</span>
+                    <span className="text-xs text-white/80">{user.email}</span>
+                  </div>
+                </div>
+              </div>
+              {hasDashboardAccess && (
+                <Link
+                  to={getDashboardPath(user.role)}
+                  className="block py-2 px-2 rounded hover:bg-white/10 text-white"
+                  onClick={closeMobileMenu}
+                >
+                  Dashboard
+                </Link>
+              )}
+              <Link
+                to="/properties"
+                className="block py-2 px-2 rounded hover:bg-white/10 text-white"
+                onClick={closeMobileMenu}
+              >
+                Ver Propiedades
+              </Link>
+              <Link
+                to="/dashboard/profile/favorites"
+                className="block py-2 px-2 rounded hover:bg-white/10 text-white"
+                onClick={closeMobileMenu}
+              >
+                Mis Favoritos
+              </Link>
+              <Link
+                to="/dashboard/profile"
+                className="block py-2 px-2 rounded hover:bg-white/10 text-white"
+                onClick={closeMobileMenu}
+              >
+                Mi Perfil
+              </Link>
+              <Button
+                onClick={() => {
+                  logout();
+                  closeMobileMenu();
+                }}
+                variant={isScrolled ? "outline" : "secondary"}
+                className="w-full mt-2"
+              >
+                Cerrar Sesión
+              </Button>
+            </>
+          ) : (
+            <Link
+              to="/login"
+              className="block pt-4"
+              onClick={closeMobileMenu}
             >
-              Iniciar Sesión
-            </Button>
-          </Link>
+              <Button
+                variant={isScrolled ? "outline" : "secondary"}
+                className="w-full"
+              >
+                Iniciar Sesión
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </nav>

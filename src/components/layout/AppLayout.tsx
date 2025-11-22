@@ -54,6 +54,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, requireAuth = true }) =
         return <Navigate to="/dashboard/agencies" />;
       case 'agent':
         return <Navigate to="/dashboard/agents" />;
+      case 'guest':
+      case 'interested':
+        return <Navigate to="/properties" />;
       default:
         return <Navigate to="/dashboard" />;
     }

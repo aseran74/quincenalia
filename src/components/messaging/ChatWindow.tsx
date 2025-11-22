@@ -8,9 +8,10 @@ import { cn } from '@/lib/utils';
 interface ChatWindowProps {
   selectedAgent: Agent | Owner;
   canSendMessage: boolean;
+  receiverRole: 'agent' | 'owner';
 }
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ selectedAgent, canSendMessage }) => {
+const ChatWindow: React.FC<ChatWindowProps> = ({ selectedAgent, canSendMessage, receiverRole }) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,7 +62,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ selectedAgent, canSendMessage }
       {/* Input de mensajes */}
       <footer className="p-4 border-t bg-white">
         {canSendMessage ? (
-          <MessageInput selectedAgent={selectedAgent} />
+          <MessageInput selectedAgent={selectedAgent} receiverRole={receiverRole} />
         ) : (
           <div className="text-center text-gray-500 py-2">
             No tienes permisos para enviar mensajes a este usuario

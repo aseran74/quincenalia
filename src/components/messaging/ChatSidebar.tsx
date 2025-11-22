@@ -20,13 +20,17 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectAgent, selectedAgent,
       setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, photo_url, email')
+        .select('id, user_id, first_name, last_name, photo_url, email')
         .eq('role', 'agent');
       if (error) {
         console.error('Error fetching agents:', error);
         setAgents([]);
       } else {
-        setAgents(data || []);
+        // Si user_id no existe, usar id como user_id
+        setAgents((data || []).map(agent => ({
+          ...agent,
+          user_id: agent.user_id || agent.id
+        })));
       }
       setLoading(false);
     };

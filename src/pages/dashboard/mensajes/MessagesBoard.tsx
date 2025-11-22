@@ -180,6 +180,7 @@ const MessagesBoard = () => {
             <ChatWindow
               selectedAgent={selectedUser}
               canSendMessage={canSendMessage(selectedUser)}
+              receiverRole={chatType === 'agentes' ? 'agent' : 'owner'}
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-gray-400">

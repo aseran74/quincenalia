@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import AppLayout from '../components/layout/AppLayout';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/components/ui/use-toast';
@@ -25,6 +26,8 @@ const getDashboardPath = (role: string) => {
       return '/dashboard/agents';
     case 'interested':
       return '/dashboard';
+    case 'guest':
+      return '/dashboard';
     default:
       return '/dashboard';
   }
@@ -32,7 +35,7 @@ const getDashboardPath = (role: string) => {
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, signup, isAuthenticated, loading, user } = useAuth();
+  const { login, loginWithGoogle, signup, isAuthenticated, loading, user } = useAuth();
   const { toast: useToastToast } = useToast();
   const [loginData, setLoginData] = useState({
     email: '',
@@ -44,12 +47,26 @@ const Login: React.FC = () => {
     password: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showTestUsersModal, setShowTestUsersModal] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && user) {
       navigate(getDashboardPath(user.role), { replace: true });
     }
   }, [isAuthenticated, user, navigate]);
+
+  // Atajo de teclado para mostrar el modal (Ctrl+Shift+D)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+        e.preventDefault();
+        setShowTestUsersModal(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,6 +162,78 @@ const Login: React.FC = () => {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      const success = await loginWithGoogle();
+      if (success) {
+        useToastToast({
+          title: "¡Bienvenido!",
+          description: "Has iniciado sesión con Google correctamente.",
+        });
+      } else {
+        useToastToast({
+          title: "Error",
+          description: "No se pudo iniciar sesión con Google.",
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      useToastToast({
+        title: "Error",
+        description: error.message || "Ha ocurrido un error al iniciar sesión con Google.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const testUsers = [
+    { email: 'admin@example.com', role: 'Admin', label: 'Admin' },
+    { email: 'agency@example.com', role: 'Agencia', label: 'Agencia' },
+    { email: 'agent@example.com', role: 'Agente', label: 'Agente' },
+    { email: 'owner@example.com', role: 'Propietario', label: 'Propietario' },
+    { email: 'interested@example.com', role: 'Interesado', label: 'Interesado' },
+  ];
+
+  const handleTestUserLogin = async (email: string) => {
+    setIsLoading(true);
+    setShowTestUsersModal(false);
+    
+    try {
+      const { data: { user }, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: 'password',
+      });
+
+      if (error) throw error;
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        useToastToast({
+          title: "¡Bienvenido!",
+          description: `Has iniciado sesión como ${testUsers.find(u => u.email === email)?.label}.`,
+        });
+
+        navigate(getDashboardPath(profile?.role || 'user'), { replace: true });
+      }
+    } catch (error: any) {
+      useToastToast({
+        title: "Error al iniciar sesión",
+        description: error.message || "Ha ocurrido un error al iniciar sesión.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -173,7 +262,7 @@ const Login: React.FC = () => {
                 <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
                 <TabsTrigger value="signup">Registrarse</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="login">
                 <Card>
                   <CardHeader>
@@ -211,6 +300,19 @@ const Login: React.FC = () => {
                     </Button>
                     <Button variant="link" className="mt-2 w-full text-center text-sm" onClick={handleMagicLink} disabled={isLoading}>
                       {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Enviar Enlace Mágico
+                    </Button>
+                    <div className="relative my-4">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">
+                          O continuar con
+                        </span>
+                      </div>
+                    </div>
+                    <Button variant="outline" type="button" onClick={handleGoogleLogin} disabled={isLoading} className="w-full">
+                      <FcGoogle className="mr-2 h-4 w-4" /> Google
                     </Button>
                   </CardFooter>
                 </Card>
@@ -262,6 +364,19 @@ const Login: React.FC = () => {
                     <Button onClick={handleSignup} className="w-full" disabled={isLoading}>
                       {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Registrarse
                     </Button>
+                    <div className="relative my-4">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">
+                          O registrarse con
+                        </span>
+                      </div>
+                    </div>
+                    <Button variant="outline" type="button" onClick={handleGoogleLogin} disabled={isLoading} className="w-full">
+                      <FcGoogle className="mr-2 h-4 w-4" /> Google
+                    </Button>
                   </CardFooter>
                 </Card>
               </TabsContent>
@@ -276,10 +391,60 @@ const Login: React.FC = () => {
               <p><strong>Propietario:</strong> owner@example.com</p>
               <p><strong>Interesado:</strong> interested@example.com</p>
               <p className="mt-2">Contraseña: <strong>password</strong> (para todos)</p>
+              <button
+                onClick={() => setShowTestUsersModal(true)}
+                className="mt-3 text-xs text-blue-600 hover:text-blue-800 underline cursor-pointer"
+              >
+                Entrar con usuario de prueba
+              </button>
             </div>
           </CardFooter>
         </Card>
       </div>
+
+      {/* Botón oculto para abrir el modal de usuarios de prueba */}
+      <button
+        onClick={() => setShowTestUsersModal(true)}
+        className="fixed bottom-4 right-4 w-1 h-1 opacity-0 pointer-events-none"
+        aria-label="Abrir usuarios de prueba"
+        tabIndex={-1}
+      />
+
+      {/* Modal de usuarios de prueba */}
+      <Dialog open={showTestUsersModal} onOpenChange={setShowTestUsersModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Entrar con usuario de prueba</DialogTitle>
+            <DialogDescription>
+              Selecciona un usuario de prueba para iniciar sesión rápidamente. Todos usan la contraseña: <strong>password</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2 py-4">
+            {testUsers.map((testUser) => (
+              <Button
+                key={testUser.email}
+                variant="outline"
+                onClick={() => handleTestUserLogin(testUser.email)}
+                disabled={isLoading}
+                className="w-full justify-start"
+              >
+                {isLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                <div className="flex flex-col items-start">
+                  <span className="font-medium">{testUser.label}</span>
+                  <span className="text-xs text-muted-foreground">{testUser.email}</span>
+                </div>
+              </Button>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTestUsersModal(false)}>
+              Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 };

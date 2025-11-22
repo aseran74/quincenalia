@@ -18,6 +18,9 @@ const DashboardRedirect = () => {
       navigate('/dashboard/agencies');
     } else if (user.role === 'agent') {
       navigate('/dashboard/admin/agents');
+    } else if (user.role === 'guest' || user.role === 'interested') {
+      // Usuarios guest/interested van a la página de propiedades públicas
+      navigate('/properties');
     } else {
       navigate('/dashboard');
     }

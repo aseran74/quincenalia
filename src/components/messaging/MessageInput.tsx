@@ -9,9 +9,10 @@ import { cn } from '@/lib/utils';
 
 interface MessageInputProps {
   selectedAgent: Agent | Owner;
+  receiverRole: 'agent' | 'owner';
 }
 
-const MessageInput: React.FC<MessageInputProps> = ({ selectedAgent }) => {
+const MessageInput: React.FC<MessageInputProps> = ({ selectedAgent, receiverRole }) => {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const { user } = useAuth();
@@ -34,7 +35,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ selectedAgent }) => {
         receiver_id: selectedAgent.user_id,
         content: message.trim(),
         sender_role: user.role || 'user',
-        receiver_role: 'agent' in selectedAgent ? 'agent' : 'owner'
+        receiver_role: receiverRole
       });
 
       if (error) throw error;
