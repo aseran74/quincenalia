@@ -20,6 +20,12 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
-    include: ['@emotion/styled', 'firebase/auth', 'firebase/app'],
+    include: ['@emotion/styled', 'firebase/app', 'firebase/auth'],
+    exclude: [],
+  },
+  build: {
+    commonjsOptions: {
+      include: [/firebase/, /node_modules/],
+    },
   },
 }));
