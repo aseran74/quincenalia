@@ -26,6 +26,15 @@ export default defineConfig(({ mode }) => ({
   build: {
     commonjsOptions: {
       include: [/firebase/, /node_modules/],
+      transformMixedEsModules: true,
     },
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+  },
+  ssr: {
+    noExternal: ['firebase'],
   },
 }));
