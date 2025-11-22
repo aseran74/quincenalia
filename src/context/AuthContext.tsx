@@ -2,8 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { User as AppUser } from '../types/user';
-import { auth, googleProvider } from '@/lib/firebase';
-import { signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth';
+import { auth, googleProvider, signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged } from '@/lib/firebase';
 
 interface AuthContextType {
   user: AppUser | null;
