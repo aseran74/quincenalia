@@ -20,6 +20,6 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
-    include: ['@emotion/styled'],
+    include: ['@emotion/styled', 'firebase/auth', 'firebase/app'],
   },
 }));
