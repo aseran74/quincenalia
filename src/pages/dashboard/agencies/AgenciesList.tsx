@@ -57,15 +57,18 @@ const AgenciesList = ({ adminMode = false }: AgenciesListProps) => {
   const fetchAgentsCount = async () => {
       try {
           const { data: detailedData, error: detailedError } = await supabase
-              .from('agency_agents')
-              .select('agency_id');
+              .from('profiles')
+              .select('agency_id')
+              .not('agency_id', 'is', null);
 
           if (detailedError) throw detailedError;
 
           if (detailedData) {
               const countMap: { [agencyId: string]: number } = {};
               detailedData.forEach((row: any) => {
-                  countMap[row.agency_id] = (countMap[row.agency_id] || 0) + 1;
+                  if (row.agency_id) {
+                    countMap[row.agency_id] = (countMap[row.agency_id] || 0) + 1;
+                  }
               });
               setAgentsCount(countMap);
           }

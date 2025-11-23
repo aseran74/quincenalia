@@ -57,6 +57,7 @@ const propertySchema = z.object({
   destacada: z.boolean().optional(),
   status: z.string().optional(),
   agent_id: z.string().optional().nullable(),
+  agency_id: z.string().optional().nullable(),
   share1_price: z.coerce.number().optional().nullable(),
   share1_status: z.string().optional().nullable(),
   share1_owner_id: z.string().optional().nullable(),
@@ -133,7 +134,8 @@ const EditProperty = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [owners, setOwners] = useState<{ id: string; name: string }[]>([]);
-  const [agents, setAgents] = useState<{ id: string; name: string }[]>([]);
+  const [agents, setAgents] = useState<{ id: string; name: string; agency_id?: string }[]>([]);
+  const [agencies, setAgencies] = useState<{ id: string; name: string }[]>([]);
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
@@ -142,19 +144,29 @@ const EditProperty = () => {
   const [hydrated, setHydrated] = useState(false);
   const [zonasUnicas, setZonasUnicas] = useState<string[]>([]);
 
-  // Cargar propietarios y agentes
+  // Cargar propietarios, agentes y agencias
   useEffect(() => {
-    supabase
-      .from('profiles')
-      .select('id, name, role')
-      .in('role', ['owner', 'agent'])
-      .then(({ data, error }) => {
-        if (error) {
-          console.error('Error cargando perfiles:', error);
-        }
-        setOwners((data || []).filter(u => u.role === 'owner'));
-        setAgents((data || []).filter(u => u.role === 'agent'));
-      });
+    const fetchData = async () => {
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name, role, agency_id')
+        .in('role', ['owner', 'agent']);
+      
+      if (profilesError) console.error('Error cargando perfiles:', profilesError);
+      else {
+        setOwners((profiles || []).filter(u => u.role === 'owner'));
+        setAgents((profiles || []).filter(u => u.role === 'agent'));
+      }
+
+      const { data: agencias, error: agenciasError } = await supabase
+        .from('real_estate_agencies')
+        .select('id, name')
+        .order('name');
+        
+      if (agenciasError) console.error('Error cargando agencias:', agenciasError);
+      else setAgencies(agencias || []);
+    };
+    fetchData();
   }, []);
 
   // Cargar datos de la propiedad
@@ -181,6 +193,7 @@ const EditProperty = () => {
         lavabos: data.lavabos ?? 0,
         latitude: data.latitude,
         longitude: data.longitude,
+        agency_id: data.agency_id || '', // Asegurar que agency_id se cargue
       });
       if (data.latitude && data.longitude) {
         setCoordinates({ lat: data.latitude, lng: data.longitude });
@@ -669,26 +682,56 @@ const EditProperty = () => {
                       </FormItem>
                     )}
                   />
-                  {/* Agente (select con búsqueda) */}
-                  <FormField
-                    control={form.control}
-                    name="agent_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Agente</FormLabel>
-                        <FormControl>
-                          <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
-                            <option value="">Selecciona un agente</option>
-                            {agents.length === 0 && <option disabled value="">No hay agentes disponibles</option>}
-                            {agents.map(agent => (
-                              <option key={agent.id} value={agent.id}>{agent.name ? agent.name : 'Sin nombre'}</option>
-                            ))}
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* Agencia y Agente */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="agency_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Agencia</FormLabel>
+                          <FormControl>
+                            <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10" onChange={(e) => {
+                                field.onChange(e);
+                                form.setValue('agent_id', ''); // Reset agent on agency change
+                            }}>
+                              <option value="">Selecciona una agencia</option>
+                              {agencies.map(agency => (
+                                <option key={agency.id} value={agency.id}>{agency.name}</option>
+                              ))}
+                            </select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="agent_id"
+                      render={({ field }) => {
+                         const selectedAgencyId = form.watch('agency_id');
+                         const filteredAgents = selectedAgencyId 
+                           ? agents.filter(a => a.agency_id === selectedAgencyId)
+                           : agents;
+
+                         return (
+                          <FormItem>
+                            <FormLabel>Agente</FormLabel>
+                            <FormControl>
+                              <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
+                                <option value="">Selecciona un agente</option>
+                                {filteredAgents.length === 0 && <option disabled value="">No hay agentes disponibles {selectedAgencyId ? 'en esta agencia' : ''}</option>}
+                                {filteredAgents.map(agent => (
+                                  <option key={agent.id} value={agent.id}>{agent.name ? agent.name : 'Sin nombre'}</option>
+                                ))}
+                              </select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                         );
+                      }}
+                    />
+                  </div>
                   {/* Copropiedades (4 fijas, solo lectura, precio calculado) */}
                   <div className="space-y-4">
                     {[1,2,3,4].map(n => (

@@ -26,6 +26,7 @@ interface AgentProfile {
   first_name: string;
   last_name: string;
   email: string;
+  agency_id?: string;
 }
 
 interface AgencyFormProps {
@@ -81,16 +82,14 @@ const AgencyForm: React.FC<AgencyFormProps> = ({ isEditing = false }) => {
   const fetchAgents = async () => {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, email')
+      .select('id, first_name, last_name, email, agency_id')
       .eq('role', 'agent');
     if (!error && data) {
       setAgents(data);
       if (isEditing && id) {
-        const { data: agencyAgents } = await supabase
-          .from('agency_agents')
-          .select('agent_id')
-          .eq('agency_id', id);
-        setSelectedAgents((agencyAgents || []).map(a => a.agent_id));
+        // Pre-seleccionar agentes que ya pertenecen a esta agencia
+        const currentAgencyAgents = data.filter((agent: any) => agent.agency_id === id).map((agent: any) => agent.id);
+        setSelectedAgents(currentAgencyAgents);
       }
     }
   };
@@ -183,24 +182,34 @@ const AgencyForm: React.FC<AgencyFormProps> = ({ isEditing = false }) => {
       // --- VINCULACIÓN DE AGENTES ---
       if (agencyId) {
         console.log('Vinculando agentes:', selectedAgents, 'a la agencia:', agencyId);
-        // 1. Elimina todos los vínculos actuales
-        const { error: deleteError } = await supabase
-          .from('agency_agents')
-          .delete()
-          .eq('agency_id', agencyId);
-        if (deleteError) {
-          console.error('Error eliminando vínculos antiguos:', deleteError);
-          toast({ title: 'Error', description: 'No se pudieron eliminar los vínculos antiguos', variant: 'destructive' });
-        }
-        // 2. Inserta los nuevos vínculos
+        
+        // 1. Desvincular agentes que ya no están seleccionados
+        // Buscamos agentes que actualmente tienen esta agency_id pero NO están en selectedAgents
+        const { error: unlinkError } = await supabase
+          .from('profiles')
+          .update({ agency_id: null })
+          .eq('agency_id', agencyId)
+          .not('id', 'in', `(${selectedAgents.join(',')})`); // Nota: si selectedAgents está vacío, esto podría fallar si no se maneja, pero filter handle empty arrays? supabase 'in' expects non-empty.
+          
+         // Manejo de caso array vacío para 'in'
+         if (selectedAgents.length === 0) {
+             // Si no hay seleccionados, desvincular TODOS los de esta agencia
+             await supabase.from('profiles').update({ agency_id: null }).eq('agency_id', agencyId);
+         } else {
+             // Si hay seleccionados, desvincular los que NO están en la lista
+             await supabase.from('profiles').update({ agency_id: null }).eq('agency_id', agencyId).not('id', 'in', `(${selectedAgents.join(',')})`);
+         }
+
+        // 2. Vincular nuevos agentes seleccionados
         if (selectedAgents.length > 0) {
-          const inserts = selectedAgents.map(agentId => ({ agency_id: agencyId, agent_id: agentId }));
-          const { error: insertError } = await supabase
-            .from('agency_agents')
-            .insert(inserts);
-          if (insertError) {
-            console.error('Error insertando vínculos nuevos:', insertError);
-            toast({ title: 'Error', description: 'No se pudieron vincular los agentes: ' + insertError.message, variant: 'destructive' });
+          const { error: linkError } = await supabase
+            .from('profiles')
+            .update({ agency_id: agencyId })
+            .in('id', selectedAgents);
+
+          if (linkError) {
+             console.error('Error vinculando agentes:', linkError);
+             toast({ title: 'Error', description: 'No se pudieron vincular algunos agentes', variant: 'destructive' });
           }
         }
       }
@@ -337,19 +346,23 @@ const AgencyForm: React.FC<AgencyFormProps> = ({ isEditing = false }) => {
               <Label>Agentes vinculados</Label>
               <select
                 multiple
-                className="w-full border rounded p-2"
+                className="w-full border rounded p-2 h-48"
                 value={selectedAgents}
                 onChange={e => {
                   const options = Array.from(e.target.selectedOptions).map(opt => opt.value);
                   setSelectedAgents(options);
                 }}
               >
-                {agents.map(agent => (
-                  <option key={agent.id} value={agent.id}>
-                    {agent.first_name} {agent.last_name} ({agent.email})
-                  </option>
-                ))}
+                {agents.map(agent => {
+                  const isAssignedToOther = agent.agency_id && agent.agency_id !== id;
+                  return (
+                    <option key={agent.id} value={agent.id} disabled={isAssignedToOther} className={isAssignedToOther ? 'text-gray-400' : ''}>
+                      {agent.first_name} {agent.last_name} ({agent.email}) {isAssignedToOther ? '(Ya asignado)' : ''}
+                    </option>
+                  );
+                })}
               </select>
+              <p className="text-xs text-gray-500 mt-1">Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples agentes.</p>
             </div>
             <div className="flex justify-end space-x-2">
               <Button
