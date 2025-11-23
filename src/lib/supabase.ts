@@ -26,7 +26,8 @@ export type Property = {
   bathrooms: number;
   area: number;
   image_url?: string;
-  features?: string[];
+  images?: string[];
+  features?: any[]; // Cambiado a any[] temporalmente para acomodar objetos complejos si es necesario
   created_at?: string;
   updated_at?: string;
 }; 

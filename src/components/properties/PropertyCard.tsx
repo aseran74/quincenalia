@@ -25,6 +25,7 @@ export const PropertyCard: FC<PropertyCardProps> = ({
   bathrooms,
   area,
   image_url,
+  images,
   agent,
   features,
   share1_price,
@@ -87,14 +88,19 @@ export const PropertyCard: FC<PropertyCardProps> = ({
     return url;
   };
 
+  const displayImage = image_url || (images && images.length > 0 ? images[0] : '/placeholder-property.jpg');
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow max-w-xl mx-auto relative group">
       <CardHeader className="p-0">
         <div className="relative h-48 w-full">
           <img
-            src={image_url}
+            src={displayImage}
             alt={title}
             className="h-full w-full object-cover"
+            onError={(e) => {
+              e.currentTarget.src = '/placeholder-property.jpg'; // Fallback si la imagen falla al cargar
+            }}
           />
           <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
             <HeartButton propertyId={id} />
