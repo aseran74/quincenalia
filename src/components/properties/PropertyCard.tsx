@@ -40,10 +40,11 @@ export const PropertyCard: FC<PropertyCardProps> = ({
 }) => {
   // Agrupar características por categoría
   const groupedFeatures = features?.reduce((acc, feature) => {
-    if (!acc[feature.category]) {
-      acc[feature.category] = [];
+    const category = feature.category || 'General';
+    if (!acc[category]) {
+      acc[category] = [];
     }
-    acc[feature.category].push(feature);
+    acc[category].push(feature);
     return acc;
   }, {} as Record<string, typeof features>);
 
@@ -91,7 +92,7 @@ export const PropertyCard: FC<PropertyCardProps> = ({
   const displayImage = image_url || (images && images.length > 0 ? images[0] : '/placeholder-property.jpg');
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow max-w-xl mx-auto relative group">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col relative group">
       <CardHeader className="p-0">
         <div className="relative h-48 w-full">
           <img
@@ -158,16 +159,19 @@ export const PropertyCard: FC<PropertyCardProps> = ({
               {showCalendar ? 'Ocultar disponibilidad' : 'Ver disponibilidad'}
             </button>
             {showCalendar && (
-              <div className="pt-4">
-                <h4 className="text-sm font-semibold mb-2">Disponibilidad</h4>
-                <Calendar
-                  mode="multiple"
-                  selected={busyDates}
-                  disabled={busyDates}
-                  locale={es}
-                  numberOfMonths={2}
-                  showOutsideDays
-                />
+              <div className="pt-4 flex justify-center">
+                <div className="border rounded-md p-2 bg-white shadow-sm">
+                  <h4 className="text-sm font-semibold mb-2 text-center">Disponibilidad</h4>
+                  <Calendar
+                    mode="multiple"
+                    selected={busyDates}
+                    disabled={busyDates}
+                    locale={es}
+                    numberOfMonths={1}
+                    showOutsideDays={false}
+                    className="rounded-md border"
+                  />
+                </div>
               </div>
             )}
           </div>
