@@ -54,6 +54,8 @@ import ProteccionDatos from './pages/ProteccionDatos';
 import PoliticaPrivacidad from './pages/PoliticaPrivacidad';
 import Favorites from './pages/dashboard/profile/Favorites';
 import ContratoUsoPage from './pages/contrato-uso';
+import PublicAgenciesList from './pages/agencies/PublicAgenciesList';
+import PublicAgencyDetail from './pages/agencies/PublicAgencyDetail';
 
 const Profile = () => (
   <div style={{ padding: 32 }}>
@@ -78,6 +80,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/properties" element={<PropertiesPage />} />
           <Route path="/properties/:id" element={<PublicPropertyDetail />} />
+          <Route path="/agencias" element={<PublicAgenciesList />} />
+          <Route path="/agencias/:id" element={<PublicAgencyDetail />} />
           <Route path="/contrato-uso" element={<ContratoUsoPage />} />
           {/* Redirección de /propiedades a /properties */}
           <Route path="/propiedades" element={<Navigate to="/properties" replace />} />

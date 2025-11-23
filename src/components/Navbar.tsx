@@ -24,6 +24,7 @@ const SMOOTH_SCROLL_DELAY_DIFFERENT_PAGE = 350;
 
 const NAV_ITEMS = [
   { label: 'Buscar Propiedades', to: '/propiedades' },
+  { label: 'Agencias', to: '/agencias' },
   { label: 'Cómo funciona', href: '#reinventada', sectionId: 'reinventada' },
   { label: 'FAQ', href: '#faq', sectionId: 'faq' },
   { label: 'Contacto', href: '#contacto', sectionId: 'contacto' },
