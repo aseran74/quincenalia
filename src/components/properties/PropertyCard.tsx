@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
+import { HeartButton } from './HeartButton';
 
 interface PropertyCardProps extends Property {
   selectedRange?: DateRange;
@@ -87,7 +88,7 @@ export const PropertyCard: FC<PropertyCardProps> = ({
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow max-w-xl mx-auto">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow max-w-xl mx-auto relative group">
       <CardHeader className="p-0">
         <div className="relative h-48 w-full">
           <img
@@ -95,6 +96,9 @@ export const PropertyCard: FC<PropertyCardProps> = ({
             alt={title}
             className="h-full w-full object-cover"
           />
+          <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+            <HeartButton propertyId={id} />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-4">

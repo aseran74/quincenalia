@@ -20,6 +20,7 @@ import { GoogleMap, Marker } from '@react-google-maps/api';
 import type { Property } from '@/types/property'; // Asegúrate de que esta ruta sea correcta
 import ContactForm from '@/components/ContactForm'; // Asegúrate de que esta ruta sea correcta
 import { useAuth } from '@/context/AuthContext';
+import { HeartButton } from '@/components/properties/HeartButton';
 
 // --- CONSTANTE FEATURES ACTUALIZADA ---
 const FEATURES = [
@@ -304,9 +305,7 @@ export const PropertyDetail = () => {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
   const shareTitle = property?.title || 'Propiedad en Quincenalia';
-  const { user, isAuthenticated } = useAuth();
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [favLoading, setFavLoading] = useState(false);
+  const { isAuthenticated } = useAuth(); // Solo necesitamos isAuthenticated si se usa en otros lados, si no, HeartButton lo maneja internamente
 
   const miniaturasRef = useRef<HTMLDivElement>(null);
   let touchStartX = 0;
@@ -437,47 +436,6 @@ export const PropertyDetail = () => {
     }
   }, [id]);
 
-  // Consultar si la propiedad es favorita al cargar
-  useEffect(() => {
-    const checkFavorite = async () => {
-      if (!user || !property?.id) return;
-      const { data, error } = await supabase
-        .from('favorites')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('property_id', property.id)
-        .single();
-      setIsFavorite(!!data && !error);
-    };
-    if (user && property?.id) checkFavorite();
-  }, [user, property?.id]);
-
-  // Añadir o quitar favorito
-  const handleToggleFavorite = async () => {
-    if (!isAuthenticated || !user) {
-      alert('Debes iniciar sesión para guardar favoritos.');
-      return;
-    }
-    if (!property?.id) return;
-    setFavLoading(true);
-    if (isFavorite) {
-      // Eliminar favorito
-      const { error } = await supabase
-        .from('favorites')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('property_id', property.id);
-      if (!error) setIsFavorite(false);
-    } else {
-      // Añadir favorito
-      const { error } = await supabase
-        .from('favorites')
-        .insert({ user_id: user.id, property_id: property.id });
-      if (!error) setIsFavorite(true);
-    }
-    setFavLoading(false);
-  };
-
   const handleContactClick = () => {
     setShowContactForm(true);
     setTimeout(() => {
@@ -591,16 +549,10 @@ export const PropertyDetail = () => {
                     />
                     {/* Botones favoritos y compartir sobre la imagen */}
                     <div className="absolute top-4 right-4 flex flex-row gap-4 z-20">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
-                        onClick={e => { e.stopPropagation(); handleToggleFavorite(); }}
-                        disabled={favLoading}
-                        className={`bg-white/80 hover:bg-white/90 shadow-lg border-2 border-white ${isFavorite ? 'text-red-500 hover:text-red-600' : 'text-gray-600 hover:text-primary'} w-14 h-14 flex items-center justify-center`}
-                      >
-                        {isFavorite ? <FaHeart className="w-8 h-8" /> : <FaRegHeart className="w-8 h-8" />}
-                      </Button>
+                      <HeartButton 
+                        propertyId={property.id} 
+                        className="w-14 h-14 flex items-center justify-center bg-white/80 hover:bg-white/90 shadow-lg border-2 border-white" 
+                      />
                       <div className="relative flex items-center justify-center">
                         <Button
                           variant="ghost"
