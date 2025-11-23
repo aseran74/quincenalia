@@ -4,6 +4,8 @@ import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { HiOutlineUserCircle } from 'react-icons/hi2';
+import { PropertyCard } from '@/components/properties/PropertyCard';
+import { Property } from '@/lib/supabase';
 
 interface RealEstateAgency {
   id: string;
@@ -28,10 +30,14 @@ const AgencyDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [agency, setAgency] = useState<RealEstateAgency | null>(null);
   const [agents, setAgents] = useState<AgentProfile[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
 
   useEffect(() => {
-    fetchAgency();
-    fetchAgents();
+    if (id) {
+      fetchAgency();
+      fetchAgents();
+      fetchProperties();
+    }
   }, [id]);
 
   const fetchAgency = async () => {
@@ -45,11 +51,28 @@ const AgencyDetail: React.FC = () => {
 
   const fetchAgents = async () => {
     const { data, error } = await supabase
-      .from('agency_agents')
-      .select('agent_id, profiles:agent_id (id, first_name, last_name, email, profile_image)')
+      .from('profiles')
+      .select('id, first_name, last_name, email, profile_image')
       .eq('agency_id', id);
+    
     if (!error && data) {
-      setAgents(data.map(a => Array.isArray(a.profiles) ? a.profiles[0] : a.profiles).filter(Boolean));
+      setAgents(data);
+    } else if (error) {
+      console.error('Error fetching agents:', error);
+    }
+  };
+
+  const fetchProperties = async () => {
+    const { data, error } = await supabase
+      .from('properties')
+      .select('*')
+      .eq('agency_id', id);
+
+    if (!error && data) {
+      // Mapear datos si es necesario para ajustar al tipo Property
+      setProperties(data as unknown as Property[]);
+    } else if (error) {
+      console.error('Error fetching properties:', error);
     }
   };
 
@@ -57,7 +80,7 @@ const AgencyDetail: React.FC = () => {
 
   return (
     <div className="container mx-auto p-6 font-poppins">
-      <Card className="max-w-2xl mx-auto">
+      <Card className="max-w-5xl mx-auto">
         <CardHeader className="flex flex-col items-center">
           {agency.logo_url ? (
             <img src={agency.logo_url} alt={agency.name} className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 mb-2" />
@@ -72,26 +95,48 @@ const AgencyDetail: React.FC = () => {
           <p className="text-gray-600 text-center">{agency.website}</p>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-700 mb-4">{agency.description}</p>
-          <h2 className="text-lg font-semibold mb-2">Agentes vinculados</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            {agents.length === 0 ? (
-              <p className="text-gray-500 col-span-2">No hay agentes vinculados a esta agencia.</p>
-            ) : (
-              agents.map(agent => (
-                <Link to={`/dashboard/agents/${agent.id}`} key={agent.id} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded hover:bg-gray-100">
-                  {agent.profile_image ? (
-                    <img src={agent.profile_image} alt={agent.first_name} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border" />
-                  ) : (
-                    <HiOutlineUserCircle className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300" />
-                  )}
-                  <div>
-                    <div className="font-semibold text-sm sm:text-base line-clamp-1">{agent.first_name} {agent.last_name}</div>
-                    <div className="text-gray-500 text-xs sm:text-sm line-clamp-1">{agent.email}</div>
-                  </div>
-                </Link>
-              ))
-            )}
+          <p className="text-gray-700 mb-8 text-center max-w-2xl mx-auto">{agency.description}</p>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Sección Agentes */}
+            <div>
+              <h2 className="text-xl font-semibold mb-4 border-b pb-2">Agentes vinculados</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+                {agents.length === 0 ? (
+                  <p className="text-gray-500">No hay agentes vinculados a esta agencia.</p>
+                ) : (
+                  agents.map(agent => (
+                    <Link to={`/dashboard/agents/${agent.id}`} key={agent.id} className="flex items-center gap-3 p-3 rounded border hover:bg-gray-50 transition-colors">
+                      {agent.profile_image ? (
+                        <img src={agent.profile_image} alt={agent.first_name} className="w-12 h-12 rounded-full object-cover border" />
+                      ) : (
+                        <HiOutlineUserCircle className="w-12 h-12 text-gray-300" />
+                      )}
+                      <div>
+                        <div className="font-semibold">{agent.first_name} {agent.last_name}</div>
+                        <div className="text-gray-500 text-sm">{agent.email}</div>
+                      </div>
+                    </Link>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Sección Propiedades */}
+            <div>
+              <h2 className="text-xl font-semibold mb-4 border-b pb-2">Propiedades de la Agencia</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 {properties.length === 0 ? (
+                   <p className="text-gray-500 col-span-full">No hay propiedades vinculadas a esta agencia.</p>
+                 ) : (
+                   properties.map(property => (
+                     <div key={property.id} className="transform scale-95">
+                        <PropertyCard {...property} />
+                     </div>
+                   ))
+                 )}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
