@@ -100,11 +100,18 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
 
+  // Determinar si estamos en una página que requiere navbar siempre visible (fondo sólido)
+  const isAlwaysScrolledPage = location.pathname.startsWith('/properties') || 
+                               location.pathname.startsWith('/login') || 
+                               location.pathname.startsWith('/dashboard'); 
+
+  const isNavbarScrolled = isScrolled || isAlwaysScrolledPage;
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > SCROLL_THRESHOLD);
     };
-    window.addEventListener('scroll', handleScroll, { passive: true }); // passive para mejor rendimiento
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -160,7 +167,7 @@ const Navbar = () => {
   const navContainerClasses = cn(
     "fixed w-full z-50 transition-all",
     NAV_TRANSITION_DURATION,
-    isScrolled ? "bg-white/80 backdrop-blur-md shadow-sm" : "bg-transparent"
+    isNavbarScrolled ? "bg-white/80 backdrop-blur-md shadow-sm" : "bg-transparent"
   );
 
   const mobileMenuContainerClasses = cn(
@@ -173,10 +180,10 @@ const Navbar = () => {
   
   const mobileMenuContentClasses = cn(
     "px-4 pt-2 pb-4 space-y-3",
-    isScrolled ? 'bg-white/80 backdrop-blur-md' : 'bg-black/80 backdrop-blur-md'
+    isNavbarScrolled ? 'bg-white/80 backdrop-blur-md' : 'bg-black/80 backdrop-blur-md'
   );
 
-  const iconClasses = cn("w-6 h-6", isScrolled ? 'text-gray-800' : 'text-white'); // Tamaño de icono más estándar
+  const iconClasses = cn("w-6 h-6", isNavbarScrolled ? 'text-gray-800' : 'text-white'); // Tamaño de icono más estándar
 
   return (
     <nav className={navContainerClasses}>
@@ -186,7 +193,7 @@ const Navbar = () => {
           <div className="flex-shrink-0">
             <Link to="/" className="block w-[150px]" onClick={closeMobileMenu}>
               <img
-                src={isScrolled ? LOGO_SCROLLED : LOGO_DEFAULT}
+                src={isNavbarScrolled ? LOGO_SCROLLED : LOGO_DEFAULT}
                 alt="Lovable"
                 className="w-full h-auto"
               />
@@ -202,7 +209,7 @@ const Navbar = () => {
                 href={item.href}
                 sectionId={item.sectionId}
                 onClick={handleNavLinkClick}
-                isScrolled={isScrolled}
+                isScrolled={isNavbarScrolled}
               >
                 {item.label}
               </NavLinkItem>
@@ -220,12 +227,12 @@ const Navbar = () => {
                       variant="ghost"
                       className={cn(
                         "relative h-10 w-10 rounded-full",
-                        isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
+                        isNavbarScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
                       )}
                     >
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={user.profileImage} alt={user.name} />
-                        <AvatarFallback className={isScrolled ? 'bg-blue-600 text-white' : 'bg-white text-blue-800'}>
+                        <AvatarFallback className={isNavbarScrolled ? 'bg-blue-600 text-white' : 'bg-white text-blue-800'}>
                           {user.name?.charAt(0).toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
@@ -262,7 +269,7 @@ const Navbar = () => {
               </>
             ) : (
               <Link to="/login" className="hidden md:inline-flex">
-                <Button variant={isScrolled ? "outline" : "secondary"}>
+                <Button variant={isNavbarScrolled ? "outline" : "secondary"}>
                   Iniciar Sesión
                 </Button>
               </Link>
@@ -271,7 +278,7 @@ const Navbar = () => {
               onClick={toggleMobileMenu}
               className={cn(
                 "md:hidden transition-transform duration-200 active:scale-90 hover:scale-110 focus:outline-none",
-                isScrolled ? 'text-gray-800 hover:bg-blue-600/10 hover:text-blue-700 focus:ring-blue-700' 
+                isNavbarScrolled ? 'text-gray-800 hover:bg-blue-600/10 hover:text-blue-700 focus:ring-blue-700' 
                            : 'text-white hover:bg-blue-600/20 hover:text-blue-400 focus:ring-blue-400',
                 "focus:ring-2" // Anillo de foco
               )}
@@ -296,7 +303,7 @@ const Navbar = () => {
               href={item.href}
               sectionId={item.sectionId}
               onClick={handleNavLinkClick}
-              isScrolled={isScrolled}
+              isScrolled={isNavbarScrolled}
               isMobile
             >
               {item.label}
@@ -353,7 +360,7 @@ const Navbar = () => {
                   logout();
                   closeMobileMenu();
                 }}
-                variant={isScrolled ? "outline" : "secondary"}
+                variant={isNavbarScrolled ? "outline" : "secondary"}
                 className="w-full mt-2"
               >
                 Cerrar Sesión
@@ -366,7 +373,7 @@ const Navbar = () => {
               onClick={closeMobileMenu}
             >
               <Button
-                variant={isScrolled ? "outline" : "secondary"}
+                variant={isNavbarScrolled ? "outline" : "secondary"}
                 className="w-full"
               >
                 Iniciar Sesión
