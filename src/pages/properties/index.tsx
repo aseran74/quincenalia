@@ -16,6 +16,7 @@ import type { Property } from '@/types/property';
 import { Input as ShadInput } from '@/components/ui/input'; // Renombrado para evitar conflicto
 import type { Libraries } from '@react-google-maps/api';
 import PropertyMapCard from '@/components/PropertyMapCard';
+import Navbar from '@/components/Navbar';
 
 // --- Tipos y Constantes ---
 type Filters = {
@@ -722,14 +723,9 @@ export const PropertiesPage = () => {
 
   return (
     <>
-      <div className={`${view === 'map' ? 'lg:container lg:mx-auto lg:px-4 lg:py-6' : 'container mx-auto px-4 py-6'}`}>
-        {/* Header - Oculto en móvil cuando está en vista mapa */}
-        <div className={`${view === 'map' ? 'hidden lg:block' : 'block'} mb-6`}>
-          <Button asChild variant="secondary" className="flex items-center gap-2">
-            <Link to="/"> <ArrowLeft className="w-4 h-4" /> Volver a inicio </Link>
-          </Button>
-        </div>
-
+      <Navbar />
+      <div className={`pt-24 ${view === 'map' ? 'lg:container lg:mx-auto lg:px-4 lg:py-6' : 'container mx-auto px-4 py-6'}`}>
+        
         <div className={`${view === 'map' ? 'hidden lg:flex' : 'flex'} flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-4`}>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Propiedades</h1>
           <Tabs defaultValue={view} onValueChange={(v) => setView(v as 'grid' | 'map')} className="w-full sm:w-auto">
