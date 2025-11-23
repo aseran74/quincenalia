@@ -726,8 +726,7 @@ export const PropertiesPage = () => {
       <Navbar />
       <div className={`pt-24 ${view === 'map' ? 'lg:container lg:mx-auto lg:px-4 lg:py-6' : 'container mx-auto px-4 py-6'}`}>
         
-        <div className={`${view === 'map' ? 'hidden lg:flex' : 'flex'} flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-4`}>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Propiedades</h1>
+        <div className={`${view === 'map' ? 'hidden lg:flex' : 'flex'} justify-end mb-4 sm:mb-6`}>
           <Tabs defaultValue={view} onValueChange={(v) => setView(v as 'grid' | 'map')} className="w-full sm:w-auto">
             <TabsList className="grid w-full grid-cols-2 sm:w-auto">
               <TabsTrigger value="grid"> <LayoutGrid className="h-4 w-4 mr-2" /> Lista </TabsTrigger>
