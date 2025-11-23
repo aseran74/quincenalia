@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { HiOutlineBuildingOffice2, HiOutlineLocationMarker, HiOutlinePhone, HiOutlineGlobeAlt } from 'react-icons/hi';
+import { HiOutlineBuildingOffice2, HiOutlineMapPin, HiOutlinePhone, HiOutlineGlobeAlt } from 'react-icons/hi2';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface RealEstateAgency {
@@ -103,7 +103,7 @@ const PublicAgenciesList = () => {
                     <div className="space-y-2 text-sm text-gray-500">
                       {agency.address && (
                         <div className="flex items-start">
-                          <HiOutlineLocationMarker className="w-5 h-5 mr-2 text-gray-400 flex-shrink-0 mt-0.5" />
+                          <HiOutlineMapPin className="w-5 h-5 mr-2 text-gray-400 flex-shrink-0 mt-0.5" />
                           <span>{agency.address}</span>
                         </div>
                       )}
