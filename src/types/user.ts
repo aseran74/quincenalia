@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'agency' | 'agent' | 'owner' | 'interested';
+export type UserRole = 'admin' | 'agency' | 'agent' | 'owner' | 'interested' | 'guest';
 
 export interface User {
   id: string;
@@ -36,4 +36,9 @@ export interface Interested extends User {
   role: 'interested';
   interestedProperties: string[]; // Property IDs
   appointments: string[]; // Appointment IDs
+}
+
+export interface Guest extends User {
+  role: 'guest';
+  bookings?: string[]; // Potential bookings
 }
