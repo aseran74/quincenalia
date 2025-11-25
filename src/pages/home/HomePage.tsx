@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import { FeaturedProperties } from '@/components/FeaturedProperties';
+import { Helmet } from 'react-helmet-async';
 import { useEffect, useState, useRef } from 'react';
 import {
   Accordion,
@@ -342,6 +343,48 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [showCookieBanner, setShowCookieBanner] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const siteUrl = 'https://www.quincenalia.com/';
+  const defaultTitle = 'Quincenalia | Copropiedad vacacional inteligente en España';
+  const defaultDescription = 'Comparte segunda residencia con Quincenalia: compra legal por porcentajes, uso garantizado en temporada alta y gestión integral con posibilidad de rentabilidad extra.';
+  const keywords = 'copropiedad vacacional, segunda residencia compartida, compra proindiviso, inversión inmobiliaria, alquiler vacacional premium, quincenalia';
+  const heroImage = `${siteUrl}hero.jpg`;
+  const featuredZones = zonasUnicas.slice(0, 6).map((zona, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: zona,
+    url: `${siteUrl}properties?zona=${encodeURIComponent(zona)}`
+  }));
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Quincenalia',
+    url: siteUrl,
+    logo: `${siteUrl}logo.svg`,
+    description: defaultDescription,
+    sameAs: [
+      'https://www.instagram.com/quincenalia',
+      'https://www.linkedin.com/company/quincenalia'
+    ],
+    contactPoint: [
+      {
+        '@type': 'ContactPoint',
+        telephone: '+34-666-777-888',
+        contactType: 'customer service',
+        areaServed: 'ES',
+        availableLanguage: ['es', 'en']
+      }
+    ],
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'Copropiedad vacacional por zonas',
+      itemListElement: featuredZones
+    },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${siteUrl}properties?zona={search_term_string}`,
+      'query-input': 'required name=search_term_string'
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -419,7 +462,32 @@ const HomePage = () => {
   console.log('viviendasPorZona:', viviendasPorZona);
 
   return (
-    <div className="min-h-screen bg-background font-poppins">
+    <>
+      <Helmet>
+        <html lang="es" />
+        <title>{defaultTitle}</title>
+        <meta name="description" content={defaultDescription} />
+        <meta name="keywords" content={keywords} />
+        <meta name="robots" content="index, follow" />
+        <meta name="theme-color" content="#0ea5e9" />
+        <link rel="canonical" href={siteUrl} />
+        <meta property="og:title" content={defaultTitle} />
+        <meta property="og:description" content={defaultDescription} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={siteUrl} />
+        <meta property="og:image" content={heroImage} />
+        <meta property="og:site_name" content="Quincenalia" />
+        <meta property="og:locale" content="es_ES" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={defaultTitle} />
+        <meta name="twitter:description" content={defaultDescription} />
+        <meta name="twitter:image" content={heroImage} />
+        <meta name="twitter:site" content="@quincenalia" />
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      </Helmet>
+      <div className="min-h-screen bg-background font-poppins">
       <Navbar />
       <section className="relative h-[85vh] sm:h-screen flex items-center justify-center overflow-hidden">
         {/* Imagen hero con efecto zoom basado en scroll */}
@@ -883,7 +951,8 @@ const HomePage = () => {
           <button onClick={aceptarCookies} className="ml-0 sm:ml-4 mt-2 sm:mt-0 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary/90 transition">Aceptar</button>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 
