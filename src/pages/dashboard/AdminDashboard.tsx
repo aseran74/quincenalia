@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { useNavigate, Outlet, useLocation } from 'react-router-dom';
+import { useNavigate, Outlet, useLocation, Link } from 'react-router-dom';
 import {
   Building, Users, Calendar, FileText, AlertTriangle, MessageSquare, DollarSign,
   User, LogOut, Home, Menu, ChevronLeft, Search, X // Asegúrate de importar X
@@ -17,16 +17,16 @@ import { FaSyncAlt } from 'react-icons/fa';
 // Asegúrate que la ruta a tus componentes (ui/button, ui/avatar, etc.) y hooks (useAuth) sea correcta
 
 const menuItems = [
-  { icon: <Home className="w-5 h-5" />, label: 'Panel de Control', path: '/dashboard/admin' },
-  { icon: <Users className="w-5 h-5" />, label: 'Propietarios', path: '/dashboard/admin/owners' },
-  { icon: <Building className="w-5 h-5" />, label: 'Propiedades', path: '/dashboard/admin/properties' },
-  { icon: <FileText className="w-5 h-5" />, label: 'Facturas', path: '/dashboard/admin/invoices' },
-  { icon: <AlertTriangle className="w-5 h-5" />, label: 'Incidencias', path: '/dashboard/admin/incidents' },
-  { icon: <FaSyncAlt className="w-5 h-5" />, label: 'Intercambios', path: '/dashboard/admin/exchange' },
-  { icon: <MessageSquare className="w-5 h-5" />, label: 'Mensajes', path: '/dashboard/admin/messages' },
-  { icon: <DollarSign className="w-5 h-5" />, label: 'Comisiones', path: '/dashboard/admin/commissions' },
-  { icon: <Building className="w-5 h-5" />, label: 'Agencias', path: '/dashboard/admin/agencies' },
-  { icon: <Users className="w-5 h-5" />, label: 'Agentes', path: '/dashboard/admin/agents' }
+  { icon: <Home className="w-5 h-5 text-white" />, label: 'Panel de Control', path: '/dashboard/admin' },
+  { icon: <Users className="w-5 h-5 text-white" />, label: 'Propietarios', path: '/dashboard/admin/owners' },
+  { icon: <Building className="w-5 h-5 text-white" />, label: 'Propiedades', path: '/dashboard/admin/properties' },
+  { icon: <FileText className="w-5 h-5 text-white" />, label: 'Facturas', path: '/dashboard/admin/invoices' },
+  { icon: <AlertTriangle className="w-5 h-5 text-white" />, label: 'Incidencias', path: '/dashboard/admin/incidents' },
+  { icon: <FaSyncAlt className="w-5 h-5 text-white" />, label: 'Intercambios', path: '/dashboard/admin/exchange' },
+  { icon: <MessageSquare className="w-5 h-5 text-white" />, label: 'Mensajes', path: '/dashboard/admin/messages' },
+  { icon: <DollarSign className="w-5 h-5 text-white" />, label: 'Comisiones', path: '/dashboard/admin/commissions' },
+  { icon: <Building className="w-5 h-5 text-white" />, label: 'Agencias', path: '/dashboard/admin/agencies' },
+  { icon: <Users className="w-5 h-5 text-white" />, label: 'Agentes', path: '/dashboard/admin/agents' }
 ];
 
 const SIDEBAR_ID = "app-sidebar";
@@ -104,6 +104,14 @@ const AdminDashboard: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location, isMobile]); // Depende de location y isMobile
 
+  // Efecto para forzar el color de la sidebar
+  useEffect(() => {
+    if (sidebarRef.current) {
+      sidebarRef.current.style.backgroundColor = '#064D82';
+      sidebarRef.current.style.setProperty('background-color', '#064D82', 'important');
+    }
+  }, []);
+
   // Handler para el logout
   const handleLogout = async () => {
     if (logout) { // Verifica que logout exista
@@ -148,31 +156,44 @@ const AdminDashboard: React.FC = () => {
         id={SIDEBAR_ID}
         ref={sidebarRef}
         className={cn(
-          "fixed left-0 top-0 z-50 flex h-screen flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark", // Estilos base y transición
+          "fixed left-0 top-0 z-50 flex h-screen flex-col overflow-y-hidden duration-300 ease-linear", // Estilos base y transición
           "lg:static lg:translate-x-0", // Comportamiento en desktop
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full', // Animación de entrada/salida móvil
           sidebarWidthClass // Ancho dinámico
         )}
+        style={{ 
+          backgroundColor: '#064D82',
+          color: '#ffffff'
+        }}
         aria-hidden={isMobile ? !isSidebarOpen : undefined} // Oculto a lectores de pantalla si está cerrado en móvil
       >
+        {/* ----- Logo arriba del todo ----- */}
+        <div className="flex items-center justify-center py-4 px-4 border-b border-white/10">
+          <Link to="/dashboard/admin" className="flex items-center justify-center">
+            {isSidebarOpen ? (
+              <img 
+                src="/logo-blanco.png" 
+                alt="Logo" 
+                className="h-10 w-auto" 
+              />
+            ) : (
+              <img 
+                src="/logo-blanco.png" 
+                alt="Logo" 
+                className="h-8 w-8 object-contain" 
+              />
+            )}
+          </Link>
+        </div>
+
         {/* ----- Cabecera del Sidebar ----- */}
         <div className="relative flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5"> {/* Añadido relative para el botón absoluto */}
-          {/* Logo/Título (Visible si sidebar abierto o en móvil) */}
-           <a href="/dashboard/admin" className={cn(isSidebarOpen ? "block" : "hidden lg:hidden")}>
-                <span className="text-white text-lg font-semibold">Lovable</span>
-           </a>
-           {/* Icono Home (Visible si sidebar colapsado en desktop) */}
-           {!isSidebarOpen && (
-              <a href="/dashboard/admin" className="hidden lg:block px-4"> {/* Padding para centrar */}
-                  <Home className="w-6 h-6 text-white" />
-              </a>
-           )}
            {/* Botón Colapsar/Expandir Desktop */}
            <Button
              variant="ghost"
              size="icon"
              onClick={toggleSidebar}
-             className="hidden lg:flex text-white hover:text-gray-300 focus:outline-none" // Solo visible en desktop
+             className="hidden lg:flex text-white hover:bg-white/20 focus:outline-none ml-auto" // Solo visible en desktop
              aria-label={isSidebarOpen ? "Colapsar menú" : "Expandir menú"}
              aria-controls={SIDEBAR_ID}
              aria-expanded={isSidebarOpen}
@@ -206,8 +227,8 @@ const AdminDashboard: React.FC = () => {
                   <Button
                     variant={location.pathname.startsWith(item.path) ? "secondary" : "ghost"}
                     className={cn(
-                      "group relative flex w-full items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 justify-start",
-                      location.pathname.startsWith(item.path) && "bg-graydark dark:bg-meta-4", // Estilo activo
+                      "group relative flex w-full items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-white duration-300 ease-in-out hover:bg-white/20 justify-start",
+                      location.pathname.startsWith(item.path) && "bg-white/20", // Estilo activo
                       !isSidebarOpen && "lg:justify-center lg:px-0" // Estilo colapsado desktop
                     )}
                     onClick={() => {
@@ -227,13 +248,13 @@ const AdminDashboard: React.FC = () => {
 
             {/* ----- Menú de Usuario (al final) ----- */}
             <div className={cn(
-                "mt-auto p-4 border-t border-gray-700 dark:border-strokedark", // mt-auto lo empuja abajo
+                "mt-auto p-4 border-t border-white/10", // mt-auto lo empuja abajo
                 !isSidebarOpen && "lg:px-0 lg:flex lg:justify-center" // Centrado si colapsado desktop
             )}>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                    <Button variant="ghost" className={cn(
-                    "relative h-auto rounded-lg hover:bg-graydark dark:hover:bg-meta-4 flex items-center gap-2 px-2 w-full text-left text-bodydark1 py-2",
+                    "relative h-auto rounded-lg hover:bg-white/20 flex items-center gap-2 px-2 w-full text-left text-white py-2",
                     !isSidebarOpen && "lg:w-12 lg:justify-center lg:px-0" // Estilo colapsado desktop
                   )}>
                     <Avatar className="h-8 w-8 flex-shrink-0">
@@ -244,8 +265,8 @@ const AdminDashboard: React.FC = () => {
                         "flex flex-col items-start overflow-hidden whitespace-nowrap flex-grow min-w-0",
                         !isSidebarOpen && "lg:hidden" // Ocultar texto si colapsado desktop
                     )}>
-                        <span className="text-sm font-medium truncate w-full">{user?.name || 'Usuario'}</span>
-                        <span className="text-xs text-gray-400 truncate w-full">{user?.email || ''}</span>
+                        <span className="text-sm font-medium truncate w-full text-white">{user?.name || 'Usuario'}</span>
+                        <span className="text-xs text-white/70 truncate w-full">{user?.email || ''}</span>
                     </div>
                   </Button>
                 </DropdownMenuTrigger>

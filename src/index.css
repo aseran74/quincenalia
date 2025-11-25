@@ -86,3 +86,14 @@
     @apply bg-background text-foreground font-sans;
   }
 }
+
+/* Sidebar color override for admin dashboard */
+aside#admin-sidebar,
+aside[id="admin-sidebar"],
+aside#app-sidebar,
+aside[id="app-sidebar"],
+aside#admin-sidebar.dark,
+aside#admin-sidebar[class*="dark"] {
+  background-color: #064D82 !important;
+  background: #064D82 !important;
+}

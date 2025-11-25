@@ -61,6 +61,14 @@ const AdminDashboard = () => {
     }
   }, [location, isMobile]);
 
+  // Efecto para forzar el color de la sidebar
+  useEffect(() => {
+    if (sidebarRef.current) {
+      sidebarRef.current.style.backgroundColor = '#064D82';
+      sidebarRef.current.style.setProperty('background-color', '#064D82', 'important');
+    }
+  }, []);
+
   const handleLogout = async () => {
     await logout();
     navigate('/login');
@@ -74,13 +82,34 @@ const AdminDashboard = () => {
     <div className="flex min-h-screen bg-gray-100 dark:bg-boxdark-2 dark:text-bodydark">
       {/* Sidebar */}
       <aside
+        id="admin-sidebar"
         ref={sidebarRef}
         className={cn(
-          "fixed left-0 top-0 z-50 flex h-screen flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0",
+          "fixed left-0 top-0 z-50 flex h-screen flex-col overflow-y-hidden duration-300 ease-linear lg:static lg:translate-x-0",
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full',
           isSidebarOpen ? 'w-64' : 'w-0 lg:w-20'
         )}
+        style={{ backgroundColor: '#064D82' }}
       >
+        {/* ----- Logo arriba del todo ----- */}
+        <div className="flex items-center justify-center py-4 px-4 border-b border-white/10">
+          <a href="/dashboard/admin" className="flex items-center justify-center">
+            {isSidebarOpen ? (
+              <img
+                src="/logo-blanco.png"
+                alt="Logo"
+                className="h-10 w-auto"
+              />
+            ) : (
+              <img
+                src="/logo-blanco.png"
+                alt="Logo"
+                className="h-8 w-8 object-contain"
+              />
+            )}
+          </a>
+        </div>
+
         {/* Botón de menú solo en móvil para mostrar/ocultar sidebar */}
         {isMobile && (
           <div className="flex items-center justify-between gap-2 px-4 py-4 md:hidden">
@@ -98,15 +127,12 @@ const AdminDashboard = () => {
 
         {/* Sidebar Header */}
         <div className="hidden lg:flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
-          <a href="/dashboard/admin" className="flex items-center">
-            {!isSidebarOpen && <Home className="w-6 h-6 text-white" />}
-          </a>
           {/* Botón de toggle solo en escritorio */}
           <Button
             variant="ghost"
             size="icon"
             onClick={toggleSidebar}
-            className="text-white hover:text-gray-300 focus:outline-none"
+            className="text-white hover:text-white/20 focus:outline-none ml-auto"
             aria-label="Toggle Sidebar"
           >
             <ChevronLeft className={cn(
