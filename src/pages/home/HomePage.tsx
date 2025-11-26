@@ -544,18 +544,28 @@ const HomePage = () => {
             Accede a propiedades exclusivas por una fracción del coste. Disfruta, rentabiliza e intercambia.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full mb-2">
-          <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-3 text-base font-semibold shadow-lg transform transition hover:scale-105" asChild>
-            <Link to="/propiedades">
-              Explorar Propiedades
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
+            <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-3 text-base font-semibold shadow-lg transform transition hover:scale-105" asChild>
+              <Link to="/propiedades">
+                Explorar Propiedades
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
             <Button size="lg" variant="outline" className="rounded-full px-8 py-3 text-base font-semibold shadow-lg border-white/70 text-primary hover:bg-white/10 hover:text-primary transition" onClick={() => {
               const seccion = document.getElementById('reinventada');
               if (seccion) seccion.scrollIntoView({ behavior: 'smooth' });
             }}>
               <HelpCircle className="w-5 h-5 mr-2 inline-block" />
               Cómo funciona
+            </Button>
+            <Button size="lg" variant="outline" className="rounded-full px-8 py-3 text-base font-semibold shadow-lg border-white/70 text-primary hover:bg-white/10 hover:text-primary transition" asChild>
+              <a
+                href="https://www.canva.com/design/DAGorN8pTRg/xHw9xivIlDBwC80QN__BLA/view?utm_content=DAGorN8pTRg&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h4128331192"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FileText className="w-5 h-5 mr-2 inline-block" />
+                Ver pitch deck
+              </a>
             </Button>
           </div>
         </div>
