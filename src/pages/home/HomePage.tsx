@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import { FeaturedProperties } from '@/components/FeaturedProperties';
 import { Helmet } from 'react-helmet-async';
 import { useEffect, useState, useRef } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Accordion,
   AccordionContent,
@@ -343,11 +344,14 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [showCookieBanner, setShowCookieBanner] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [isPitchDeckOpen, setPitchDeckOpen] = useState(false);
   const siteUrl = 'https://www.quincenalia.com/';
   const defaultTitle = 'Quincenalia | Copropiedad vacacional inteligente en España';
   const defaultDescription = 'Comparte segunda residencia con Quincenalia: compra legal por porcentajes, uso garantizado en temporada alta y gestión integral con posibilidad de rentabilidad extra.';
   const keywords = 'copropiedad vacacional, segunda residencia compartida, compra proindiviso, inversión inmobiliaria, alquiler vacacional premium, quincenalia';
   const heroImage = `${siteUrl}hero.jpg`;
+  const pitchDeckSharedUrl = 'https://www.canva.com/design/DAGorN8pTRg/xHw9xivIlDBwC80QN__BLA/view?utm_content=DAGorN8pTRg&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h4128331192';
+  const pitchDeckEmbedUrl = 'https://www.canva.com/design/DAGorN8pTRg/xHw9xivIlDBwC80QN__BLA/view?embed';
   const featuredZones = zonasUnicas.slice(0, 6).map((zona, index) => ({
     '@type': 'ListItem',
     position: index + 1,
@@ -556,6 +560,15 @@ const HomePage = () => {
             }}>
               <HelpCircle className="w-5 h-5 mr-2 inline-block" />
               Cómo funciona
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="rounded-full px-8 py-3 text-base font-semibold shadow-lg border-white/70 text-primary hover:bg-white/10 hover:text-primary transition inline-flex items-center gap-2"
+              onClick={() => setPitchDeckOpen(true)}
+            >
+              <FileText className="w-5 h-5" />
+              Ver pitch deck
             </Button>
           </div>
         </div>
@@ -870,16 +883,10 @@ const HomePage = () => {
               variant="outline"
               size="lg"
               className="rounded-full px-8 py-3 text-base font-semibold shadow-lg border-primary/40 text-primary hover:bg-primary/10 transition inline-flex items-center gap-2"
-              asChild
+              onClick={() => setPitchDeckOpen(true)}
             >
-              <a
-                href="https://www.canva.com/design/DAGorN8pTRg/xHw9xivIlDBwC80QN__BLA/view?utm_content=DAGorN8pTRg&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h4128331192"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FileText className="w-5 h-5" />
-                Ver pitch deck
-              </a>
+              <FileText className="w-5 h-5" />
+              Ver pitch deck
             </Button>
           </div>
         </div>
@@ -968,6 +975,33 @@ const HomePage = () => {
           <button onClick={aceptarCookies} className="ml-0 sm:ml-4 mt-2 sm:mt-0 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary/90 transition">Aceptar</button>
         </div>
       )}
+      <Dialog open={isPitchDeckOpen} onOpenChange={setPitchDeckOpen}>
+        <DialogContent className="max-w-5xl w-[95vw] sm:w-[90vw]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-primary" />
+              Pitch deck de Quincenalia
+            </DialogTitle>
+            <DialogDescription>
+              Explora nuestra visión, modelo de negocio y métricas clave. Puedes abrirlo en otra pestaña si lo prefieres.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="aspect-video w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-50 shadow-inner">
+            <iframe
+              title="Quincenalia Pitch Deck"
+              src={pitchDeckEmbedUrl}
+              loading="lazy"
+              allowFullScreen
+              className="w-full h-full"
+            />
+          </div>
+          <div className="text-right">
+            <a href={pitchDeckSharedUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-primary hover:underline">
+              Abrir en pestaña nueva
+            </a>
+          </div>
+        </DialogContent>
+      </Dialog>
       </div>
     </>
   );
