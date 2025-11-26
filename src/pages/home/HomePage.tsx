@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import { FeaturedProperties } from '@/components/FeaturedProperties';
+import { Helmet } from 'react-helmet-async';
 import { useEffect, useState, useRef } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Accordion,
   AccordionContent,
@@ -342,6 +344,51 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [showCookieBanner, setShowCookieBanner] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [isPitchDeckOpen, setPitchDeckOpen] = useState(false);
+  const siteUrl = 'https://www.quincenalia.com/';
+  const defaultTitle = 'Quincenalia | Copropiedad vacacional inteligente en España';
+  const defaultDescription = 'Comparte segunda residencia con Quincenalia: compra legal por porcentajes, uso garantizado en temporada alta y gestión integral con posibilidad de rentabilidad extra.';
+  const keywords = 'copropiedad vacacional, segunda residencia compartida, compra proindiviso, inversión inmobiliaria, alquiler vacacional premium, quincenalia';
+  const heroImage = `${siteUrl}hero.jpg`;
+  const pitchDeckSharedUrl = 'https://www.canva.com/design/DAGorN8pTRg/xHw9xivIlDBwC80QN__BLA/view?utm_content=DAGorN8pTRg&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h4128331192';
+  const pitchDeckEmbedUrl = 'https://www.canva.com/design/DAGorN8pTRg/xHw9xivIlDBwC80QN__BLA/view?embed';
+  const featuredZones = zonasUnicas.slice(0, 6).map((zona, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: zona,
+    url: `${siteUrl}properties?zona=${encodeURIComponent(zona)}`
+  }));
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Quincenalia',
+    url: siteUrl,
+    logo: `${siteUrl}logo.svg`,
+    description: defaultDescription,
+    sameAs: [
+      'https://www.instagram.com/quincenalia',
+      'https://www.linkedin.com/company/quincenalia'
+    ],
+    contactPoint: [
+      {
+        '@type': 'ContactPoint',
+        telephone: '+34-666-777-888',
+        contactType: 'customer service',
+        areaServed: 'ES',
+        availableLanguage: ['es', 'en']
+      }
+    ],
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'Copropiedad vacacional por zonas',
+      itemListElement: featuredZones
+    },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${siteUrl}properties?zona={search_term_string}`,
+      'query-input': 'required name=search_term_string'
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -419,7 +466,32 @@ const HomePage = () => {
   console.log('viviendasPorZona:', viviendasPorZona);
 
   return (
-    <div className="min-h-screen bg-background font-poppins">
+    <>
+      <Helmet>
+        <html lang="es" />
+        <title>{defaultTitle}</title>
+        <meta name="description" content={defaultDescription} />
+        <meta name="keywords" content={keywords} />
+        <meta name="robots" content="index, follow" />
+        <meta name="theme-color" content="#0ea5e9" />
+        <link rel="canonical" href={siteUrl} />
+        <meta property="og:title" content={defaultTitle} />
+        <meta property="og:description" content={defaultDescription} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={siteUrl} />
+        <meta property="og:image" content={heroImage} />
+        <meta property="og:site_name" content="Quincenalia" />
+        <meta property="og:locale" content="es_ES" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={defaultTitle} />
+        <meta name="twitter:description" content={defaultDescription} />
+        <meta name="twitter:image" content={heroImage} />
+        <meta name="twitter:site" content="@quincenalia" />
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      </Helmet>
+      <div className="min-h-screen bg-background font-poppins">
       <Navbar />
       <section className="relative h-[85vh] sm:h-screen flex items-center justify-center overflow-hidden">
         {/* Imagen hero con efecto zoom basado en scroll */}
@@ -476,18 +548,27 @@ const HomePage = () => {
             Accede a propiedades exclusivas por una fracción del coste. Disfruta, rentabiliza e intercambia.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full mb-2">
-          <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-3 text-base font-semibold shadow-lg transform transition hover:scale-105" asChild>
-            <Link to="/propiedades">
-              Explorar Propiedades
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
+            <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-3 text-base font-semibold shadow-lg transform transition hover:scale-105" asChild>
+              <Link to="/propiedades">
+                Explorar Propiedades
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
             <Button size="lg" variant="outline" className="rounded-full px-8 py-3 text-base font-semibold shadow-lg border-white/70 text-primary hover:bg-white/10 hover:text-primary transition" onClick={() => {
               const seccion = document.getElementById('reinventada');
               if (seccion) seccion.scrollIntoView({ behavior: 'smooth' });
             }}>
               <HelpCircle className="w-5 h-5 mr-2 inline-block" />
               Cómo funciona
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="rounded-full px-8 py-3 text-base font-semibold shadow-lg border-white/70 text-primary hover:bg-white/10 hover:text-primary transition inline-flex items-center gap-2"
+              onClick={() => setPitchDeckOpen(true)}
+            >
+              <FileText className="w-5 h-5" />
+              Ver pitch deck
             </Button>
           </div>
         </div>
@@ -797,6 +878,17 @@ const HomePage = () => {
               </Button>
             </div>
           )}
+          <div className="text-center mt-10">
+            <Button
+              variant="outline"
+              size="lg"
+              className="rounded-full px-8 py-3 text-base font-semibold shadow-lg border-primary/40 text-primary hover:bg-primary/10 transition inline-flex items-center gap-2"
+              onClick={() => setPitchDeckOpen(true)}
+            >
+              <FileText className="w-5 h-5" />
+              Ver pitch deck
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -883,7 +975,35 @@ const HomePage = () => {
           <button onClick={aceptarCookies} className="ml-0 sm:ml-4 mt-2 sm:mt-0 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary/90 transition">Aceptar</button>
         </div>
       )}
-    </div>
+      <Dialog open={isPitchDeckOpen} onOpenChange={setPitchDeckOpen}>
+        <DialogContent className="max-w-5xl w-[95vw] sm:w-[90vw]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-primary" />
+              Pitch deck de Quincenalia
+            </DialogTitle>
+            <DialogDescription>
+              Explora nuestra visión, modelo de negocio y métricas clave. Puedes abrirlo en otra pestaña si lo prefieres.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="aspect-video w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-50 shadow-inner">
+            <iframe
+              title="Quincenalia Pitch Deck"
+              src={pitchDeckEmbedUrl}
+              loading="lazy"
+              allowFullScreen
+              className="w-full h-full"
+            />
+          </div>
+          <div className="text-right">
+            <a href={pitchDeckSharedUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-primary hover:underline">
+              Abrir en pestaña nueva
+            </a>
+          </div>
+        </DialogContent>
+      </Dialog>
+      </div>
+    </>
   );
 };
 
