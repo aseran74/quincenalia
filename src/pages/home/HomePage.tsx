@@ -737,6 +737,42 @@ const HomePage = () => {
         </div>
       </section>
       <ComoFunciona />
+      <section id="pitch-deck" className="py-16 sm:py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary mb-3">Presentación</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
+              Pitch deck de Quincenalia
+              <span className="text-primary">.</span>
+            </h2>
+            <p className="text-base sm:text-lg text-muted-foreground mb-8">
+              Explora nuestra visión, modelo de negocio y métricas clave en una presentación diseñada para inversores y socios estratégicos.
+            </p>
+          </div>
+          <div className="relative max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50">
+            <div className="aspect-video w-full bg-slate-100">
+              <iframe
+                title="Quincenalia Pitch Deck"
+                src="https://www.canva.com/design/DAGorN8pTRg/xHw9xivIlDBwC80QN__BLA/view?embed"
+                loading="lazy"
+                allowFullScreen
+                className="w-full h-full"
+              />
+            </div>
+          </div>
+          <div className="text-center mt-6">
+            <a
+              href="https://www.canva.com/design/DAGorN8pTRg/xHw9xivIlDBwC80QN__BLA/view?utm_content=DAGorN8pTRg&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h4128331192"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-primary font-semibold hover:underline"
+            >
+              Abrir presentación en una pestaña nueva
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </section>
       <section id="contacto" className="py-16 sm:py-20 bg-gradient-to-b from-slate-50 to-white">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
