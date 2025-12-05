@@ -1,0 +1,30 @@
+[33m82bb1ab[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m feat: Agregar Navbar a la página de búsqueda de propiedades
+[33m0e8a72c[m Cambiar color sidebar admin a #064D82 y agregar logo arriba
+[33mb03f2eb[m style: Remove Properties title and align view toggle
+[33mbc0b2c2[m fix: Add Navbar to PropertiesPage and adjust layout
+[33m0463fb3[m feat: Implement HeartButton component and fix PropertyDetail error
+[33m2eef0a1[m feat: Make mobile map fullscreen with floating back button
+[33m31c8587[m feat: Move back button to top in mobile map view
+[33m9b1bc42[m feat: Add back button to mobile map view
+[33m4d3fcbb[m fix: Show navbar in mobile map view
+[33m6ad927c[m feat: Improve map InfoWindows with modern card design
+[33m7d71242[m feat: Add map view with mobile fullscreen for properties and exchange pages
+[33m8cedd53[m Rediseñar layout de vista mapa: mapa grande abajo y cards laterales
+[33m1dbd11d[m feat: Exclude sold properties from properties list
+[33maa6ae74[m feat: Actualizar interés hipotecario a 1.9%
+[33mda2bc0c[m feat: Integrate Google authentication and include pending changes
+[33m45f7497[m Nota explicativa: cuota mensual incluye 7% de gastos de compra en cards y destacadas
+[33m67a62a5[m Mejoras landing: iconos más grandes, textos actualizados, imágenes zonas y dirección oficina actualizada
+[33m3a4b6e6[m feat: opción y filtro de obra nueva en formularios y búsqueda
+[33m2944318[m Mejora grid y anchos de filtros en propiedades para tablet y móvil grande
+[33m2883760[m Ajuste responsive de badges en featured cards para móviles pequeños
+[33m9de4da5[m Mejoras en filtros, responsive y UX de propiedades
+[33mbfab6bb[m chore: modificación mínima para forzar commit y push
+[33m189a158[m Responsividad: sidebar de agentes, solicitudes y comisiones en móvil y escritorio
+[33mb621346[m Avances en panel de intercambio: corrección visualización calendario owner y lógica de puntos
+[33m8c206c6[m Mejoras galería detalle: bordes internos, swipe, modal carrusel, alineación imágenes
+[33m6a7deca[m feat: reordenar imágenes y marcar destacada en alta y edición de propiedades. Fix validaciones y UX admin
+[33mca27ac8[m feat: centrar título, dirección e iconos en el footer de las cards de propiedades
+[33mf679ea0[m fix: iconos y textos blancos en cards de propiedades destacadas en home
+[33maa00ae3[m fix: enlaces del mapa ahora son absolutos usando window.location.origin
+[33m1fe8475[m Fix: icono de marcador del mapa apunta a map-marker-svgrepo-com.svg (sin error 404)
