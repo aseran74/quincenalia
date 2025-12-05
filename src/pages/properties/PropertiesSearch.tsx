@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useLoadScript, Autocomplete } from '@react-google-maps/api';
 import type { Libraries } from '@react-google-maps/api';
+import Navbar from '@/components/Navbar';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const GOOGLE_MAPS_LIBRARIES: Libraries = ['places'];
@@ -49,8 +50,9 @@ const PropertiesSearch = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Navbar />
       {/* Header con toggle de vista */}
-      <div className="bg-white shadow">
+      <div className="bg-white shadow pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-900">
