@@ -56,6 +56,13 @@ import Favorites from './pages/dashboard/profile/Favorites';
 import ContratoUsoPage from './pages/contrato-uso';
 import PublicAgenciesList from './pages/agencies/PublicAgenciesList';
 import PublicAgencyDetail from './pages/agencies/PublicAgencyDetail';
+import ComoBuscarReservar from './pages/como-buscar-reservar';
+import ComoFuncionaDashboard from './pages/como-funciona-dashboard';
+import IntercambioPropiedades from './pages/intercambio-propiedades';
+import SerAgente from './pages/ser-agente';
+import Ventajas from './pages/ventajas';
+import ComoReservar from './pages/como-reservar';
+import Soporte from './pages/soporte';
 
 const Profile = () => (
   <div style={{ padding: 32 }}>
@@ -83,6 +90,13 @@ function App() {
           <Route path="/agencias" element={<PublicAgenciesList />} />
           <Route path="/agencias/:id" element={<PublicAgencyDetail />} />
           <Route path="/contrato-uso" element={<ContratoUsoPage />} />
+          <Route path="/como-buscar-reservar" element={<ComoBuscarReservar />} />
+          <Route path="/como-funciona-dashboard" element={<ComoFuncionaDashboard />} />
+          <Route path="/intercambio-propiedades" element={<IntercambioPropiedades />} />
+          <Route path="/ser-agente" element={<SerAgente />} />
+          <Route path="/ventajas" element={<Ventajas />} />
+          <Route path="/como-reservar" element={<ComoReservar />} />
+          <Route path="/soporte" element={<Soporte />} />
           {/* Redirección de /propiedades a /properties */}
           <Route path="/propiedades" element={<Navigate to="/properties" replace />} />
           {/* Redirección de /propiedades/:id a /properties/:id */}
