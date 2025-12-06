@@ -11,7 +11,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-    PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin, ChevronLeft, HelpCircle, Cookie, Star, Users, FileText // Asegúrate de que CheckCircle y ShieldAlert estén aquí si los usas
+    PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin, ChevronLeft, HelpCircle, Cookie, Star, Users, FileText, Presentation // Asegúrate de que CheckCircle y ShieldAlert estén aquí si los usas
 } from 'lucide-react'; // Iconos usados y potencialmente nuevos
 import { Link, useNavigate } from 'react-router-dom';
 import ContactForm from '@/components/ContactForm';
@@ -883,6 +883,17 @@ const HomePage = () => {
           <button onClick={aceptarCookies} className="ml-0 sm:ml-4 mt-2 sm:mt-0 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary/90 transition">Aceptar</button>
         </div>
       )}
+      {/* Icono del Pitch Deck */}
+      <a
+        href="https://holydeo.my.canva.site/quincenalia"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 left-6 z-50 bg-primary text-white rounded-full shadow-lg w-14 h-14 flex items-center justify-center hover:bg-primary/90 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary/60 group"
+        aria-label="Ver Pitch Deck"
+        title="Ver Pitch Deck"
+      >
+        <Presentation className="w-6 h-6 group-hover:scale-110 transition-transform" />
+      </a>
     </div>
   );
 };

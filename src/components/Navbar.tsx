@@ -436,7 +436,7 @@ const Navbar = () => {
                           setOpenDropdowns(prev => ({ ...prev, [item.label]: true }));
                         }}
                         onMouseLeave={() => {
-                          setTimeout(() => setOpenDropdowns(prev => ({ ...prev, [item.label]: false })), 400);
+                          setTimeout(() => setOpenDropdowns(prev => ({ ...prev, [item.label]: false })), 1500);
                         }}
                       >
                         {item.icon && (
@@ -462,7 +462,7 @@ const Navbar = () => {
                       sideOffset={8}
                       onMouseEnter={() => setOpenDropdowns(prev => ({ ...prev, [item.label]: true }))}
                       onMouseLeave={() => {
-                        setTimeout(() => setOpenDropdowns(prev => ({ ...prev, [item.label]: false })), 400);
+                        setTimeout(() => setOpenDropdowns(prev => ({ ...prev, [item.label]: false })), 1500);
                       }}
                     >
                       {item.submenu.map((subItem) => (
