@@ -1,29 +1,137 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building, Users, Calendar } from 'lucide-react';
-import { mockProperties, mockUsers, mockAppointments } from '../../data/mockData';
-import { Link } from 'react-router-dom';
+import { Building, Users, Calendar, Loader2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Agency } from '@/types/user';
+import { supabase } from '@/lib/supabase';
+import { toast } from '@/components/ui/use-toast';
+
+interface Agent {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  photo_url?: string;
+}
+
+interface Property {
+  id: string;
+  title: string;
+  location: string;
+  price: number;
+}
 
 const AgencyDashboard: React.FC = () => {
   const { user } = useAuth();
-  const agency = user as Agency;
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [agencyId, setAgencyId] = useState<string | null>(null);
+  const [agencyAgents, setAgencyAgents] = useState<Agent[]>([]);
+  const [agencyProperties, setAgencyProperties] = useState<Property[]>([]);
+  const [propertiesCount, setPropertiesCount] = useState(0);
+
+  useEffect(() => {
+    fetchAgencyData();
+  }, [user]);
+
+  const fetchAgencyData = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      // Obtener el agency_id del perfil del usuario
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('agency_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      if (!profile?.agency_id) {
+        toast({
+          title: 'Sin agencia asignada',
+          description: 'Tu perfil no está asociado a ninguna agencia.',
+          variant: 'destructive'
+        });
+        setLoading(false);
+        return;
+      }
+
+      setAgencyId(profile.agency_id);
+
+      // Obtener agentes de la agencia
+      const { data: agents, error: agentsError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, email, phone, photo_url')
+        .eq('role', 'agent')
+        .eq('agency_id', profile.agency_id)
+        .order('first_name');
+
+      if (agentsError) throw agentsError;
+      setAgencyAgents(agents || []);
+
+      // Obtener propiedades gestionadas por la agencia
+      // Buscar por agency_id directo O por agent_id de los agentes
+      let propertiesQuery = supabase
+        .from('properties')
+        .select('id, title, location, price')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (agents && agents.length > 0) {
+        const agentIds = agents.map(a => a.id);
+        propertiesQuery = propertiesQuery.or(
+          `agency_id.eq.${profile.agency_id},agent_id.in.(${agentIds.join(',')})`
+        );
+      } else {
+        propertiesQuery = propertiesQuery.eq('agency_id', profile.agency_id);
+      }
+
+      const { data: properties, error: propertiesError } = await propertiesQuery;
+
+      if (propertiesError) throw propertiesError;
+      setAgencyProperties(properties || []);
+      
+      // Contar todas las propiedades (no solo las 10 primeras)
+      let countQuery = supabase
+        .from('properties')
+        .select('id', { count: 'exact', head: true });
+
+      if (agents && agents.length > 0) {
+        const agentIds = agents.map(a => a.id);
+        countQuery = countQuery.or(
+          `agency_id.eq.${profile.agency_id},agent_id.in.(${agentIds.join(',')})`
+        );
+      } else {
+        countQuery = countQuery.eq('agency_id', profile.agency_id);
+      }
+
+      const { count } = await countQuery;
+      setPropertiesCount(count || 0);
+
+    } catch (error: any) {
+      console.error('Error fetching agency data:', error);
+      toast({
+        title: 'Error',
+        description: `No se pudieron cargar los datos: ${error.message}`,
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   
-  const agencyAgents = mockUsers.filter(user => 
-    user.role === 'agent' && (user as any).agencyId === agency.id
-  );
-  
-  const agentIds = agencyAgents.map(agent => agent.id);
-  
-  const agencyProperties = mockProperties.filter(property => 
-    agentIds.includes(property.agentId || '')
-  );
-  
-  const agencyAppointments = mockAppointments.filter(appointment => 
-    agentIds.includes(appointment.agentId)
-  );
-  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -42,9 +150,16 @@ const AgencyDashboard: React.FC = () => {
             <p className="text-xs text-muted-foreground">
               agentes en la agencia
             </p>
-            <Button asChild className="w-full mt-4" variant="outline">
-              <Link to="/agents">Ver agentes</Link>
-            </Button>
+            {agencyId && (
+              <Button 
+                asChild 
+                className="w-full mt-4" 
+                variant="outline"
+                onClick={() => navigate(`/dashboard/agencies/${agencyId}/agents`)}
+              >
+                <Link to={`/dashboard/agencies/${agencyId}/agents`}>Ver agentes</Link>
+              </Button>
+            )}
           </CardContent>
         </Card>
         
@@ -54,28 +169,28 @@ const AgencyDashboard: React.FC = () => {
             <Building className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{agencyProperties.length}</div>
+            <div className="text-2xl font-bold">{propertiesCount}</div>
             <p className="text-xs text-muted-foreground">
               propiedades gestionadas
             </p>
             <Button asChild className="w-full mt-4" variant="outline">
-              <Link to="/properties">Ver propiedades</Link>
+              <Link to="/dashboard/agencies/properties">Ver propiedades</Link>
             </Button>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Citas</CardTitle>
+            <CardTitle className="text-sm font-medium">Reservas</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{agencyAppointments.length}</div>
+            <div className="text-2xl font-bold">-</div>
             <p className="text-xs text-muted-foreground">
-              citas programadas
+              reservas activas
             </p>
             <Button asChild className="w-full mt-4" variant="outline">
-              <Link to="/appointments">Ver citas</Link>
+              <Link to="/dashboard/reservations">Ver reservas</Link>
             </Button>
           </CardContent>
         </Card>
@@ -89,20 +204,43 @@ const AgencyDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {agencyAgents.map(agent => (
-                <div key={agent.id} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="font-medium">{agent.name}</div>
-                    <div className="text-sm text-muted-foreground">{agent.email}</div>
+              {agencyAgents.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No hay agentes registrados</p>
+              ) : (
+                agencyAgents.map(agent => (
+                  <div key={agent.id} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      {agent.photo_url ? (
+                        <img 
+                          src={agent.photo_url} 
+                          alt={`${agent.first_name} ${agent.last_name}`}
+                          className="w-10 h-10 rounded-full"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                          <Users className="h-5 w-5 text-gray-400" />
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-medium">{agent.first_name} {agent.last_name}</div>
+                        <div className="text-sm text-muted-foreground">{agent.email}</div>
+                      </div>
+                    </div>
+                    <Button asChild size="sm" variant="outline">
+                      <Link to={`/dashboard/agents/${agent.id}`}>Ver</Link>
+                    </Button>
                   </div>
-                  <Button asChild size="sm" variant="outline">
-                    <Link to={`/agents/${agent.id}`}>Ver</Link>
-                  </Button>
-                </div>
-              ))}
-              <Button className="w-full mt-2" variant="outline">
-                Añadir Agente
-              </Button>
+                ))
+              )}
+              {agencyId && (
+                <Button 
+                  className="w-full mt-2" 
+                  variant="outline"
+                  onClick={() => navigate(`/dashboard/agencies/${agencyId}/agents/new`)}
+                >
+                  Añadir Agente
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -114,21 +252,25 @@ const AgencyDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {agencyProperties.slice(0, 3).map(property => (
-                <div key={property.id} className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium">{property.title}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {property.city} - {property.price.toLocaleString('es-ES')}€
+              {agencyProperties.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No hay propiedades gestionadas</p>
+              ) : (
+                agencyProperties.slice(0, 3).map(property => (
+                  <div key={property.id} className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">{property.title}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {property.location} - {property.price.toLocaleString('es-ES')}€
+                      </div>
                     </div>
+                    <Button asChild size="sm" variant="outline">
+                      <Link to={`/dashboard/agencies/properties`}>Ver</Link>
+                    </Button>
                   </div>
-                  <Button asChild size="sm" variant="outline">
-                    <Link to={`/properties/${property.id}`}>Ver</Link>
-                  </Button>
-                </div>
-              ))}
+                ))
+              )}
               <Button asChild className="w-full mt-2" variant="outline">
-                <Link to="/properties">Ver todas</Link>
+                <Link to="/dashboard/agencies/properties">Ver todas</Link>
               </Button>
             </div>
           </CardContent>

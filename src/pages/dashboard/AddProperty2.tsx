@@ -19,7 +19,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
 import { useEffect, useState, useRef } from 'react';
 import { Autocomplete, useLoadScript } from '@react-google-maps/api';
-import { Bed, Bath, Toilet, Building2 } from 'lucide-react';
+import { Bed, Bath, Droplet, Building2 } from 'lucide-react';
 
 const propertySchema = z.object({
   title: z.string().min(1, 'El título es requerido'),
@@ -137,6 +137,8 @@ const AddProperty2 = () => {
   const [agencies, setAgencies] = useState<{ id: string; name: string }[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [initialValues, setInitialValues] = useState<PropertyFormValues | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const autocompleteRef = useRef<any>(null);
@@ -173,49 +175,59 @@ const AddProperty2 = () => {
 
   // Persistencia: cargar valores iniciales de localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('add-property2-form');
-    if (saved) {
-      try {
-        setInitialValues(JSON.parse(saved));
-      } catch (e) {
-        localStorage.removeItem('add-property2-form');
-        setInitialValues({
-          title: '',
-          description: '',
-          price: 0,
-          location: '',
-          bedrooms: 0,
-          bathrooms: 0,
-          area: 0,
-          zona: '',
-          lavabos: 0,
-          url_externa_anuncio: '',
-          tipo_vivienda: '',
-          features: [],
-          features_extra: [],
-          images: [],
-          nearby_services: [],
-          latitude: undefined,
-          longitude: undefined,
-          destacada: false,
-          status: '',
-          agent_id: '',
-          agency_id: '',
-          share1_price: undefined,
-          share1_status: '',
-          share1_owner_id: '',
-          share2_price: undefined,
-          share2_status: '',
-          share2_owner_id: '',
-          share3_price: undefined,
-          share3_status: '',
-          share3_owner_id: '',
-          share4_price: undefined,
-          share4_status: '',
-          share4_owner_id: '',
-        });
+    try {
+      const saved = localStorage.getItem('add-property2-form');
+      const defaultValues: PropertyFormValues = {
+        title: '',
+        description: '',
+        price: 0,
+        location: '',
+        bedrooms: 0,
+        bathrooms: 0,
+        area: 0,
+        zona: '',
+        lavabos: 0,
+        url_externa_anuncio: '',
+        tipo_vivienda: '',
+        features: [],
+        features_extra: [],
+        images: [],
+        nearby_services: [],
+        latitude: undefined,
+        longitude: undefined,
+        destacada: false,
+        status: '',
+        agent_id: '',
+        agency_id: '',
+        share1_price: undefined,
+        share1_status: '',
+        share1_owner_id: '',
+        share2_price: undefined,
+        share2_status: '',
+        share2_owner_id: '',
+        share3_price: undefined,
+        share3_status: '',
+        share3_owner_id: '',
+        share4_price: undefined,
+        share4_status: '',
+        share4_owner_id: '',
+      };
+
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setInitialValues({ ...defaultValues, ...parsed });
+        } catch (e) {
+          console.error('Error parsing saved form data:', e);
+          localStorage.removeItem('add-property2-form');
+          setInitialValues(defaultValues);
+        }
+      } else {
+        setInitialValues(defaultValues);
       }
-    } else {
+    } catch (e) {
+      console.error('Error initializing form:', e);
+      setError('Error al inicializar el formulario. Por favor, recarga la página.');
       setInitialValues({
         title: '',
         description: '',
@@ -237,6 +249,7 @@ const AddProperty2 = () => {
         destacada: false,
         status: '',
         agent_id: '',
+        agency_id: '',
         share1_price: undefined,
         share1_status: '',
         share1_owner_id: '',
@@ -253,17 +266,70 @@ const AddProperty2 = () => {
     }
   }, []);
 
+  // Valores por defecto para el formulario
+  const getDefaultValues = (): PropertyFormValues => ({
+    title: '',
+    description: '',
+    price: 0,
+    location: '',
+    bedrooms: 0,
+    bathrooms: 0,
+    area: 0,
+    zona: '',
+    lavabos: 0,
+    url_externa_anuncio: '',
+    tipo_vivienda: '',
+    features: [],
+    features_extra: [],
+    images: [],
+    nearby_services: [],
+    latitude: undefined,
+    longitude: undefined,
+    destacada: false,
+    status: '',
+    agent_id: '',
+    agency_id: '',
+    share1_price: undefined,
+    share1_status: '',
+    share1_owner_id: '',
+    share2_price: undefined,
+    share2_status: '',
+    share2_owner_id: '',
+    share3_price: undefined,
+    share3_status: '',
+    share3_owner_id: '',
+    share4_price: undefined,
+    share4_status: '',
+    share4_owner_id: '',
+  });
+
   // Inicializar el formulario solo cuando initialValues está listo
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertySchema),
-    defaultValues: initialValues || undefined,
+    defaultValues: initialValues || getDefaultValues(),
   });
+
+  // Timeout para detectar si la carga se queda colgada
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!hydrated) {
+        setLoadingTimeout(true);
+      }
+    }, 5000); // 5 segundos
+    return () => clearTimeout(timer);
+  }, [hydrated]);
 
   // Hidratar el formulario solo una vez cuando initialValues cambia
   useEffect(() => {
     if (initialValues && !hydrated) {
-      form.reset(initialValues);
-      setHydrated(true);
+      try {
+        form.reset(initialValues);
+        setHydrated(true);
+      } catch (e) {
+        console.error('Error hydrating form:', e);
+        setError('Error al inicializar el formulario. Por favor, recarga la página.');
+        setHydrated(true); // Forzar hydrated para que muestre el error
+      }
     }
   }, [initialValues, hydrated, form]);
 
@@ -431,10 +497,53 @@ const AddProperty2 = () => {
     });
   }, []);
 
+  // Si hay un error, mostrarlo
+  if (error) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">
+              <p className="text-red-600 mb-4">{error}</p>
+              <Button onClick={() => window.location.reload()}>Recargar página</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Si hay timeout, mostrar error
+  if (loadingTimeout && !hydrated) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">
+              <p className="text-red-600 mb-4">El formulario está tardando demasiado en cargar.</p>
+              <Button onClick={() => {
+                localStorage.removeItem('add-property2-form');
+                window.location.reload();
+              }}>Recargar página</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto py-8">
       {(!initialValues || !hydrated) ? (
-        <div>Cargando...</div>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-lg mb-2">Cargando formulario...</p>
+            <p className="text-sm text-muted-foreground">Por favor espera</p>
+            {loadingTimeout && (
+              <p className="text-sm text-yellow-600 mt-2">Esto está tardando más de lo normal...</p>
+            )}
+          </div>
+        </div>
       ) : (
         <Card>
           <CardHeader>
@@ -543,7 +652,7 @@ const AddProperty2 = () => {
                         name="lavabos"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="flex items-center gap-1"><Toilet className="w-4 h-4" /> Aseo</FormLabel>
+                            <FormLabel className="flex items-center gap-1"><Droplet className="w-4 h-4" /> Aseo</FormLabel>
                             <FormControl>
                               <select {...field} className="w-full border rounded px-3 py-2 text-sm h-10">
                                 <option value="">Aseo</option>

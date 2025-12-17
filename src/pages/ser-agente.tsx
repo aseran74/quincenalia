@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import Navbar from '@/components/Navbar';
 import { 
   UserPlus, Briefcase, TrendingUp, DollarSign,
   Shield, Users, Clock, CheckCircle, ArrowRight,
   Star, Award, MessageSquare, BarChart3,
-  Heart, Globe, Target, Zap,
+  Target, Zap,
   ChevronRight, Sparkles, Building2, Users2,
-  Calendar, FileText, Smartphone, Headphones
+  Smartphone, Headphones
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -252,10 +251,10 @@ const SerAgente = () => {
                       <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
-                  <Link to="/demo" className="w-full sm:w-auto">
+                  <Link to="/soporte" className="w-full sm:w-auto">
                     <Button size="lg" variant="outline" className="text-lg px-8 py-6 h-auto border-2 w-full sm:w-auto">
-                      <Play className="w-5 h-5 mr-2" />
-                      Ver Demo
+                      <MessageSquare className="w-5 h-5 mr-2" />
+                      Solicitar Información
                     </Button>
                   </Link>
                 </>
@@ -294,9 +293,9 @@ const SerAgente = () => {
       </section>
 
       {/* Navegación por Tabs */}
-      <section className="sticky top-20 z-10 bg-white/80 backdrop-blur-sm border-b py-4">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <section className="sticky top-20 z-10 bg-white/80 backdrop-blur-sm border-b py-4">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <TabsList className="grid grid-cols-4 lg:w-auto mx-auto">
               <TabsTrigger value="steps" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-500">
                 Proceso
@@ -311,12 +310,11 @@ const SerAgente = () => {
                 Herramientas
               </TabsTrigger>
             </TabsList>
-          </Tabs>
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* Steps Section */}
-      <TabsContent value="steps" className="m-0">
+        {/* Steps Section */}
+        <TabsContent value="steps" className="m-0">
         <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-gray-50/50">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
@@ -394,10 +392,10 @@ const SerAgente = () => {
             </div>
           </div>
         </section>
-      </TabsContent>
+        </TabsContent>
 
-      {/* Benefits Section */}
-      <TabsContent value="benefits" className="m-0">
+        {/* Benefits Section */}
+        <TabsContent value="benefits" className="m-0">
         <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
@@ -443,10 +441,10 @@ const SerAgente = () => {
             </div>
           </div>
         </section>
-      </TabsContent>
+        </TabsContent>
 
-      {/* Requirements Section */}
-      <TabsContent value="requirements" className="m-0">
+        {/* Requirements Section */}
+        <TabsContent value="requirements" className="m-0">
         <section className="py-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
@@ -511,7 +509,7 @@ const SerAgente = () => {
                 <p className="text-gray-600 mb-6">
                   Aún puedes aplicar. Consideramos candidatos excepcionales con gran potencial de aprendizaje.
                 </p>
-                <Link to="/contact">
+                <Link to="/soporte">
                   <Button variant="outline" size="lg">
                     Contactar para Evaluación
                     <ArrowRight className="ml-2 w-5 h-5" />
@@ -521,10 +519,10 @@ const SerAgente = () => {
             </motion.div>
           </div>
         </section>
-      </TabsContent>
+        </TabsContent>
 
-      {/* Tools Section */}
-      <TabsContent value="tools" className="m-0">
+        {/* Tools Section */}
+        <TabsContent value="tools" className="m-0">
         <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-gray-50/50">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
@@ -578,7 +576,8 @@ const SerAgente = () => {
             </div>
           </div>
         </section>
-      </TabsContent>
+        </TabsContent>
+      </Tabs>
 
       {/* CTA Final */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -640,12 +639,5 @@ const SerAgente = () => {
     </div>
   );
 };
-
-// Componente Play para el botón de demo
-const Play = ({ className }: { className?: string }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-    <path d="M8 5v14l11-7z" />
-  </svg>
-);
 
 export default SerAgente;

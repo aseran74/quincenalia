@@ -185,13 +185,21 @@ const AdminDashboard = () => {
                   </div>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-black text-white border-gray-700" align="end" forceMount>
-                <DropdownMenuItem onClick={() => navigate('/dashboard/admin/profile')} className="hover:bg-white/10 text-white">
-                  <User className="mr-2 h-4 w-4 text-white" /><span>Perfil</span>
+              <DropdownMenuContent className="w-56 bg-gray-900 text-white border-gray-700 shadow-xl" align="end" forceMount>
+                <DropdownMenuItem 
+                  onClick={() => navigate('/dashboard/admin/profile')} 
+                  className="hover:bg-white/10 text-white cursor-pointer focus:bg-white/10"
+                >
+                  <User className="mr-2 h-4 w-4 text-white" />
+                  <span>Perfil</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-gray-700" />
-                <DropdownMenuItem onClick={handleLogout} className="text-red-400 hover:bg-white/10">
-                  <LogOut className="mr-2 h-4 w-4 text-red-400" /><span>Cerrar Sesión</span>
+                <DropdownMenuItem 
+                  onClick={handleLogout} 
+                  className="text-red-400 hover:bg-red-500/20 cursor-pointer focus:bg-red-500/20"
+                >
+                  <LogOut className="mr-2 h-4 w-4 text-red-400" />
+                  <span>Cerrar Sesión</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -202,17 +210,75 @@ const AdminDashboard = () => {
       {/* Content Area */}
       <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
         {/* Header */}
-        <header className="sticky top-0 z-40 flex w-full bg-white drop-shadow-1 dark:bg-boxdark dark:drop-shadow-none">
-          <div className="flex flex-grow items-center justify-between px-4 py-4 shadow-2 md:px-6 2xl:px-11">
+        <header className="sticky top-0 z-[60] flex w-full bg-white border-b border-gray-200 shadow-sm">
+          <div className="flex flex-grow items-center justify-between px-4 py-4 md:px-6 2xl:px-11 w-full">
+            {/* Botón de menú móvil */}
             <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={toggleSidebar}
-                className="z-50 block rounded-sm border border-stroke bg-white p-1.5 shadow-sm dark:border-strokedark dark:bg-boxdark lg:hidden"
+                className="lg:hidden"
               >
-                <Menu className="h-5 w-5 text-gray-600 dark:text-white" />
+                <Menu className="h-5 w-5 text-gray-600" />
               </Button>
+            </div>
+            
+            {/* User Menu en Header - Siempre visible en todas las pantallas */}
+            <div className="ml-auto flex items-center">
+              {user && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="flex items-center gap-2 hover:bg-gray-100 rounded-full px-2 py-1.5"
+                    >
+                      <Avatar className="h-9 w-9 border-2 border-gray-200 ring-2 ring-gray-100">
+                        <AvatarImage src={user?.profileImage} alt={user?.name} />
+                        <AvatarFallback className="bg-blue-600 text-white font-semibold">
+                          {user?.name?.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="hidden sm:flex flex-col items-start">
+                        <span className="text-sm font-semibold text-gray-900">{user?.name}</span>
+                        <span className="text-xs text-gray-500">{user?.email}</span>
+                      </div>
+                      <ChevronLeft className="hidden sm:block h-4 w-4 text-gray-400 rotate-90" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-64 shadow-lg" align="end" forceMount>
+                  <div className="px-2 py-3 border-b border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={user?.profileImage} alt={user?.name} />
+                        <AvatarFallback className="bg-blue-600 text-white">
+                          {user?.name?.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold">{user?.name}</span>
+                        <span className="text-xs text-gray-500">{user?.email}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <DropdownMenuItem 
+                    onClick={() => navigate('/dashboard/admin/profile')} 
+                    className="cursor-pointer py-2.5"
+                  >
+                    <User className="mr-2 h-4 w-4 text-gray-600" />
+                    <span>Mi Perfil</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleLogout} 
+                    className="text-red-600 hover:bg-red-50 cursor-pointer py-2.5 focus:bg-red-50"
+                  >
+                    <LogOut className="mr-2 h-4 w-4 text-red-600" />
+                    <span>Cerrar Sesión</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           </div>
         </header>

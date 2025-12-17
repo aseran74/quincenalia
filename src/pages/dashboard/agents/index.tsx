@@ -2,22 +2,68 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, FileText, DollarSign, User, LogOut, Menu, X as XIcon } from 'lucide-react';
+import { MessageSquare, FileText, DollarSign, User, LogOut, Menu, X as XIcon, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
-
-const agentMenu = [
-  { label: 'Solicitudes de contacto', icon: <MessageSquare className="w-5 h-5" />, path: '/dashboard/agents' },
-  { label: 'ERP', icon: <FileText className="w-5 h-5" />, path: '/dashboard/agents/erp' },
-  { label: 'Comisiones', icon: <DollarSign className="w-5 h-5" />, path: '/dashboard/agents/comisiones' },
-  { label: 'Perfil', icon: <User className="w-5 h-5" />, path: '/dashboard/agents/profile' },
-];
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export default function AgentDashboardLayout() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [assignedProperties, setAssignedProperties] = useState<Array<{ id: string; title: string }>>([]);
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchAssignedProperties();
+    }
+  }, [user]);
+
+  const fetchAssignedProperties = async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('id, title')
+        .eq('agent_id', user.id)
+        .order('title', { ascending: true });
+
+      if (error) throw error;
+      setAssignedProperties(data || []);
+    } catch (error) {
+      console.error('Error fetching assigned properties:', error);
+    }
+  };
+
+  const baseMenu = [
+    { label: 'Solicitudes de contacto', icon: <MessageSquare className="w-5 h-5" />, path: '/dashboard/agents' },
+    { label: 'ERP', icon: <FileText className="w-5 h-5" />, path: '/dashboard/agents/erp' },
+    { label: 'Comisiones', icon: <DollarSign className="w-5 h-5" />, path: '/dashboard/agents/comisiones' },
+    { label: 'Perfil', icon: <User className="w-5 h-5" />, path: '/dashboard/agents/profile' },
+  ];
+
+  // Agregar propiedades asignadas al menú
+  const agentMenu = [
+    ...baseMenu,
+    ...(assignedProperties.length > 0
+      ? [
+          { 
+            label: 'Mis Viviendas', 
+            icon: <Home className="w-5 h-5" />, 
+            path: '/dashboard/agents/properties',
+            isSection: true 
+          },
+          ...assignedProperties.map(property => ({
+            label: property.title,
+            icon: <Home className="w-4 h-4 ml-1" />,
+            path: `/dashboard/agents/properties/${property.id}`,
+            isProperty: true
+          }))
+        ]
+      : [])
+  ];
 
   const handleLogout = async () => {
     await logout();
@@ -60,23 +106,41 @@ export default function AgentDashboardLayout() {
           <div className="font-semibold text-lg text-center break-words">{user?.name}</div>
           <div className="text-xs text-gray-500 text-center break-words">{user?.email}</div>
         </div>
-        <nav className="flex-1 space-y-1">
-          {agentMenu.map(item => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-md font-medium transition-colors',
-                location.pathname === item.path
-                  ? 'bg-primary text-white'
-                  : 'text-gray-700 hover:bg-gray-100'
-              )}
-              onClick={() => setSidebarOpen(false)}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
-          ))}
+        <nav className="flex-1 space-y-1 overflow-y-auto">
+          {agentMenu.map((item, index) => {
+            const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
+            const isSection = (item as any).isSection;
+            const isProperty = (item as any).isProperty;
+
+            if (isSection) {
+              return (
+                <div key={`section-${index}`} className="pt-4 mt-4 border-t border-gray-200">
+                  <div className="flex items-center gap-3 px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    {item.icon}
+                    {item.label}
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2 rounded-md font-medium transition-colors',
+                  isActive
+                    ? 'bg-primary text-white'
+                    : 'text-gray-700 hover:bg-gray-100',
+                  isProperty && 'ml-6 text-sm'
+                )}
+                onClick={() => setSidebarOpen(false)}
+              >
+                {item.icon}
+                <span className={cn(isProperty && 'truncate')}>{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
         <Button
           variant="ghost"

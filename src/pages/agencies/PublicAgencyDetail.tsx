@@ -66,10 +66,39 @@ const PublicAgencyDetail: React.FC = () => {
   };
 
   const fetchProperties = async () => {
-    const { data, error } = await supabase
+    if (!id) return;
+    
+    // Primero obtener los agentes de la agencia
+    const { data: agents, error: agentsError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('role', 'agent')
+      .eq('agency_id', id);
+
+    if (agentsError) {
+      console.error('Error fetching agents:', agentsError);
+      return;
+    }
+
+    const agentIds = agents?.map(a => a.id) || [];
+
+    // Obtener propiedades: por agency_id directo O por agent_id de los agentes
+    let propertiesQuery = supabase
       .from('properties')
       .select('*')
-      .eq('agency_id', id);
+      .order('created_at', { ascending: false });
+
+    if (agentIds.length > 0) {
+      // Buscar propiedades con agency_id O con agent_id de los agentes
+      propertiesQuery = propertiesQuery.or(
+        `agency_id.eq.${id},agent_id.in.(${agentIds.join(',')})`
+      );
+    } else {
+      // Si no hay agentes, solo buscar por agency_id
+      propertiesQuery = propertiesQuery.eq('agency_id', id);
+    }
+
+    const { data, error } = await propertiesQuery;
 
     if (!error && data) {
       setProperties(data as unknown as Property[]);

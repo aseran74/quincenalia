@@ -176,10 +176,27 @@ const ZONAS_OPTIONS = [
 ];
 
 const PropertyForm: FC<PropertyFormProps> = ({ isEditing = false }) => {
-  if (isEditing) {
-    return <EditProperty />;
+  try {
+    if (isEditing) {
+      return <EditProperty />;
+    }
+    return <AddProperty2 />;
+  } catch (error) {
+    console.error('Error rendering PropertyForm:', error);
+    return (
+      <div className="container mx-auto py-8">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Error al cargar el formulario. Por favor, recarga la página.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded"
+          >
+            Recargar
+          </button>
+        </div>
+      </div>
+    );
   }
-  return <AddProperty2 />;
 };
 
 export default PropertyForm; 

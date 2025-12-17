@@ -11,6 +11,10 @@ import AgencyForm from './pages/dashboard/agencies/AgencyForm';
 import AgentsList from './pages/dashboard/agents/AgentsList';
 import AgentForm from './pages/dashboard/agents/AgentForm';
 import AgencyDetail from './pages/dashboard/agencies/AgencyDetail';
+import AgencyDashboard from './components/dashboards/AgencyDashboard';
+import AgencyDashboardLayout from './pages/dashboard/agencies/AgencyDashboardLayout';
+import AgencyMessages from './pages/dashboard/agencies/AgencyMessages';
+import AgencyProperties from './pages/dashboard/agencies/AgencyProperties';
 import AgentDetail from './pages/dashboard/agents/AgentDetail';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import OwnersList from './pages/admin/owners/OwnersList';
@@ -50,6 +54,7 @@ import ContactRequestsTable from '@/components/ContactRequestsTable';
 import AgentErpPage from './pages/dashboard/agents/erp';
 import AgentComisionesPage from './pages/dashboard/agents/comisiones';
 import AgentProfilePage from './pages/dashboard/agents/profile';
+import AgentProperties from './pages/dashboard/agents/properties';
 import ProteccionDatos from './pages/ProteccionDatos';
 import PoliticaPrivacidad from './pages/PoliticaPrivacidad';
 import Favorites from './pages/dashboard/profile/Favorites';
@@ -131,6 +136,20 @@ function App() {
             <Route path="profile/favorites" element={<Favorites />} />
           </Route>
 
+          {/* Dashboard de Agencias con Layout Específico */}
+          <Route path="/dashboard/agencies" element={<ProtectedRoute><AgencyDashboardLayout /></ProtectedRoute>}>
+            <Route index element={<AgencyDashboard />} />
+            <Route path="list" element={<AgenciesList />} />
+            <Route path="new" element={<AgencyForm />} />
+            <Route path="properties" element={<AgencyProperties />} />
+            <Route path="properties/:id" element={<PropertyDetail />} />
+            <Route path=":id" element={<AgencyDetail />} />
+            <Route path=":id/edit" element={<AgencyForm isEditing />} />
+            <Route path=":id/agents" element={<AgentsList />} />
+            <Route path=":id/agents/new" element={<AgentForm />} />
+            <Route path=":id/messages" element={<AgencyMessages />} />
+          </Route>
+
           {/* Dashboard de Administración */}
           <Route path="/dashboard/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>}>
             <Route index element={<AdminHome />} />
@@ -169,6 +188,8 @@ function App() {
             <Route path="erp" element={<AgentErpPage />} />
             <Route path="comisiones" element={<AgentComisionesPage />} />
             <Route path="profile" element={<AgentProfilePage />} />
+            <Route path="properties" element={<AgentProperties />} />
+            <Route path="properties/:id" element={<PropertyDetail />} />
           </Route>
         </Routes>
       </AuthProvider>
