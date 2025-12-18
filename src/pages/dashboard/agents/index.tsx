@@ -71,12 +71,12 @@ export default function AgentDashboardLayout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[#F2F3F4]">
       {/* Botón hamburguesa solo en móvil */}
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-50 md:hidden"
+        className="fixed top-4 left-4 z-50 md:hidden bg-black text-white border border-white/10 shadow-md hover:bg-neutral-900"
         onClick={() => setSidebarOpen(true)}
         aria-label="Abrir menú"
       >
@@ -88,13 +88,13 @@ export default function AgentDashboardLayout() {
       )}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-50 h-screen bg-white border-r flex flex-col py-6 px-4 w-64 transition-transform duration-300 md:relative md:translate-x-0",
+          "fixed top-0 left-0 z-50 h-screen bg-black text-white border-r border-white/10 flex flex-col py-6 px-4 w-64 transition-transform duration-300 md:relative md:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
         {/* Botón cerrar en móvil */}
         <div className="flex justify-end md:hidden mb-2">
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)} aria-label="Cerrar menú">
+          <Button variant="ghost" size="icon" className="text-white hover:bg-white/10" onClick={() => setSidebarOpen(false)} aria-label="Cerrar menú">
             <XIcon className="h-6 w-6" />
           </Button>
         </div>
@@ -104,7 +104,7 @@ export default function AgentDashboardLayout() {
             <AvatarFallback>{user?.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="font-semibold text-lg text-center break-words">{user?.name}</div>
-          <div className="text-xs text-gray-500 text-center break-words">{user?.email}</div>
+          <div className="text-xs text-white/70 text-center break-words">{user?.email}</div>
         </div>
         <nav className="flex-1 space-y-1 overflow-y-auto">
           {agentMenu.map((item, index) => {
@@ -114,8 +114,8 @@ export default function AgentDashboardLayout() {
 
             if (isSection) {
               return (
-                <div key={`section-${index}`} className="pt-4 mt-4 border-t border-gray-200">
-                  <div className="flex items-center gap-3 px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <div key={`section-${index}`} className="pt-4 mt-4 border-t border-white/10">
+                  <div className="flex items-center gap-3 px-3 py-2 text-xs font-semibold text-white/60 uppercase tracking-wider">
                     {item.icon}
                     {item.label}
                   </div>
@@ -130,8 +130,8 @@ export default function AgentDashboardLayout() {
                 className={cn(
                   'flex items-center gap-3 px-3 py-2 rounded-md font-medium transition-colors',
                   isActive
-                    ? 'bg-primary text-white'
-                    : 'text-gray-700 hover:bg-gray-100',
+                    ? 'bg-white/15 text-white'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white',
                   isProperty && 'ml-6 text-sm'
                 )}
                 onClick={() => setSidebarOpen(false)}
@@ -144,7 +144,7 @@ export default function AgentDashboardLayout() {
         </nav>
         <Button
           variant="ghost"
-          className="mt-8 flex items-center gap-2 text-red-600 justify-center"
+          className="mt-8 flex items-center gap-2 text-red-200 justify-center hover:bg-red-500/15 hover:text-red-100"
           onClick={handleLogout}
         >
           <LogOut className="w-5 h-5" />
@@ -152,7 +152,7 @@ export default function AgentDashboardLayout() {
         </Button>
       </aside>
       {/* Contenido principal */}
-      <main className="flex-1 p-2 sm:p-4 md:p-6 transition-all duration-300">
+      <main className="flex-1 p-2 sm:p-4 md:p-6 transition-all duration-300 bg-[#F2F3F4]">
         <Outlet />
       </main>
     </div>

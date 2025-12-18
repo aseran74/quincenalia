@@ -28,15 +28,19 @@ export const HeartButton: React.FC<HeartButtonProps> = ({ propertyId, className 
           .select('*')
           .eq('user_id', user.id)
           .eq('property_id', propertyId)
-          .single();
+          .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') {
+        // Si no existe, maybeSingle devuelve data=null sin error
+        if (error) {
           console.error('Error checking favorite:', error);
+          setIsFavorite(false);
+          return;
         }
 
         setIsFavorite(!!data);
       } catch (error) {
         console.error('Error checking favorite:', error);
+        setIsFavorite(false);
       }
     };
 
@@ -86,9 +90,17 @@ export const HeartButton: React.FC<HeartButtonProps> = ({ propertyId, className 
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);
+      const anyErr = error as any;
+      const msg = anyErr?.message || anyErr?.error_description || 'No se pudo actualizar favoritos.';
+      const isUuidTypeError =
+        anyErr?.code === '22P02' ||
+        String(msg).toLowerCase().includes('invalid input syntax for type uuid') ||
+        String(msg).toLowerCase().includes('uuid');
       toast({
         title: "Error",
-        description: "No se pudo actualizar favoritos. Inténtalo de nuevo.",
+        description: isUuidTypeError
+          ? "No se pudo guardar el favorito por un problema de tipo en la tabla 'favorites' (user_id). Aplica la migración 20250109_create_or_fix_favorites.sql y recarga."
+          : "No se pudo actualizar favoritos. Inténtalo de nuevo.",
         variant: "destructive",
       });
     } finally {

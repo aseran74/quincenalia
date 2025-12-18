@@ -19,8 +19,12 @@ const DashboardRedirect = () => {
     } else if (user.role === 'agent') {
       navigate('/dashboard/admin/agents');
     } else if (user.role === 'guest' || user.role === 'interested') {
-      // Usuarios guest/interested van a la página de propiedades públicas
-      navigate('/properties');
+      // Guest: a propiedades públicas. Interested: a su panel.
+      if (user.role === 'guest') {
+        navigate('/properties');
+      } else {
+        navigate('/dashboard/interested');
+      }
     } else {
       navigate('/dashboard');
     }

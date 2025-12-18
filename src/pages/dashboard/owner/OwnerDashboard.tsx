@@ -124,7 +124,7 @@ const OwnerDashboard: React.FC = () => {
   const mainContentMarginClass = 'lg:ml-64';
 
   return (
-    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+    <div className="flex min-h-screen bg-[#F2F3F4] text-gray-800">
 
       {/* Botón para abrir/cerrar en móvil (usando react-icons) */}
       <Button
@@ -132,7 +132,7 @@ const OwnerDashboard: React.FC = () => {
         variant="ghost"
         size="icon"
         onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-[60] lg:hidden bg-white dark:bg-gray-800 p-2 rounded-md shadow-md border border-gray-200 dark:border-gray-700"
+        className="fixed top-4 left-4 z-[60] lg:hidden bg-black text-white p-2 rounded-md shadow-md border border-white/10 hover:bg-neutral-900"
         aria-label={isSidebarOpen ? "Cerrar menú" : "Abrir menú"}
         aria-controls={SIDEBAR_ID}
         aria-expanded={isSidebarOpen}
@@ -155,7 +155,7 @@ const OwnerDashboard: React.FC = () => {
         id={SIDEBAR_ID}
         ref={sidebarRef}
         className={cn(
-          "fixed left-0 top-0 z-50 flex h-screen flex-col bg-white dark:bg-gray-800 shadow-lg lg:shadow-md duration-300 ease-in-out",
+          "fixed left-0 top-0 z-50 flex h-screen flex-col bg-black text-white shadow-lg lg:shadow-md duration-300 ease-in-out",
           "lg:static lg:translate-x-0",
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full',
           sidebarWidthClass
@@ -163,13 +163,13 @@ const OwnerDashboard: React.FC = () => {
         aria-hidden={isMobile ? !isSidebarOpen : undefined}
       >
         {/* Cabecera del Sidebar - Solo visible en desktop */}
-        <div className="hidden lg:flex items-center justify-center p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="hidden lg:flex items-center justify-center p-4 border-b border-white/10">
            {/* Logo */}
            <div className="flex items-center justify-center">
              <img 
                src={`${window.location.origin}/logo.png`} 
                alt="Quincenalia" 
-               className="h-8 w-auto object-contain"
+               className="h-8 w-auto object-contain brightness-0 invert"
                onError={(e) => {
                  console.log('Error loading logo, using fallback');
                  e.currentTarget.style.display = 'none';
@@ -194,15 +194,15 @@ const OwnerDashboard: React.FC = () => {
                     className={cn(
                       "w-full justify-start gap-3 px-3 py-2.5 rounded-md text-sm font-medium",
                       finalIsActive
-                        ? "bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-300"
-                        : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
+                        ? "bg-white/15 text-white hover:bg-white/20"
+                        : "text-white/80 hover:bg-white/10 hover:text-white"
                     )}
                     onClick={() => {
                       navigate(item.path);
                       closeSidebar();
                     }}
                   >
-                    <span className={cn("flex-shrink-0 w-5 h-5", finalIsActive ? "text-blue-600 dark:text-blue-300" : "")}>{item.icon}</span>
+                    <span className={cn("flex-shrink-0 w-5 h-5", finalIsActive ? "text-white" : "text-white/80")}>{item.icon}</span>
                     <span className="truncate">{item.label}</span>
                   </Button>
               );
@@ -210,21 +210,21 @@ const OwnerDashboard: React.FC = () => {
           </div>
 
           {/* Perfil del usuario y Logout */}
-          <div className="p-2 mt-auto border-t border-gray-200 dark:border-gray-700 space-y-2">
+          <div className="p-2 mt-auto border-t border-white/10 space-y-2">
             {/* Perfil del usuario */}
-            <div className="flex items-center gap-3 px-3 py-2 rounded-md bg-gray-50 dark:bg-gray-700">
+            <div className="flex items-center gap-3 px-3 py-2 rounded-md bg-white/10">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={user?.profileImage || undefined} alt={user?.name || 'P'} />
-                <AvatarFallback className="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-sm">
+                <AvatarFallback className="bg-white/15 text-white text-sm">
                   {user?.name ? user.name.substring(0, 1).toUpperCase() : (user?.email ? user.email.substring(0, 1).toUpperCase() : 'P')}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col overflow-hidden flex-grow min-w-0">
-                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{user?.name || 'Propietario'}</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                <h3 className="text-sm font-semibold text-white truncate">{user?.name || 'Propietario'}</h3>
+                <p className="text-xs text-white/70 truncate">{user?.email}</p>
                 {/* Display user points */}
                 {!authLoading && user && user.role === 'owner' && 'points' in user && (
-                  <div className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded px-1 py-0.5 mt-1 inline-block">
+                  <div className="text-xs bg-white/15 text-white rounded px-1 py-0.5 mt-1 inline-block">
                     {(user as Owner).points} Pts
                   </div>
                 )}
@@ -234,7 +234,7 @@ const OwnerDashboard: React.FC = () => {
             {/* Botón de Logout */}
             <Button
               variant="ghost"
-              className="w-full justify-start gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-300"
+              className="w-full justify-start gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-red-200 hover:bg-red-500/15 hover:text-red-100"
               onClick={handleLogout}
             >
               <FaSignOutAlt className="w-5 h-5 flex-shrink-0" />
@@ -246,12 +246,12 @@ const OwnerDashboard: React.FC = () => {
 
       {/* Contenido Principal */}
       <div className={cn(
-          "relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden transition-margin duration-300 ease-in-out",
+          "relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden transition-margin duration-300 ease-in-out bg-[#F2F3F4]",
           isSidebarOpen ? mainContentMarginClass : "lg:ml-0"
         )}
       >
          {/* Cabecera simple del contenido principal */}
-         <header className="sticky top-0 z-30 flex w-full bg-white dark:bg-gray-800 shadow-sm dark:border-b dark:border-gray-700 lg:hidden"> {/* Oculto en desktop */}
+         <header className="sticky top-0 z-30 flex w-full bg-black text-white shadow-sm border-b border-white/10 lg:hidden"> {/* Oculto en desktop */}
              <div className="flex items-center justify-between px-4 py-3 w-full">
                  {/* Espacio para el botón de menú en móvil */}
                  <div className="w-10 h-10"></div>
@@ -261,7 +261,7 @@ const OwnerDashboard: React.FC = () => {
                    <img 
                      src={`${window.location.origin}/logo.png`} 
                      alt="Quincenalia" 
-                     className="h-8 w-auto object-contain"
+                     className="h-8 w-auto object-contain brightness-0 invert"
                      onError={(e) => {
                        console.log('Error loading logo, using fallback');
                        e.currentTarget.style.display = 'none';

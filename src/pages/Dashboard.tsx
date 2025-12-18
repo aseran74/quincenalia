@@ -1,5 +1,5 @@
 import React, { useEffect, useState, ReactNode } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend
 } from 'recharts';
+import { useAuth } from '@/context/AuthContext';
 
 const COLORS = ['#22c55e', '#ef4444', '#6366f1', '#f59e42'];
 
@@ -16,6 +17,7 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ children }) => {
   const location = useLocation();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalProperties: 0,
@@ -83,11 +85,16 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-[#F2F3F4]">
       <Navbar />
       <div className="flex">
         <main className="flex-1">
           {location.pathname === '/dashboard' ? (
+            user?.role === 'interested' ? (
+              <Navigate to="/dashboard/interested" replace />
+            ) : user?.role === 'guest' ? (
+              <Navigate to="/properties" replace />
+            ) : (
             children || (
               <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-1 sm:px-2 md:px-6">
                 {loading ? (
@@ -151,6 +158,7 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                   </>
                 )}
               </div>
+            )
             )
           ) : (
             <Outlet />

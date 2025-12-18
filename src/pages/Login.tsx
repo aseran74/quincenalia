@@ -25,9 +25,9 @@ const getDashboardPath = (role: string) => {
     case 'agent':
       return '/dashboard/agents';
     case 'interested':
-      return '/dashboard';
+      return '/dashboard/interested';
     case 'guest':
-      return '/dashboard';
+      return '/properties';
     default:
       return '/dashboard';
   }

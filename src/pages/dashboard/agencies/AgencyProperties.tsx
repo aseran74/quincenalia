@@ -167,5 +167,3 @@ const AgencyProperties: React.FC = () => {
 };
 
 export default AgencyProperties;
-
-

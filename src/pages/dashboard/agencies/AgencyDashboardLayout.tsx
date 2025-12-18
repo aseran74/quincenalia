@@ -38,8 +38,8 @@ const SidebarLink = ({ to, icon, children, agencyId, onNavigate }: SidebarLinkPr
       className={cn(
         'flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors',
         isActive
-          ? 'bg-blue-100 text-blue-700 font-semibold'
-          : 'text-gray-700 hover:bg-gray-100'
+          ? 'bg-white/15 text-white font-semibold'
+          : 'text-white/80 hover:bg-white/10 hover:text-white'
       )}
     >
       {icon}
@@ -132,7 +132,7 @@ const AgencyDashboardLayout = ({ children }: { children?: React.ReactNode }) => 
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[#F2F3F4]">
       {/* Overlay para móvil */}
       {isSidebarOpen && isMobile && (
         <div
@@ -145,7 +145,7 @@ const AgencyDashboardLayout = ({ children }: { children?: React.ReactNode }) => 
       <aside
         ref={sidebarRef}
         className={cn(
-          "fixed left-0 top-0 z-50 flex h-screen flex-col overflow-y-auto bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
+          "fixed left-0 top-0 z-50 flex h-screen flex-col overflow-y-auto bg-black text-white border-r border-white/10 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           isSidebarOpen ? 'w-64' : 'w-0 lg:w-64'
         )}
@@ -153,13 +153,13 @@ const AgencyDashboardLayout = ({ children }: { children?: React.ReactNode }) => 
         <div className="flex flex-col h-full p-4">
           {/* Header del Sidebar */}
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-xl font-bold text-gray-800">Dashboard Agencia</h2>
+            <h2 className="text-xl font-bold text-white">Dashboard Agencia</h2>
             {isMobile && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={closeSidebar}
-                className="lg:hidden"
+                className="lg:hidden text-white hover:bg-white/10"
               >
                 <X className="h-5 w-5" />
               </Button>
@@ -206,12 +206,12 @@ const AgencyDashboardLayout = ({ children }: { children?: React.ReactNode }) => 
           </nav>
 
           {/* User Profile en Sidebar */}
-          <div className="mt-auto pt-4 border-t border-gray-200">
+          <div className="mt-auto pt-4 border-t border-white/10">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start gap-2 hover:bg-gray-100"
+                  className="w-full justify-start gap-2 text-white hover:bg-white/10"
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user?.profileImage} alt={user?.name} />
@@ -219,7 +219,7 @@ const AgencyDashboardLayout = ({ children }: { children?: React.ReactNode }) => 
                   </Avatar>
                   <div className="flex flex-col items-start overflow-hidden">
                     <span className="text-sm font-medium truncate">{user?.name}</span>
-                    <span className="text-xs text-gray-500 truncate">{user?.email}</span>
+                    <span className="text-xs text-white/70 truncate">{user?.email}</span>
                   </div>
                 </Button>
               </DropdownMenuTrigger>
@@ -240,16 +240,16 @@ const AgencyDashboardLayout = ({ children }: { children?: React.ReactNode }) => 
       </aside>
 
       {/* Content Area */}
-      <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+      <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden bg-[#F2F3F4]">
         {/* Header */}
-        <header className="sticky top-0 z-40 flex w-full bg-white border-b border-gray-200 shadow-sm">
+        <header className="sticky top-0 z-40 flex w-full bg-black text-white border-b border-white/10 shadow-sm">
           <div className="flex flex-grow items-center justify-between px-4 py-4 md:px-6">
             <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={toggleSidebar}
-                className="lg:hidden"
+                className="lg:hidden text-white hover:bg-white/10"
               >
                 <Menu className="h-5 w-5" />
               </Button>
@@ -260,13 +260,13 @@ const AgencyDashboardLayout = ({ children }: { children?: React.ReactNode }) => 
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="flex items-center gap-2 hover:bg-gray-100"
+                    className="flex items-center gap-2 text-white hover:bg-white/10"
                   >
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user?.profileImage} alt={user?.name} />
                       <AvatarFallback>{user?.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    <span className="hidden sm:block text-sm font-medium">{user?.name}</span>
+                    <span className="hidden sm:block text-sm font-medium text-white">{user?.name}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end">
@@ -286,7 +286,7 @@ const AgencyDashboardLayout = ({ children }: { children?: React.ReactNode }) => 
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
+        <main className="flex-1 p-4 md:p-6 lg:p-8 bg-[#F2F3F4]">
           {children || <Outlet />}
         </main>
       </div>

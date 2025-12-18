@@ -105,4 +105,3 @@ node scripts/apply-rls-policies.mjs "tu-service-role-key"
 4. Verifica en el dashboard de Supabase que los usuarios se crearon en Auth > Users
 5. Verifica que las políticas RLS estén aplicadas en: Authentication > Policies > profiles
 
-

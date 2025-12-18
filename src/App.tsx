@@ -68,6 +68,7 @@ import SerAgente from './pages/ser-agente';
 import Ventajas from './pages/ventajas';
 import ComoReservar from './pages/como-reservar';
 import Soporte from './pages/soporte';
+import InterestedDashboard from './pages/dashboard/interested/InterestedDashboard';
 
 const Profile = () => (
   <div style={{ padding: 32 }}>
@@ -130,6 +131,8 @@ function App() {
             <Route path="reservations" element={<ReservationCalendar />} />
             <Route path="properties/:id/reservations" element={<ReservationCalendar />} />
             <Route path="properties/reservas" element={<ReservationCalendar />} />
+            {/* Dashboard de Interesado */}
+            <Route path="interested" element={<InterestedDashboard />} />
             {/* Ruta de perfil del usuario */}
             <Route path="profile" element={<ProfilePanel />} />
             {/* Ruta de favoritos del usuario */}

@@ -51,5 +51,3 @@ WITH CHECK (
     AND role = 'admin'
   )
 );
-
-

@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('id, name, auth_user_id')
         .eq(queryField, userId)
-        .single();
+        .maybeSingle();
 
       // Si hay un error al buscar y no es porque no existe, loguear el error
       if (fetchError && fetchError.code !== 'PGRST116') {
@@ -75,24 +75,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           profileData.profile_image = profileImage;
         }
 
-        const { error: insertError } = await supabase
+        console.log('Attempting to insert profile with data:', {
+          id: profileData.id,
+          name: profileData.name,
+          role: profileData.role,
+          auth_user_id: profileData.auth_user_id,
+          profile_image: profileData.profile_image ? 'present' : 'missing'
+        });
+
+        // Intentar insertar el perfil
+        // Nota: No usar .single() en insert, solo en select
+        const { data: insertData, error: insertError } = await supabase
           .from('profiles')
-          .insert([profileData]);
+          .insert([profileData])
+          .select();
 
         if (insertError) {
-          console.error('Error creating profile:', insertError);
+          console.error('❌ Error creating profile:', insertError);
+          console.error('Error details:', {
+            message: insertError.message,
+            code: insertError.code,
+            details: insertError.details,
+            hint: insertError.hint,
+            fullError: JSON.stringify(insertError, null, 2)
+          });
+
+          // Mostrar el error completo en un alert para debugging
+          if (insertError.message?.includes('granted') || insertError.message?.includes('granting')) {
+            alert(`Error al crear perfil:\n\n${insertError.message}\n\nCódigo: ${insertError.code}\n\nDetalles: ${JSON.stringify(insertError.details || {}, null, 2)}`);
+          }
+
           // Si el error es por auth_user_id siendo UUID, intentar sin ese campo
           if (insertError.message?.includes('uuid') || insertError.code === '22P02') {
             // Intentar crear sin auth_user_id si hay un problema de tipo
             const retryData = { ...profileData };
             delete retryData.auth_user_id;
-            
-            const { error: retryError } = await supabase
+
+            const { data: retryDataResult, error: retryError } = await supabase
               .from('profiles')
-              .insert([retryData]);
-            
+              .insert([retryData])
+              .select();
+
             if (retryError) {
               console.error('Error creating profile (retry):', retryError);
+              console.error('Retry error details:', {
+                message: retryError.message,
+                code: retryError.code,
+                details: retryError.details,
+                hint: retryError.hint
+              });
+            } else {
+              console.log('Profile created successfully on retry');
             }
           }
           // No lanzar el error, solo loguearlo para que no rompa el flujo de autenticación
@@ -184,7 +217,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .from('profiles')
             .select('id, name, role, profile_image')
             .eq('auth_user_id', firebaseUser.uid)
-            .single();
+            .maybeSingle();
 
           if (profileData && !profileError) {
             const newUser: AppUser = {
@@ -263,16 +296,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                           session.data.session?.user.user_metadata?.name || 
                           email.split('@')[0] || 'Usuario';
         
-        const { error: insertError } = await supabase
+        console.log('Attempting to insert profile on fetch with data:', {
+          id: userId,
+          name: displayName,
+          role: 'interested'
+        });
+
+        const { data: insertData, error: insertError } = await supabase
           .from('profiles')
           .insert([{
             id: userId,
             name: displayName,
             role: 'interested'
-          }]);
+          }])
+          .select();
 
         if (insertError) {
-          console.error('Error creating profile on fetch:', insertError);
+          console.error('❌ Error creating profile on fetch:', insertError);
+          console.error('Error details:', {
+            message: insertError.message,
+            code: insertError.code,
+            details: insertError.details,
+            hint: insertError.hint,
+            fullError: JSON.stringify(insertError, null, 2)
+          });
           // Si falla, usar datos básicos del usuario
           const fallbackUser: AppUser = {
             id: userId,

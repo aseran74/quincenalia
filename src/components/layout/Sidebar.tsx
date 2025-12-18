@@ -89,6 +89,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobile }) => {
     (item) => user && item.roles.includes(user.role)
   );
 
+  const resolvePath = (path: string) => {
+    if (!user) return path;
+    // Evitar que el rol interested caiga en el dashboard de KPIs globales
+    if (user.role === 'interested' && path === '/dashboard') return '/dashboard/interested';
+    return path;
+  };
+
   return (
     <aside className={cn(
       "fixed top-0 left-0 z-40 h-screen bg-white shadow-md transition-transform duration-300 ease-in-out min-w-[64px]",
@@ -139,7 +146,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobile }) => {
         {/* Navegación */}
         <nav className="mt-4 flex-1 overflow-y-auto">
           {filteredItems.map((item) => (
-            <Link key={item.path} to={item.path}>
+            <Link key={item.path} to={resolvePath(item.path)}>
               <Button
                 variant={location.pathname.startsWith(item.path) ? "secondary" : "ghost"}
                 className={cn(

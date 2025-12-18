@@ -5,6 +5,7 @@ import { PropertyCard } from '@/components/properties/PropertyCard';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { toast } from '@/components/ui/use-toast';
 
 const Favorites = () => {
   const { user, isAuthenticated } = useAuth();
@@ -15,16 +16,43 @@ const Favorites = () => {
     const fetchFavorites = async () => {
       if (!user) return;
       setLoading(true);
-      // Obtener los favoritos del usuario y las propiedades asociadas
-      const { data, error } = await supabase
-        .from('favorites')
-        .select('property_id, properties(*)')
-        .eq('user_id', user.id);
-      if (!error && data) {
-        // Extraer las propiedades asociadas
-        setProperties(data.map((fav: any) => fav.properties));
+      try {
+        // 1) Obtener IDs de favoritos
+        const { data: favs, error: favsError } = await supabase
+          .from('favorites')
+          .select('property_id')
+          .eq('user_id', user.id);
+
+        if (favsError) throw favsError;
+
+        const ids = (favs || [])
+          .map((f: any) => f.property_id)
+          .filter((id: any): id is string => Boolean(id));
+
+        if (ids.length === 0) {
+          setProperties([]);
+          return;
+        }
+
+        // 2) Cargar propiedades en lote
+        const { data: props, error: propsError } = await supabase
+          .from('properties')
+          .select('*')
+          .in('id', ids);
+
+        if (propsError) throw propsError;
+        setProperties(props || []);
+      } catch (e: any) {
+        console.error('Error cargando favoritos:', e);
+        setProperties([]);
+        toast({
+          title: 'No se pudieron cargar los favoritos',
+          description: e?.message || 'Revisa permisos / conexión',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     if (user) fetchFavorites();
   }, [user]);

@@ -56,7 +56,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, requireAuth = true }) =
         return <Navigate to="/dashboard/agents" />;
       case 'guest':
       case 'interested':
-        return <Navigate to="/properties" />;
+        return <Navigate to={user.role === 'interested' ? "/dashboard/interested" : "/properties"} />;
       default:
         return <Navigate to="/dashboard" />;
     }

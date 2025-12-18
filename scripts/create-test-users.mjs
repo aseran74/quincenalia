@@ -228,5 +228,3 @@ async function createTestUsers() {
 
 // Ejecutar el script
 createTestUsers().catch(console.error);
-
-
