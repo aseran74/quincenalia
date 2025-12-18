@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
-import { Pencil, Trash2, Plus, Home, Mail, Phone } from 'lucide-react';
+import { Pencil, Trash2, Plus, Home, Mail, Phone, Search, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
 
 interface Owner {
   id: string;
@@ -24,6 +25,7 @@ interface Owner {
 const OwnersList = () => {
   const [owners, setOwners] = useState<Owner[]>([]);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,6 +53,17 @@ const OwnersList = () => {
     }
   };
 
+  const filteredOwners = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return owners;
+    return owners.filter((o) => {
+      const fullName = `${o.first_name || ''} ${o.last_name || ''}`.trim().toLowerCase();
+      const email = (o.email || '').toLowerCase();
+      const phone = (o.phone || '').toLowerCase();
+      return fullName.includes(q) || email.includes(q) || phone.includes(q);
+    });
+  }, [owners, query]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -61,16 +74,43 @@ const OwnersList = () => {
 
   return (
     <div className="p-4 md:p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold">Propietarios</h1>
-        <Button onClick={() => navigate('/dashboard/admin/owners/new')}>
-          <Plus className="h-5 w-5 mr-2" />
-          Nuevo Propietario
-        </Button>
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h1 className="text-2xl md:text-3xl font-bold">Propietarios</h1>
+          <Button onClick={() => navigate('/dashboard/admin/owners/new')}>
+            <Plus className="h-5 w-5 mr-2" />
+            Nuevo Propietario
+          </Button>
+        </div>
+
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="relative w-full md:max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar propietario por nombre, email o teléfono..."
+              className="pl-9 pr-9"
+            />
+            {query.trim() && (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100"
+                aria-label="Limpiar búsqueda"
+              >
+                <X className="h-4 w-4 text-gray-500" />
+              </button>
+            )}
+          </div>
+          <div className="text-sm text-gray-600">
+            Mostrando <b>{filteredOwners.length}</b> de <b>{owners.length}</b>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {owners.map((owner) => (
+        {filteredOwners.map((owner) => (
           <Card 
             key={owner.id}
             className="group cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
@@ -153,6 +193,12 @@ const OwnersList = () => {
           </Card>
         ))}
       </div>
+
+      {!filteredOwners.length && owners.length > 0 && (
+        <div className="mt-10 text-center text-gray-600">
+          No hay resultados para <b>{query.trim()}</b>.
+        </div>
+      )}
     </div>
   );
 };

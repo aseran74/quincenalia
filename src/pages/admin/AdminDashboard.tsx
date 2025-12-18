@@ -210,18 +210,29 @@ const AdminDashboard = () => {
       {/* Content Area */}
       <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
         {/* Header */}
-        <header className="sticky top-0 z-[60] flex w-full bg-white border-b border-gray-200 shadow-sm">
-          <div className="flex flex-grow items-center justify-between px-4 py-4 md:px-6 2xl:px-11 w-full">
+        <header className="sticky top-0 z-[60] flex w-full bg-[#064D82] text-white border-b border-white/10 shadow-sm">
+          <div className="relative flex flex-grow items-center justify-between px-4 py-3 md:px-6 2xl:px-11 w-full">
             {/* Botón de menú móvil */}
             <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={toggleSidebar}
-                className="lg:hidden"
+                className="lg:hidden text-white hover:bg-white/10"
               >
-                <Menu className="h-5 w-5 text-gray-600" />
+                <Menu className="h-5 w-5 text-white" />
               </Button>
+            </div>
+
+            {/* Logo centrado */}
+            <div className="absolute left-1/2 -translate-x-1/2">
+              <a href="/dashboard/admin" className="flex items-center justify-center">
+                <img
+                  src="/logo-blanco.png"
+                  alt="Quincenalia"
+                  className="h-8 w-auto object-contain"
+                />
+              </a>
             </div>
             
             {/* User Menu en Header - Siempre visible en todas las pantallas */}
@@ -231,19 +242,19 @@ const AdminDashboard = () => {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="flex items-center gap-2 hover:bg-gray-100 rounded-full px-2 py-1.5"
+                      className="flex items-center gap-2 hover:bg-white/10 rounded-full px-2 py-1.5 text-white"
                     >
-                      <Avatar className="h-9 w-9 border-2 border-gray-200 ring-2 ring-gray-100">
+                      <Avatar className="h-9 w-9 border-2 border-white/15 ring-2 ring-white/10">
                         <AvatarImage src={user?.profileImage} alt={user?.name} />
-                        <AvatarFallback className="bg-blue-600 text-white font-semibold">
+                        <AvatarFallback className="bg-white/15 text-white font-semibold">
                           {user?.name?.substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="hidden sm:flex flex-col items-start">
-                        <span className="text-sm font-semibold text-gray-900">{user?.name}</span>
-                        <span className="text-xs text-gray-500">{user?.email}</span>
+                        <span className="text-sm font-semibold text-white">{user?.name}</span>
+                        <span className="text-xs text-white/70">{user?.email}</span>
                       </div>
-                      <ChevronLeft className="hidden sm:block h-4 w-4 text-gray-400 rotate-90" />
+                      <ChevronLeft className="hidden sm:block h-4 w-4 text-white/70 rotate-90" />
                     </Button>
                   </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-64 shadow-lg" align="end" forceMount>
