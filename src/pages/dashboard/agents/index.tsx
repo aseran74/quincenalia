@@ -13,6 +13,7 @@ export default function AgentDashboardLayout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [assignedProperties, setAssignedProperties] = useState<Array<{ id: string; title: string }>>([]);
+  const [loadingProperties, setLoadingProperties] = useState(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -24,6 +25,7 @@ export default function AgentDashboardLayout() {
     if (!user?.id) return;
 
     try {
+      setLoadingProperties(true);
       const { data, error } = await supabase
         .from('properties')
         .select('id, title')
@@ -34,6 +36,8 @@ export default function AgentDashboardLayout() {
       setAssignedProperties(data || []);
     } catch (error) {
       console.error('Error fetching assigned properties:', error);
+    } finally {
+      setLoadingProperties(false);
     }
   };
 
@@ -70,22 +74,27 @@ export default function AgentDashboardLayout() {
     navigate('/login');
   };
 
+  const pageTitle =
+    location.pathname === '/dashboard/agents'
+      ? 'Solicitudes de contacto'
+      : location.pathname.startsWith('/dashboard/agents/erp')
+        ? 'ERP'
+        : location.pathname.startsWith('/dashboard/agents/comisiones')
+          ? 'Comisiones'
+          : location.pathname.startsWith('/dashboard/agents/profile')
+            ? 'Perfil'
+            : location.pathname.startsWith('/dashboard/agents/properties')
+              ? 'Mis Viviendas'
+              : 'Dashboard';
+
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Botón hamburguesa solo en móvil */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed top-4 left-4 z-50 md:hidden"
-        onClick={() => setSidebarOpen(true)}
-        aria-label="Abrir menú"
-      >
-        <Menu className="h-6 w-6" />
-      </Button>
-      {/* Overlay y sidebar en móvil */}
+      {/* Overlay en móvil */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
+
+      {/* Sidebar */}
       <aside
         className={cn(
           "fixed top-0 left-0 z-50 h-screen bg-white border-r flex flex-col py-6 px-4 w-64 transition-transform duration-300 md:relative md:translate-x-0",
@@ -118,6 +127,11 @@ export default function AgentDashboardLayout() {
                   <div className="flex items-center gap-3 px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     {item.icon}
                     {item.label}
+                    {loadingProperties && (
+                      <span className="ml-auto text-[11px] font-normal text-gray-400 normal-case tracking-normal">
+                        Cargando…
+                      </span>
+                    )}
                   </div>
                 </div>
               );
@@ -135,6 +149,7 @@ export default function AgentDashboardLayout() {
                   isProperty && 'ml-6 text-sm'
                 )}
                 onClick={() => setSidebarOpen(false)}
+                aria-current={isActive ? 'page' : undefined}
               >
                 {item.icon}
                 <span className={cn(isProperty && 'truncate')}>{item.label}</span>
@@ -151,10 +166,36 @@ export default function AgentDashboardLayout() {
           Cerrar sesión
         </Button>
       </aside>
+
       {/* Contenido principal */}
-      <main className="flex-1 p-2 sm:p-4 md:p-6 transition-all duration-300">
-        <Outlet />
-      </main>
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b">
+          <div className="h-14 px-3 sm:px-4 md:px-6 flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Abrir menú"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <div className="min-w-0">
+              <div className="text-sm text-muted-foreground">Agente</div>
+              <div className="font-semibold leading-tight truncate">{pageTitle}</div>
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user?.profileImage} alt={user?.name} />
+                <AvatarFallback>{user?.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+            </div>
+          </div>
+        </header>
+        <main className="flex-1 p-3 sm:p-4 md:p-6">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 } 

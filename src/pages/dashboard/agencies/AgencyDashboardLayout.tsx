@@ -41,6 +41,7 @@ const SidebarLink = ({ to, icon, children, agencyId, onNavigate }: SidebarLinkPr
           ? 'bg-blue-100 text-blue-700 font-semibold'
           : 'text-gray-700 hover:bg-gray-100'
       )}
+      aria-current={isActive ? 'page' : undefined}
     >
       {icon}
       <span>{children}</span>
@@ -122,6 +123,19 @@ const AgencyDashboardLayout = ({ children }: { children?: React.ReactNode }) => 
       setIsSidebarOpen(false);
     }
   };
+
+  const pageTitle =
+    location.pathname === '/dashboard/agencies'
+      ? 'Inicio'
+      : location.pathname.startsWith('/dashboard/agencies/properties')
+        ? 'Mis Viviendas'
+        : agencyId && location.pathname.startsWith(`/dashboard/agencies/${agencyId}/agents`)
+          ? 'Mis Agentes'
+          : agencyId && location.pathname.startsWith(`/dashboard/agencies/${agencyId}/messages`)
+            ? 'Mensajes'
+            : location.pathname.startsWith('/dashboard/agencies/new')
+              ? 'Crear agencia'
+              : 'Dashboard';
 
   if (loading) {
     return (
@@ -242,19 +256,25 @@ const AgencyDashboardLayout = ({ children }: { children?: React.ReactNode }) => 
       {/* Content Area */}
       <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
         {/* Header */}
-        <header className="sticky top-0 z-40 flex w-full bg-white border-b border-gray-200 shadow-sm">
-          <div className="flex flex-grow items-center justify-between px-4 py-4 md:px-6">
-            <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
+        <header className="sticky top-0 z-40 flex w-full bg-white/90 backdrop-blur border-b border-gray-200">
+          <div className="flex flex-grow items-center justify-between px-3 py-3 sm:px-4 md:px-6">
+            <div className="flex items-center gap-2 min-w-0">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={toggleSidebar}
                 className="lg:hidden"
+                aria-label="Abrir menú"
               >
                 <Menu className="h-5 w-5" />
               </Button>
+              <div className="min-w-0">
+                <div className="text-sm text-muted-foreground">Agencia</div>
+                <div className="font-semibold leading-tight truncate">{pageTitle}</div>
+              </div>
             </div>
-            {/* User Menu en Header - Visible en desktop cuando sidebar está cerrado o siempre en móvil */}
+
+            {/* User Menu en Header */}
             <div className="ml-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -287,7 +307,9 @@ const AgencyDashboardLayout = ({ children }: { children?: React.ReactNode }) => 
 
         {/* Main Content */}
         <main className="flex-1 p-4 md:p-6 lg:p-8">
-          {children || <Outlet />}
+          <div className="max-w-7xl mx-auto w-full">
+            {children || <Outlet />}
+          </div>
         </main>
       </div>
     </div>

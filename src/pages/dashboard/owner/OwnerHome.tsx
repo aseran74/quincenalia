@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Link } from 'react-router-dom';
+import { AlertTriangle, Calendar, Home, MessageSquare, Star } from 'lucide-react';
 
 const OwnerHome = () => {
   const { user, loading: authLoading } = useAuth();
@@ -11,8 +15,6 @@ const OwnerHome = () => {
   const [pointsLoading, setPointsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('User object in OwnerHome:', user);
-
     const fetchOwnerPoints = async () => {
       if (!user?.id) {
         setPointsLoading(false);
@@ -71,47 +73,113 @@ const OwnerHome = () => {
   }, [user?.id]);
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Bienvenido a tu Panel de Propietario</h1>
-      
-      {user && user.role === 'owner' && !pointsLoading && (
-         <Card className="p-4 mb-6 bg-blue-50 border-blue-200">
-            <h2 className="text-lg font-semibold mb-2 text-blue-800">Tus Puntos</h2>
-            <p className="text-blue-700 text-xl font-bold">
-               {typeof ownerPoints === 'number' ? `${ownerPoints} Puntos` : 'Cargando...'}
-            </p>
-         </Card>
-      )}
-
-      {user && user.role === 'owner' && pointsLoading && <p>Cargando puntos...</p>}
-
-      {authLoading && <p>Cargando información del usuario...</p>}
-
-      <Card className="p-4 mb-6">
-        <h2 className="text-lg font-semibold mb-2">Tu Propiedad</h2>
-        <p className="text-gray-600">
-          {loading ? 'Cargando...' : property ? property.title : 'No tienes ninguna propiedad asignada'}
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl sm:text-3xl font-bold">Panel de Propietario</h1>
+        <p className="text-muted-foreground">
+          Gestiona reservas, incidencias, mensajes y tus puntos de intercambio.
         </p>
-      </Card>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-4">
-          <h2 className="text-lg font-semibold mb-2">¿Qué puedes hacer?</h2>
-          <ul className="space-y-2 text-gray-600">
-            <li>• Ver y gestionar tus reservas de semanas</li>
-            <li>• Crear y dar seguimiento a incidencias</li>
-            <li>• Consultar tus facturas</li>
-            <li>• Ver mensajes del administrador</li>
-            <li>• Intercambiar estancias mediante Guest points</li>
-          </ul>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="md:col-span-1">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Star className="h-4 w-4 text-yellow-500" />
+              Puntos disponibles
+            </CardTitle>
+            <CardDescription>Para intercambios</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {authLoading || pointsLoading ? (
+              <Skeleton className="h-8 w-24" />
+            ) : (
+              <div className="text-3xl font-bold">
+                {typeof ownerPoints === 'number' ? ownerPoints : 0}
+              </div>
+            )}
+            <div className="mt-4">
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/dashboard/owner/exchange">Ir a intercambio</Link>
+              </Button>
+            </div>
+          </CardContent>
         </Card>
 
-        <Card className="p-4">
-          <h2 className="text-lg font-semibold mb-2">Necesitas ayuda?</h2>
-          <p className="text-gray-600">
-            Si tienes alguna duda o problema, puedes crear una incidencia
-            o contactar directamente con el administrador.
-          </p>
+        <Card className="md:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              Tu propiedad
+            </CardTitle>
+            <CardDescription>Propiedad asignada (si existe)</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {authLoading || loading ? (
+              <>
+                <Skeleton className="h-5 w-2/3" />
+                <Skeleton className="h-4 w-1/2" />
+              </>
+            ) : (
+              <div className="text-base font-semibold">
+                {property ? property.title : 'Aún no tienes una propiedad asignada'}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/dashboard/owner/reservations">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Reservas
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/dashboard/owner/incidents">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  Incidencias
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/dashboard/owner/messages">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Mensajes
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>¿Qué puedes hacer?</CardTitle>
+            <CardDescription>Accesos rápidos a tus tareas frecuentes</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <ul className="space-y-2">
+              <li>- Ver y gestionar tus reservas de semanas</li>
+              <li>- Crear y dar seguimiento a incidencias</li>
+              <li>- Consultar tus facturas</li>
+              <li>- Ver mensajes del administrador</li>
+              <li>- Intercambiar estancias mediante puntos</li>
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>¿Necesitas ayuda?</CardTitle>
+            <CardDescription>Soporte y resolución de problemas</CardDescription>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground space-y-3">
+            <p>
+              Si tienes alguna duda o problema, crea una incidencia o contacta con el administrador.
+            </p>
+            <Button asChild className="w-full">
+              <Link to="/dashboard/owner/incidents">Crear / ver incidencias</Link>
+            </Button>
+          </CardContent>
         </Card>
       </div>
     </div>

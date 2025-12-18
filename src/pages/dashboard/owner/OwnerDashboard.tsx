@@ -5,7 +5,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
-import MessagesBoard from '@/pages/dashboard/mensajes/MessagesBoard';
 import { Owner } from '@/types/user'; // Import Owner type
 // import logoImage from '/logo.png';
 
@@ -123,6 +122,29 @@ const OwnerDashboard: React.FC = () => {
   const sidebarWidthClass = 'w-64';
   const mainContentMarginClass = 'lg:ml-64';
 
+  const pageTitle =
+    location.pathname === '/dashboard/owner'
+      ? 'Inicio'
+      : location.pathname.startsWith('/dashboard/owner/incidents')
+        ? 'Incidencias'
+        : location.pathname.startsWith('/dashboard/owner/reservations')
+          ? 'Reservas'
+          : location.pathname.startsWith('/dashboard/owner/exchange')
+            ? 'Intercambio'
+            : location.pathname.startsWith('/dashboard/owner/explorar')
+              ? 'Explorar intercambios'
+              : location.pathname.startsWith('/dashboard/owner/invoices')
+                ? 'Facturas'
+                : location.pathname.startsWith('/dashboard/owner/messages')
+                  ? 'Mensajes'
+                  : location.pathname.startsWith('/dashboard/owner/profile')
+                    ? 'Perfil'
+                    : location.pathname.startsWith('/dashboard/owner/sold-properties')
+                      ? 'Propiedades vendidas'
+                      : location.pathname.startsWith('/dashboard/owner/copropiedades')
+                        ? 'Copropiedades'
+                        : 'Dashboard';
+
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
 
@@ -167,11 +189,10 @@ const OwnerDashboard: React.FC = () => {
            {/* Logo */}
            <div className="flex items-center justify-center">
              <img 
-               src={`${window.location.origin}/logo.png`} 
+               src="/logo.png"
                alt="Quincenalia" 
                className="h-8 w-auto object-contain"
                onError={(e) => {
-                 console.log('Error loading logo, using fallback');
                  e.currentTarget.style.display = 'none';
                }}
              />
@@ -201,6 +222,7 @@ const OwnerDashboard: React.FC = () => {
                       navigate(item.path);
                       closeSidebar();
                     }}
+                    aria-current={finalIsActive ? 'page' : undefined}
                   >
                     <span className={cn("flex-shrink-0 w-5 h-5", finalIsActive ? "text-blue-600 dark:text-blue-300" : "")}>{item.icon}</span>
                     <span className="truncate">{item.label}</span>
@@ -251,28 +273,28 @@ const OwnerDashboard: React.FC = () => {
         )}
       >
          {/* Cabecera simple del contenido principal */}
-         <header className="sticky top-0 z-30 flex w-full bg-white dark:bg-gray-800 shadow-sm dark:border-b dark:border-gray-700 lg:hidden"> {/* Oculto en desktop */}
-             <div className="flex items-center justify-between px-4 py-3 w-full">
-                 {/* Espacio para el botón de menú en móvil */}
-                 <div className="w-10 h-10"></div>
-                 
-                 {/* Logo en móvil */}
-                 <div className="flex items-center justify-center">
-                   <img 
-                     src={`${window.location.origin}/logo.png`} 
-                     alt="Quincenalia" 
-                     className="h-8 w-auto object-contain"
-                     onError={(e) => {
-                       console.log('Error loading logo, using fallback');
-                       e.currentTarget.style.display = 'none';
-                     }}
-                   />
-                 </div>
-                 
-                 {/* Espacio derecho (o iconos adicionales si los hubiera) */}
-                 <div className="w-10"></div>
+         <header className="sticky top-0 z-30 flex w-full bg-white/90 backdrop-blur dark:bg-gray-800/90 shadow-sm dark:border-b dark:border-gray-700 lg:hidden">
+           <div className="flex items-center gap-3 px-4 py-3 w-full">
+             {/* Espacio para el botón de menú (está fijo arriba a la izquierda) */}
+             <div className="w-10 h-10" />
+
+             <div className="flex-1 min-w-0 text-center">
+               <img
+                 src="/logo.png"
+                 alt="Quincenalia"
+                 className="h-7 w-auto object-contain mx-auto"
+                 onError={(e) => {
+                   e.currentTarget.style.display = 'none';
+                 }}
+               />
+               <div className="mt-1 text-xs text-muted-foreground truncate">
+                 {pageTitle}
+               </div>
              </div>
-        </header>
+
+             <div className="w-10" />
+           </div>
+         </header>
 
         {/* Outlet donde se renderiza el contenido de la ruta */}
         <main className="flex-1"> {/* Quitamos el p-6 de aquí para ponerlo en los componentes hijos si se desea */}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -19,6 +19,11 @@ import {
 import { toast } from '@/components/ui/use-toast'; // Asumo que es de Shadcn/ui
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Mail, Phone, Search } from 'lucide-react';
 
 interface ContactRequest {
   id: string;
@@ -43,12 +48,10 @@ const ContactRequestsTable = () => {
   const [requests, setRequests] = useState<ContactRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | ContactRequest['status']>('all');
 
-  useEffect(() => {
-    fetchRequests();
-  }, []);
-
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     setLoading(true); // Asegurarse de poner loading a true al inicio
     try {
       let query = supabase
@@ -75,7 +78,11 @@ const ContactRequestsTable = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id, user?.role]);
+
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
 
   const handleStatusChange = async (requestId: string, newStatus: string) => {
     try {
@@ -111,29 +118,168 @@ const ContactRequestsTable = () => {
   const isAgent = user?.role === 'agent';
 
   if (loading) {
-    return <div className="flex justify-center items-center h-32">Cargando solicitudes...</div>;
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-56" />
+            <Skeleton className="h-4 w-80" />
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-0">
+            <div className="p-4 space-y-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
-  // Título responsivo
-  const title = (
-    <h2 className={`text-2xl font-bold mb-6 ${isAgent ? 'text-right sm:text-left' : 'text-center'}`}>
-      <span className="hidden sm:inline">Solicitudes de Contacto</span>
-      <span className="inline sm:hidden">Solicitudes<br />de Contacto</span>
-    </h2>
-  );
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredRequests = useMemo(() => {
+    return requests.filter((r) => {
+      if (statusFilter !== 'all' && r.status !== statusFilter) return false;
+      if (!normalizedSearch) return true;
+      const haystack = [
+        r.name,
+        r.email,
+        r.phone ?? '',
+        r.message ?? '',
+        statusOptions.find((o) => o.value === r.status)?.label ?? r.status,
+      ]
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(normalizedSearch);
+    });
+  }, [normalizedSearch, requests, statusFilter]);
 
-  if (!requests.length) {
+  const statusCounts = useMemo(() => {
+    return statusOptions.reduce<Record<ContactRequest['status'], number>>((acc, opt) => {
+      acc[opt.value] = requests.filter((r) => r.status === opt.value).length;
+      return acc;
+    }, { pendiente: 0, contactado: 0, enviado_documentacion: 0, no_interesado: 0 });
+  }, [requests]);
+
+  const statusFilterOptions = useMemo(() => {
+    return new Set<string>(['all', ...statusOptions.map((o) => o.value)]);
+  }, []);
+
+  const handleStatusFilterChange = (value: string) => {
+    if (statusFilterOptions.has(value)) {
+      setStatusFilter(value as 'all' | ContactRequest['status']);
+      return;
+    }
+    setStatusFilter('all');
+  };
+
+  if (!filteredRequests.length) {
     return (
-      <div className="container mx-auto p-4">
-        {title}
-        <p className="text-center text-gray-500">No hay solicitudes de contacto para mostrar.</p>
+      <div className="space-y-4">
+        <Card>
+          <CardHeader className="space-y-2">
+            <CardTitle className="text-xl sm:text-2xl">Solicitudes de contacto</CardTitle>
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary">Pendiente: {statusCounts.pendiente}</Badge>
+                <Badge variant="secondary">Contactado: {statusCounts.contactado}</Badge>
+                <Badge variant="secondary">Enviado doc.: {statusCounts.enviado_documentacion}</Badge>
+                <Badge variant="secondary">No interesado: {statusCounts.no_interesado}</Badge>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {requests.length} total
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar por nombre, email, teléfono o mensaje…"
+                className="pl-9"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+              <SelectTrigger className="w-full sm:w-64">
+                <SelectValue placeholder="Filtrar por estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los estados</SelectItem>
+                {statusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="py-10 text-center text-muted-foreground">
+            {requests.length === 0
+              ? 'No hay solicitudes de contacto para mostrar.'
+              : 'No hay resultados con esos filtros.'}
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-6"> {/* `container` para centrar y limitar ancho, `p-4` para padding */}
-      {title}
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="space-y-2">
+          <CardTitle className="text-xl sm:text-2xl">
+            Solicitudes de contacto
+          </CardTitle>
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="secondary">Pendiente: {statusCounts.pendiente}</Badge>
+              <Badge variant="secondary">Contactado: {statusCounts.contactado}</Badge>
+              <Badge variant="secondary">Enviado doc.: {statusCounts.enviado_documentacion}</Badge>
+              <Badge variant="secondary">No interesado: {statusCounts.no_interesado}</Badge>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {filteredRequests.length} de {requests.length}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+            <Input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar por nombre, email, teléfono o mensaje…"
+              className="pl-9"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+            <SelectTrigger className="w-full sm:w-64">
+              <SelectValue placeholder="Filtrar por estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los estados</SelectItem>
+              {statusOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
 
       {/* Tabla para pantallas md y superiores */}
       <div className="hidden md:block w-full overflow-x-auto rounded-lg border"> {/* `overflow-x-auto` para scroll horizontal si la tabla es muy ancha, `rounded-lg border` para estética */}
@@ -149,7 +295,7 @@ const ContactRequestsTable = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {requests.map((request) => (
+            {filteredRequests.map((request) => (
               <TableRow key={request.id}>
                 <TableCell className="whitespace-nowrap"> {/* Evitar que la fecha se parta */}
                   {format(new Date(request.created_at), 'dd/MM/yy HH:mm', { locale: es })}
@@ -189,7 +335,7 @@ const ContactRequestsTable = () => {
 
       {/* Vista de tarjetas para pantallas pequeñas (menores a md) */}
       <div className="md:hidden grid grid-cols-1 gap-4">
-        {requests.map((request) => (
+        {filteredRequests.map((request) => (
           <div key={request.id} className="border rounded-lg bg-white shadow-sm flex flex-col p-4 gap-2">
             <div className="flex items-center gap-3 mb-1">
               <span className="inline-flex items-center justify-center rounded-full bg-purple-100 text-purple-700 w-10 h-10 text-xl font-bold">
@@ -201,11 +347,11 @@ const ContactRequestsTable = () => {
               </div>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-600">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 01-8 0 4 4 0 018 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14v7m0 0H9m3 0h3" /></svg>
+              <Mail className="h-4 w-4 text-blue-500" />
               <span className="break-all">{request.email}</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-600">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm0 10a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H5a2 2 0 01-2-2v-2zm10-10a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zm0 10a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+              <Phone className="h-4 w-4 text-green-500" />
               <span className="break-all">{request.phone || '-'}</span>
             </div>
             {request.message && (

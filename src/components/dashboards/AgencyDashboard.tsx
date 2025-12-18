@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building, Users, Calendar, Loader2 } from 'lucide-react';
+import { Building, Users, Calendar, Loader2, MessageSquare } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -112,11 +112,12 @@ const AgencyDashboard: React.FC = () => {
       const { count } = await countQuery;
       setPropertiesCount(count || 0);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
       console.error('Error fetching agency data:', error);
       toast({
         title: 'Error',
-        description: `No se pudieron cargar los datos: ${error.message}`,
+        description: `No se pudieron cargar los datos: ${message}`,
         variant: 'destructive'
       });
     } finally {
@@ -136,7 +137,38 @@ const AgencyDashboard: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold mb-2">Dashboard de Agencia</h1>
-        <p className="text-muted-foreground">Gestión de agentes y propiedades</p>
+        <p className="text-muted-foreground">
+          Gestión de agentes y propiedades{user?.name ? ` · ${user.name}` : ''}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Button
+          variant="outline"
+          className="w-full justify-start"
+          disabled={!agencyId}
+          onClick={() => agencyId && navigate(`/dashboard/agencies/${agencyId}/agents`)}
+        >
+          <Users className="h-4 w-4 mr-2" />
+          Mis agentes
+        </Button>
+        <Button
+          variant="outline"
+          className="w-full justify-start"
+          onClick={() => navigate('/dashboard/agencies/properties')}
+        >
+          <Building className="h-4 w-4 mr-2" />
+          Mis viviendas
+        </Button>
+        <Button
+          variant="outline"
+          className="w-full justify-start"
+          disabled={!agencyId}
+          onClick={() => agencyId && navigate(`/dashboard/agencies/${agencyId}/messages`)}
+        >
+          <MessageSquare className="h-4 w-4 mr-2" />
+          Mensajes
+        </Button>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
