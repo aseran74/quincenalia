@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/context/AuthContext';
-import { ChevronDown, Paperclip, Eye, Trash2 } from 'lucide-react';
+import { ChevronDown, Paperclip, Eye, Trash2, Search, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 const ESTADOS = [
   { value: 'pendiente', label: 'Pendiente' },
@@ -39,6 +40,7 @@ const FacturasPropietario: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [filterEstado, setFilterEstado] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [detalleFactura, setDetalleFactura] = useState<any | null>(null);
@@ -91,10 +93,49 @@ const FacturasPropietario: React.FC = () => {
   };
 
   useEffect(() => {
-    if (user?.role === 'owner' || ownerId) {
+    if (user?.role === 'owner' || ownerId || user?.role === 'admin') {
       fetchFacturas();
     }
   }, [ownerId, filterEstado, user]);
+
+  // Filtrar facturas por búsqueda
+  const filteredFacturas = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return facturas;
+    
+    return facturas.filter((f) => {
+      // Buscar por tipo
+      const tipoLabel = TIPOS.find(t => t.value === f.type)?.label || f.type;
+      if (tipoLabel.toLowerCase().includes(q)) return true;
+      
+      // Buscar por mes/año
+      const mesAño = `${meses[f.month]} ${f.year}`;
+      if (mesAño.toLowerCase().includes(q)) return true;
+      
+      // Buscar por importe
+      const importe = Number(f.amount).toFixed(2);
+      if (importe.includes(q)) return true;
+      
+      // Buscar por estado
+      const estadoLabel = ESTADOS.find(e => e.value === f.status)?.label || f.status;
+      if (estadoLabel.toLowerCase().includes(q)) return true;
+      
+      // Buscar por nombre del propietario (si es admin)
+      if (user?.role === 'admin') {
+        const owner = owners.find(o => o.id === f.owner_id);
+        if (owner) {
+          const ownerName = `${owner.first_name || ''} ${owner.last_name || ''}`.trim().toLowerCase();
+          if (ownerName.includes(q)) return true;
+        }
+      }
+      
+      // Buscar por fecha
+      const fecha = new Date(f.created_at).toLocaleDateString();
+      if (fecha.includes(q)) return true;
+      
+      return false;
+    });
+  }, [facturas, searchQuery, owners, user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -233,6 +274,36 @@ const FacturasPropietario: React.FC = () => {
         </div>
       )}
 
+      {/* Filtro de búsqueda para admin */}
+      {user?.role === 'admin' && (
+        <div className="mb-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="relative w-full md:max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar facturas por tipo, mes/año, importe, estado, propietario..."
+                className="pl-9 pr-9"
+              />
+              {searchQuery.trim() && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100"
+                  aria-label="Limpiar búsqueda"
+                >
+                  <X className="h-4 w-4 text-gray-500" />
+                </button>
+              )}
+            </div>
+            <div className="text-sm text-gray-600">
+              Mostrando <b>{filteredFacturas.length}</b> de <b>{facturas.length}</b>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Resumen últimas 10 facturas para admin */}
       {user?.role === 'admin' && facturas.length > 0 && (
         <div className="mb-8">
@@ -248,7 +319,7 @@ const FacturasPropietario: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {facturas.slice(0, 10).map(f => (
+                {filteredFacturas.slice(0, 10).map(f => (
                   <tr key={f.id} className="border-b hover:bg-gray-50">
                     <td className="px-2 py-1">{TIPOS.find(t => t.value === f.type)?.label || f.type}</td>
                     <td className="px-2 py-1">{Number(f.amount).toFixed(2)} €</td>
@@ -293,11 +364,41 @@ const FacturasPropietario: React.FC = () => {
               </div>
             </div>
 
+            {/* Filtro de búsqueda para owner o cuando hay ownerId seleccionado */}
+            {(user?.role === 'owner' || (user?.role === 'admin' && ownerId)) && (
+              <div className="mb-4">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div className="relative w-full md:max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Buscar facturas por tipo, mes/año, importe, estado..."
+                      className="pl-9 pr-9"
+                    />
+                    {searchQuery.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-100"
+                        aria-label="Limpiar búsqueda"
+                      >
+                        <X className="h-4 w-4 text-gray-500" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Mostrando <b>{filteredFacturas.length}</b> de <b>{facturas.length}</b>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Resumen de facturas */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
               {(['Total', 'Pendiente', 'Pagada', 'Devuelta'] as const).map((statusType) => {
-                 const count = statusType === 'Total' ? facturas.length : facturas.filter(f => f.status === statusType.toLowerCase()).length;
-                 const amount = statusType === 'Total' ? facturas.reduce((acc, f) => acc + Number(f.amount), 0) : facturas.filter(f => f.status === statusType.toLowerCase()).reduce((acc, f) => acc + Number(f.amount), 0);
+                 const count = statusType === 'Total' ? filteredFacturas.length : filteredFacturas.filter(f => f.status === statusType.toLowerCase()).length;
+                 const amount = statusType === 'Total' ? filteredFacturas.reduce((acc, f) => acc + Number(f.amount), 0) : filteredFacturas.filter(f => f.status === statusType.toLowerCase()).reduce((acc, f) => acc + Number(f.amount), 0);
                  const styles = statusType === 'Pendiente' ? getStatusStyle('pendiente') : statusType === 'Pagada' ? getStatusStyle('pagada') : statusType === 'Devuelta' ? getStatusStyle('devuelta') : { color: 'bg-blue-50 text-blue-800', borderColor: 'border-blue-200'};
 
                  return (
@@ -316,12 +417,16 @@ const FacturasPropietario: React.FC = () => {
 
             {/* Lista de facturas responsiva - Cards en móvil, tabla en desktop */}
             <div className="mt-4">
-              {facturas.length === 0 ? (
-                  <p className="text-center text-gray-500 py-6">No hay facturas para mostrar.</p>
+              {filteredFacturas.length === 0 ? (
+                  <p className="text-center text-gray-500 py-6">
+                    {facturas.length === 0 
+                      ? 'No hay facturas para mostrar.' 
+                      : `No hay resultados para "${searchQuery.trim()}".`}
+                  </p>
               ) : (
                   <>
                     <div className="space-y-4 md:hidden"> {/* Vista Móvil (Cards) */}
-                      {facturas.map(f => {
+                      {filteredFacturas.map(f => {
                         const statusStyle = getStatusStyle(f.status);
                         return (
                           <div key={f.id} className={`border rounded-lg p-4 shadow-sm relative ${statusStyle.borderColor} bg-white hover:bg-gray-50`}> {/* Card móvil */}
@@ -395,7 +500,7 @@ const FacturasPropietario: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                          {facturas.map(f => {
+                          {filteredFacturas.map(f => {
                               const statusStyle = getStatusStyle(f.status);
                               return (
                         <tr key={f.id} className="hover:bg-gray-50">
