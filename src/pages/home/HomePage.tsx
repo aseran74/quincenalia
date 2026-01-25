@@ -332,15 +332,6 @@ function getFakeCount(zona: string) {
   return num;
 }
 
-// Configuración de la secuencia de imágenes (Fuera del componente para evitar re-creaciones)
-const IMAGE_BASE_NAME = 'Whisk_ytmyqmm2ugomhzmk1cmlfwotydohrtl5qzmz0yy_';
-const IMAGE_FOLDER = `${IMAGE_BASE_NAME}000`;
-const TOTAL_IMAGES = 50; 
-const IMAGE_SEQUENCE = Array.from({ length: TOTAL_IMAGES }, (_, i) => {
-  const num = i.toString().padStart(3, '0');
-  const fileName = `${IMAGE_BASE_NAME}${num}`;
-  return `/fotos-efecto/${IMAGE_FOLDER}/${fileName}.webp`;
-});
 
 const HomePage = () => {
   const [viviendasPorZona, setViviendasPorZona] = useState<{ [key: string]: number }>({});
@@ -352,9 +343,6 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [showCookieBanner, setShowCookieBanner] = useState(false);
   const [scrollY, setScrollY] = useState(0);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imagesRef = useRef<HTMLImageElement[]>([]); // Referencia para guardar los objetos HTMLImageElement ya cargados
-  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -369,108 +357,23 @@ const HomePage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Función optimizada para dibujar en el Canvas
-  const renderCanvasFrame = (index: number) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    const img = imagesRef.current[index];
-
-    if (!ctx || !img) return;
-
-    // Ajustar resolución del canvas al tamaño del contenedor
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight * 0.85; // Ajustar al 85vh del hero
-
-    // Lógica "Object-fit: cover" manual para Canvas
-    const canvasAspect = canvas.width / canvas.height;
-    const imgAspect = img.width / img.height;
-    let drawWidth: number, drawHeight: number, offsetX: number, offsetY: number;
-
-    if (imgAspect > canvasAspect) {
-      drawHeight = canvas.height;
-      drawWidth = canvas.height * imgAspect;
-      offsetX = (canvas.width - drawWidth) / 2;
-      offsetY = 0;
-    } else {
-      drawWidth = canvas.width;
-      drawHeight = canvas.width / imgAspect;
-      offsetX = 0;
-      offsetY = (canvas.height - drawHeight) / 2;
-    }
-
-    // Ajustar para objectPosition: center (más centrado o más abajo)
-    // Reducir el valor o hacerlo negativo para mover más abajo/centrado
-    offsetY -= drawHeight * 0.05; // Más centrado, mostrando más la parte inferior de la imagen
-
-    // Limpiar y dibujar
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-  };
-
-  // Precarga de imágenes y preparación del Canvas
-  useEffect(() => {
-    let loadedCount = 0;
-
-    const preloadImages = () => {
-      IMAGE_SEQUENCE.forEach((src, index) => {
-        const img = new Image();
-        img.src = src;
-        img.onload = () => {
-          imagesRef.current[index] = img;
-          loadedCount++;
-          if (loadedCount === TOTAL_IMAGES) {
-            setIsLoaded(true);
-            // No renderizar todavía, esperar a que el video termine
-          }
-        };
-        img.onerror = () => {
-          // Si falla, usar fallback
-          const fallbackImg = new Image();
-          fallbackImg.src = '/hero.jpg';
-          imagesRef.current[index] = fallbackImg;
-          loadedCount++;
-          if (loadedCount === TOTAL_IMAGES) {
-            setIsLoaded(true);
-          }
-        };
-      });
-    };
-
-    preloadImages();
-  }, []);
 
 
   // Estado para controlar si el video ha terminado
   const [videoEnded, setVideoEnded] = useState(false);
 
-  // Escucha de Scroll vinculada a la animación con efecto parallax
+  // Escucha de Scroll para efecto zoom-in/zoom-out en hero.jpg
   useEffect(() => {
     const handleScroll = () => {
       const scrollPos = window.scrollY;
-      const heroHeight = window.innerHeight * 0.85;
-      
-      // Calculamos el progreso (0 a 1) dentro de la sección hero
-      const progress = Math.min(scrollPos / heroHeight, 1);
-      const frameIndex = Math.min(
-        TOTAL_IMAGES - 1,
-        Math.floor(progress * TOTAL_IMAGES)
-      );
-
       setScrollY(scrollPos);
-      
-      // Solo renderizamos si las imágenes están listas, el video ha terminado y hay scroll
-      // Si no hay scroll, mostramos hero.jpg, si hay scroll, mostramos la secuencia
-      if (isLoaded && videoEnded && scrollPos > 50) {
-        requestAnimationFrame(() => renderCanvasFrame(frameIndex));
-      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    // Llamar una vez al montar para establecer el frame inicial
     handleScroll();
     
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isLoaded, videoEnded]);
+  }, []);
 
   useEffect(() => {
     const fetchViviendasPorZona = async () => {
@@ -559,36 +462,22 @@ const HomePage = () => {
           >
             <source src="/fotos-efecto/Whisk_ytmyqmm2ugomhzmk1cmlfwotydohrtl5qzmz0yy_000/Video.mp4" type="video/mp4" />
           </video>
-          {/* Imagen hero.jpg (se muestra cuando el video termina y no hay scroll) */}
-          {videoEnded && scrollY <= 50 && (
+          {/* Imagen hero.jpg con efecto zoom-in/zoom-out (se muestra cuando el video termina) */}
+          {videoEnded && (
             <img
               src="/hero.jpg"
               alt="Hero"
               className="w-full h-full object-cover absolute inset-0"
               style={{
                 filter: 'brightness(0.7)',
-                transform: `scale(${1 + scrollY * 0.0005}) translateY(${scrollY * 0.2}px)`,
-                transition: 'transform 0.1s ease-out, opacity 0.5s ease-out',
+                transform: `scale(${1 + scrollY * 0.002}) translateY(${scrollY * 0.2}px)`,
+                transition: 'transform 0.1s ease-out',
                 willChange: 'transform',
                 zIndex: 2,
                 opacity: 1
               }}
             />
           )}
-          {/* Canvas con imágenes (se muestra cuando se hace scroll después del video) */}
-          <canvas
-            ref={canvasRef}
-            className="w-full h-full block absolute inset-0"
-            style={{
-              filter: 'brightness(0.7)',
-              transform: `scale(${1 + scrollY * 0.0005}) translateY(${scrollY * 0.2}px)`,
-              transition: 'transform 0.1s ease-out, opacity 0.5s ease-out',
-              willChange: 'transform',
-              zIndex: videoEnded && scrollY > 50 ? 3 : 0,
-              opacity: videoEnded && scrollY > 50 ? 1 : 0 // Se muestra cuando hay scroll después del video
-            }}
-            id="hero-canvas"
-          />
           {/* Overlay gradiente para asegurar legibilidad */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 z-10" />
         </div>
