@@ -458,8 +458,9 @@ const HomePage = () => {
 
       setScrollY(scrollPos);
       
-      // Solo renderizamos si las imágenes están listas y el video ha terminado
-      if (isLoaded && videoEnded) {
+      // Solo renderizamos si las imágenes están listas, el video ha terminado y hay scroll
+      // Si no hay scroll, mostramos hero.jpg, si hay scroll, mostramos la secuencia
+      if (isLoaded && videoEnded && scrollPos > 50) {
         requestAnimationFrame(() => renderCanvasFrame(frameIndex));
       }
     };
@@ -541,24 +542,40 @@ const HomePage = () => {
               zIndex: videoEnded ? 0 : 2,
               opacity: videoEnded ? 0 : 1
             }}
-            src="/fotos-efecto/Whisk_ytmyqmm2ugomhzmk1cmlfwotydohrtl5qzmz0yy_000/Video.mp4"
+            autoPlay
             muted
             playsInline
-            autoPlay
+            preload="auto"
+            poster="/hero.jpg"
             onEnded={() => {
-              // Cuando el video termina, mostrar la primera imagen (000.webp)
+              // Cuando el video termina, mostrar hero.jpg
               setVideoEnded(true);
-              if (isLoaded && canvasRef.current) {
-                renderCanvasFrame(0);
-              }
             }}
             onError={() => {
               // Si el video falla, usar imágenes directamente
               console.log('Error al cargar video, usando imágenes');
               setVideoEnded(true);
             }}
-          />
-          {/* Canvas con imágenes (se muestra cuando el video termina) */}
+          >
+            <source src="/fotos-efecto/Whisk_ytmyqmm2ugomhzmk1cmlfwotydohrtl5qzmz0yy_000/Video.mp4" type="video/mp4" />
+          </video>
+          {/* Imagen hero.jpg (se muestra cuando el video termina y no hay scroll) */}
+          {videoEnded && scrollY <= 50 && (
+            <img
+              src="/hero.jpg"
+              alt="Hero"
+              className="w-full h-full object-cover absolute inset-0"
+              style={{
+                filter: 'brightness(0.7)',
+                transform: `scale(${1 + scrollY * 0.0005}) translateY(${scrollY * 0.2}px)`,
+                transition: 'transform 0.1s ease-out, opacity 0.5s ease-out',
+                willChange: 'transform',
+                zIndex: 2,
+                opacity: 1
+              }}
+            />
+          )}
+          {/* Canvas con imágenes (se muestra cuando se hace scroll después del video) */}
           <canvas
             ref={canvasRef}
             className="w-full h-full block absolute inset-0"
@@ -567,8 +584,8 @@ const HomePage = () => {
               transform: `scale(${1 + scrollY * 0.0005}) translateY(${scrollY * 0.2}px)`,
               transition: 'transform 0.1s ease-out, opacity 0.5s ease-out',
               willChange: 'transform',
-              zIndex: videoEnded ? 2 : 0,
-              opacity: videoEnded ? 1 : 0 // Se muestra cuando el video termina
+              zIndex: videoEnded && scrollY > 50 ? 3 : 0,
+              opacity: videoEnded && scrollY > 50 ? 1 : 0 // Se muestra cuando hay scroll después del video
             }}
             id="hero-canvas"
           />
