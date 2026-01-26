@@ -343,14 +343,13 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [showCookieBanner, setShowCookieBanner] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        setFaqExpandido(true);
-      } else {
-        setFaqExpandido(false);
-      }
+      const mobileView = window.innerWidth < 768;
+      setIsMobile(mobileView);
+      setFaqExpandido(!mobileView);
     };
     handleResize();
     window.addEventListener('resize', handleResize);
@@ -427,6 +426,8 @@ const HomePage = () => {
   // Debug: mostrar el contenido real de viviendasPorZona antes de renderizar las cards de zona
   console.log('viviendasPorZona:', viviendasPorZona);
 
+  const heroImageBaseScale = isMobile ? 0.92 : 1;
+
   return (
     <div className="min-h-screen bg-background font-poppins">
       <Navbar />
@@ -470,7 +471,7 @@ const HomePage = () => {
               className="w-full h-full object-cover absolute inset-0"
               style={{
                 filter: 'brightness(0.7)',
-                transform: `scale(${1 + scrollY * 0.002}) translateY(${scrollY * 0.2}px)`,
+                transform: `scale(${heroImageBaseScale + scrollY * 0.002}) translateY(${scrollY * 0.2}px)`,
                 transition: 'transform 0.1s ease-out',
                 willChange: 'transform',
                 zIndex: 2,
