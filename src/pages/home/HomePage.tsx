@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import { FeaturedProperties } from '@/components/FeaturedProperties';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -332,6 +332,15 @@ function getFakeCount(zona: string) {
   return num;
 }
 
+// Configuración de la secuencia de imágenes
+const IMAGE_BASE_NAME = 'Whisk_ytmyqmm2ugomhzmk1cmlfwotydohrtl5qzmz0yy_';
+const IMAGE_FOLDER = `${IMAGE_BASE_NAME}000`;
+const TOTAL_IMAGES = 50; 
+const IMAGE_SEQUENCE = Array.from({ length: TOTAL_IMAGES }, (_, i) => {
+  const num = i.toString().padStart(3, '0');
+  const fileName = `${IMAGE_BASE_NAME}${num}`;
+  return `/fotos-efecto/${IMAGE_FOLDER}/${fileName}.webp`;
+});
 
 const HomePage = () => {
   const [viviendasPorZona, setViviendasPorZona] = useState<{ [key: string]: number }>({});
@@ -343,9 +352,17 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [showCookieBanner, setShowCookieBanner] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imagesRef = useRef<HTMLImageElement[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [videoEnded, setVideoEnded] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
       if (window.innerWidth >= 768) {
         setFaqExpandido(true);
       } else {
@@ -357,23 +374,107 @@ const HomePage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Función para dibujar un frame en el Canvas (memoizada con useCallback)
+  const renderCanvasFrame = useCallback((index: number) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    const img = imagesRef.current[index];
+
+    if (!ctx || !img) return;
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight * 0.85;
+
+    const canvasAspect = canvas.width / canvas.height;
+    const imgAspect = img.width / img.height;
+    let drawWidth: number, drawHeight: number, offsetX: number, offsetY: number;
+
+    if (imgAspect > canvasAspect) {
+      drawHeight = canvas.height;
+      drawWidth = canvas.height * imgAspect;
+      offsetX = (canvas.width - drawWidth) / 2;
+      offsetY = 0;
+    } else {
+      drawWidth = canvas.width;
+      drawHeight = canvas.width / imgAspect;
+      offsetX = 0;
+      offsetY = (canvas.height - drawHeight) / 2;
+    }
+
+    // Ajuste para móvil: mostrar más de la imagen
+    if (isMobile) {
+      offsetY -= drawHeight * 0.1; // Mostrar más arriba en móvil
+    } else {
+      offsetY -= drawHeight * 0.05; // Desktop
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+  }, [isMobile]);
+
+  // Precarga de imágenes
+  useEffect(() => {
+    let loadedCount = 0;
+
+    const preloadImages = () => {
+      IMAGE_SEQUENCE.forEach((src, index) => {
+        const img = new Image();
+        img.src = src;
+        img.onload = () => {
+          imagesRef.current[index] = img;
+          loadedCount++;
+          if (loadedCount === TOTAL_IMAGES) {
+            setIsLoaded(true);
+            if (videoEnded) {
+              renderCanvasFrame(0);
+            }
+          }
+        };
+        img.onerror = () => {
+          const fallbackImg = new Image();
+          fallbackImg.src = isMobile ? '/hero-movil.jpg' : '/hero.jpg';
+          imagesRef.current[index] = fallbackImg;
+          loadedCount++;
+          if (loadedCount === TOTAL_IMAGES) {
+            setIsLoaded(true);
+            if (videoEnded) {
+              renderCanvasFrame(0);
+            }
+          }
+        };
+      });
+    };
+
+    preloadImages();
+  }, [isMobile, videoEnded, renderCanvasFrame]);
 
 
-  // Estado para controlar si el video ha terminado
-  const [videoEnded, setVideoEnded] = useState(false);
-
-  // Escucha de Scroll para efecto zoom-in/zoom-out en hero.jpg
+  // Escucha de Scroll para la secuencia de imágenes (solo en desktop)
   useEffect(() => {
     const handleScroll = () => {
       const scrollPos = window.scrollY;
       setScrollY(scrollPos);
+      
+      // Solo hacer transición en desktop, en móvil mostrar solo la primera imagen
+      if (!isMobile && isLoaded && videoEnded) {
+        const heroHeight = window.innerHeight * 0.85;
+        const progress = Math.min(scrollPos / heroHeight, 1);
+        const frameIndex = Math.min(
+          TOTAL_IMAGES - 1,
+          Math.floor(progress * TOTAL_IMAGES)
+        );
+        requestAnimationFrame(() => renderCanvasFrame(frameIndex));
+      } else if (isMobile && isLoaded && videoEnded) {
+        // En móvil, mostrar siempre la primera imagen (000.webp)
+        requestAnimationFrame(() => renderCanvasFrame(0));
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
     
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isLoaded, videoEnded, isMobile, renderCanvasFrame]);
 
   useEffect(() => {
     const fetchViviendasPorZona = async () => {
@@ -435,6 +536,7 @@ const HomePage = () => {
         <div className="absolute inset-0 z-0 w-full h-full hero-image-container bg-black">
           {/* Video que se reproduce primero */}
           <video
+            ref={videoRef}
             className="w-full h-full object-cover absolute inset-0"
             style={{
               filter: 'brightness(0.7)',
@@ -445,11 +547,22 @@ const HomePage = () => {
               zIndex: videoEnded ? 0 : 2,
               opacity: videoEnded ? 0 : 1
             }}
-            autoPlay
             muted
             playsInline
             preload="auto"
             poster="/hero.jpg"
+            onLoadedData={() => {
+              // Esperar 2 segundos antes de reproducir el video
+              if (videoRef.current) {
+                setTimeout(() => {
+                  if (videoRef.current) {
+                    videoRef.current.play().catch((err) => {
+                      console.log('Error al reproducir video:', err);
+                    });
+                  }
+                }, 2000); // 2 segundos de delay
+              }
+            }}
             onEnded={() => {
               // Cuando el video termina, mostrar hero.jpg
               setVideoEnded(true);
@@ -462,21 +575,35 @@ const HomePage = () => {
           >
             <source src="/fotos-efecto/Whisk_ytmyqmm2ugomhzmk1cmlfwotydohrtl5qzmz0yy_000/Video.mp4" type="video/mp4" />
           </video>
-          {/* Imagen hero.jpg con efecto zoom-in/zoom-out (se muestra cuando el video termina) */}
+          {/* Canvas con secuencia de imágenes (se muestra cuando el video termina) */}
           {videoEnded && (
-            <img
-              src="/hero.jpg"
-              alt="Hero"
-              className="w-full h-full object-cover absolute inset-0"
-              style={{
-                filter: 'brightness(0.7)',
-                transform: `scale(${1 + scrollY * 0.002}) translateY(${scrollY * 0.2}px)`,
-                transition: 'transform 0.1s ease-out',
-                willChange: 'transform',
-                zIndex: 2,
-                opacity: 1
-              }}
-            />
+            <>
+              {!isLoaded && (
+                <img
+                  src={isMobile ? "/hero-movil.jpg" : "/hero.jpg"}
+                  alt="Hero"
+                  className="w-full h-full object-cover absolute inset-0"
+                  style={{
+                    filter: 'brightness(0.7)',
+                    zIndex: 1,
+                    opacity: 1
+                  }}
+                />
+              )}
+              <canvas
+                ref={canvasRef}
+                className="w-full h-full block absolute inset-0"
+                style={{
+                  filter: 'brightness(0.7)',
+                  transform: `scale(${1 + scrollY * 0.0005}) translateY(${scrollY * 0.2}px)`,
+                  transition: 'transform 0.1s ease-out',
+                  willChange: 'transform',
+                  zIndex: 2,
+                  opacity: isLoaded ? 1 : 0,
+                  display: isLoaded ? 'block' : 'none'
+                }}
+              />
+            </>
           )}
           {/* Overlay gradiente para asegurar legibilidad */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 z-10" />
