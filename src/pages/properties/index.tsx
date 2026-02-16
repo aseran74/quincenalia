@@ -92,7 +92,7 @@ const RoomFilterStepper = ({ id, label, value, onChange }: RoomFilterStepperProp
   };
 
   return (
-    <div>
+    <div className="w-full max-w-[170px]">
       <label className="block text-xs font-medium text-muted-foreground mb-1.5">{label}</label>
       <div
         id={id}
