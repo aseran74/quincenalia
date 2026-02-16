@@ -55,13 +55,80 @@ const priceOptions = [
     { value: 1000000, label: '1.000.000€+' },
 ];
 
-const roomOptions = [
-    { value: 1, label: '1+' },
-    { value: 2, label: '2+' },
-    { value: 3, label: '3+' },
-    { value: 4, label: '4+' },
-    { value: 5, label: '5+' },
-];
+const ROOM_FILTER_MIN = 1;
+const ROOM_FILTER_MAX = 5;
+
+type RoomFilterValue = Filters['bedrooms'];
+
+type RoomFilterStepperProps = {
+  id: string;
+  label: string;
+  value: RoomFilterValue;
+  onChange: (value: RoomFilterValue) => void;
+};
+
+const RoomFilterStepper = ({ id, label, value, onChange }: RoomFilterStepperProps) => {
+  const isAny = value === 'any';
+  const parsedValue = Number(value);
+  const numericValue = isAny || Number.isNaN(parsedValue) ? ROOM_FILTER_MIN : parsedValue;
+  const canIncrement = isAny || numericValue < ROOM_FILTER_MAX;
+
+  const decrease = () => {
+    if (isAny) return;
+    if (numericValue <= ROOM_FILTER_MIN) {
+      onChange('any');
+      return;
+    }
+    onChange(numericValue - 1);
+  };
+
+  const increase = () => {
+    if (isAny) {
+      onChange(ROOM_FILTER_MIN);
+      return;
+    }
+    if (numericValue >= ROOM_FILTER_MAX) return;
+    onChange(numericValue + 1);
+  };
+
+  return (
+    <div>
+      <label className="block text-xs font-medium text-muted-foreground mb-1.5">{label}</label>
+      <div
+        id={id}
+        role="group"
+        aria-label={label}
+        className="flex h-10 items-center rounded-md border border-input bg-background px-1"
+      >
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={decrease}
+          disabled={isAny}
+          aria-label={`Disminuir ${label.toLowerCase()}`}
+        >
+          <Minus className="h-4 w-4" />
+        </Button>
+        <span className="flex-1 text-center text-sm font-medium">
+          {isAny ? 'Cualquiera' : `${numericValue}+`}
+        </span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={increase}
+          disabled={!canIncrement}
+          aria-label={`Aumentar ${label.toLowerCase()}`}
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 const TIPO_VIVIENDA_OPTIONS = [
   'Piso o apartamento.',
@@ -544,43 +611,21 @@ export const PropertiesPage = () => {
             </div>
 
             {/* 4. Dormitorios */}
-            <div>
-              <label htmlFor="filterBedrooms" className="block text-xs font-medium text-muted-foreground mb-1.5">Dormitorios (mín.)</label>
-              <Select
-                value={String(filters.bedrooms)}
-                onValueChange={value => setFilters({ ...filters, bedrooms: value === 'any' ? 'any' : Number(value) })}
-              >
-                <SelectTrigger id="filterBedrooms" className="text-sm h-10">
-                  <SelectValue placeholder="Cualquiera" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
-                  {roomOptions.map(opt => (
-                    <SelectItem key={`bed-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <RoomFilterStepper
+              id="filterBedrooms"
+              label="Dormitorios (mín.)"
+              value={filters.bedrooms}
+              onChange={value => setFilters(prev => ({ ...prev, bedrooms: value }))}
+            />
             
             {/* --- START REORDERED AND RESTRUCTURED SECTION --- */}
             {/* 5. Baños (mín.) - Moved and reordered */}
-            <div>
-              <label htmlFor="filterBathrooms" className="block text-xs font-medium text-muted-foreground mb-1.5">Baños (mín.)</label>
-              <Select
-                value={String(filters.bathrooms)}
-                onValueChange={value => setFilters({ ...filters, bathrooms: value === 'any' ? 'any' : Number(value) })}
-              >
-                <SelectTrigger id="filterBathrooms" className="text-sm h-10 w-full"> {/* MODIFIED: h-10 */}
-                  <SelectValue placeholder="Cualquiera" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any" className="text-sm">Cualquiera</SelectItem>
-                  {roomOptions.map(opt => (
-                    <SelectItem key={`bath-${opt.value}`} value={String(opt.value)} className="text-sm">{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <RoomFilterStepper
+              id="filterBathrooms"
+              label="Baños (mín.)"
+              value={filters.bathrooms}
+              onChange={value => setFilters(prev => ({ ...prev, bathrooms: value }))}
+            />
 
             {/* 6. Precio Mín. - Reordered */}
             <div>
