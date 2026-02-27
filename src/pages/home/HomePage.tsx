@@ -335,7 +335,7 @@ function getFakeCount(zona: string) {
 // Configuración de la secuencia de imágenes
 const IMAGE_BASE_NAME = 'Whisk_ytmyqmm2ugomhzmk1cmlfwotydohrtl5qzmz0yy_';
 const IMAGE_FOLDER = `${IMAGE_BASE_NAME}000`;
-const TOTAL_IMAGES = 81; 
+const TOTAL_IMAGES = 50; 
 const IMAGE_SEQUENCE = Array.from({ length: TOTAL_IMAGES }, (_, i) => {
   const num = i.toString().padStart(3, '0');
   const fileName = `${IMAGE_BASE_NAME}${num}`;
@@ -357,9 +357,7 @@ const HomePage = () => {
   const imagesRef = useRef<HTMLImageElement[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
-  const [firstFrameDataUrl, setFirstFrameDataUrl] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const firstFrameCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -414,7 +412,7 @@ const HomePage = () => {
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
   }, [isMobile]);
 
-  // Precarga de imágenes (tanto móvil como desktop)
+  // Precarga de imágenes
   useEffect(() => {
     let loadedCount = 0;
 
@@ -434,7 +432,7 @@ const HomePage = () => {
         };
         img.onerror = () => {
           const fallbackImg = new Image();
-          fallbackImg.src = isMobile ? '/foto-movil.jpg' : '/hero.jpg';
+          fallbackImg.src = isMobile ? '/hero-movil.jpg' : '/hero.jpg';
           imagesRef.current[index] = fallbackImg;
           loadedCount++;
           if (loadedCount === TOTAL_IMAGES) {
@@ -448,33 +446,27 @@ const HomePage = () => {
     };
 
     preloadImages();
-  }, [videoEnded, renderCanvasFrame, isMobile]);
+  }, [isMobile, videoEnded, renderCanvasFrame]);
 
 
-
-  // Escucha de Scroll para la secuencia de imágenes (móvil y desktop)
+  // Escucha de Scroll para la secuencia de imágenes (solo en desktop)
   useEffect(() => {
     const handleScroll = () => {
       const scrollPos = window.scrollY;
-      // Scroll más rápido: usar 1.2 veces la altura de la ventana
-      const heroHeight = window.innerHeight * 1.2;
-      
-      const progress = Math.min(scrollPos / heroHeight, 1);
-      const frameIndex = Math.min(
-        TOTAL_IMAGES - 1,
-        Math.floor(progress * TOTAL_IMAGES)
-      );
-
       setScrollY(scrollPos);
       
-      // Hacer transición tanto en móvil como en desktop cuando el video termine
-      // En móvil, empezar desde scrollY > 100 para dar tiempo a mostrar foto-movil.webp primero
-      if (isLoaded && videoEnded) {
-        if (isMobile && scrollPos < 100) {
-          // En móvil, no mostrar secuencia hasta que haya scroll suficiente
-          return;
-        }
+      // Solo hacer transición en desktop, en móvil mostrar solo la primera imagen
+      if (!isMobile && isLoaded && videoEnded) {
+        const heroHeight = window.innerHeight * 0.85;
+        const progress = Math.min(scrollPos / heroHeight, 1);
+        const frameIndex = Math.min(
+          TOTAL_IMAGES - 1,
+          Math.floor(progress * TOTAL_IMAGES)
+        );
         requestAnimationFrame(() => renderCanvasFrame(frameIndex));
+      } else if (isMobile && isLoaded && videoEnded) {
+        // En móvil, mostrar siempre la primera imagen (000.webp)
+        requestAnimationFrame(() => renderCanvasFrame(0));
       }
     };
 
@@ -545,7 +537,6 @@ const HomePage = () => {
           {/* Video que se reproduce primero */}
           <video
             ref={videoRef}
-            key={isMobile ? "mobile" : "desktop"}
             className="w-full h-full object-cover absolute inset-0"
             style={{
               filter: 'brightness(0.7)',
@@ -559,49 +550,10 @@ const HomePage = () => {
             muted
             playsInline
             preload="auto"
-            poster={isMobile ? "/foto-movil.jpg" : "/hero.jpg"}
+            poster="/hero.jpg"
             onLoadedData={() => {
               // Esperar 2 segundos antes de reproducir el video
               if (videoRef.current) {
-                const video = videoRef.current;
-                
-                // Capturar el primer fotograma del video
-                if (isMobile && firstFrameCanvasRef.current) {
-                  const canvas = firstFrameCanvasRef.current;
-                  const ctx = canvas.getContext('2d');
-                  
-                  if (ctx && video.videoWidth > 0 && video.videoHeight > 0) {
-                    // Ir al primer frame (0 segundos)
-                    video.currentTime = 0;
-                    
-                    // Capturar el frame cuando se haya posicionado
-                    const captureFrame = () => {
-                      if (video && canvas && ctx && video.videoWidth > 0 && video.videoHeight > 0) {
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-                        setFirstFrameDataUrl(dataUrl);
-                        video.removeEventListener('seeked', captureFrame);
-                      }
-                    };
-                    
-                    video.addEventListener('seeked', captureFrame);
-                  }
-                }
-                
-                // Si es móvil, limitar la duración a 8 segundos
-                if (isMobile) {
-                  const handleTimeUpdate = () => {
-                    if (video.currentTime >= 8) {
-                      video.pause();
-                      setVideoEnded(true);
-                      video.removeEventListener('timeupdate', handleTimeUpdate);
-                    }
-                  };
-                  video.addEventListener('timeupdate', handleTimeUpdate);
-                }
-                
                 setTimeout(() => {
                   if (videoRef.current) {
                     videoRef.current.play().catch((err) => {
@@ -612,30 +564,26 @@ const HomePage = () => {
               }
             }}
             onEnded={() => {
-              // Cuando el video termina, mostrar imagen
-              console.log('Video terminado, mostrando imagen');
+              // Cuando el video termina, mostrar hero.jpg
               setVideoEnded(true);
             }}
-            onError={(e) => {
+            onError={() => {
               // Si el video falla, usar imágenes directamente
-              console.log('Error al cargar video, usando imágenes:', e);
+              console.log('Error al cargar video, usando imágenes');
               setVideoEnded(true);
             }}
           >
-            <source src={isMobile ? "/Video.mp4" : "/fotos-efecto/Whisk_ytmyqmm2ugomhzmk1cmlfwotydohrtl5qzmz0yy_000/Video.mp4"} type="video/mp4" />
+            <source
+              src={isMobile ? "/Video-movil.mp4" : "/fotos-efecto/Whisk_ytmyqmm2ugomhzmk1cmlfwotydohrtl5qzmz0yy_000/Video.mp4"}
+              type="video/mp4"
+            />
           </video>
-          {/* Canvas oculto para capturar el primer fotograma del video */}
-          <canvas
-            ref={firstFrameCanvasRef}
-            style={{ display: 'none' }}
-          />
-          
           {/* Canvas con secuencia de imágenes (se muestra cuando el video termina) */}
           {videoEnded && (
             <>
               {!isLoaded && (
                 <img
-                  src={isMobile ? (firstFrameDataUrl || "/foto-movil.jpg") : "/hero.jpg"}
+                  src={isMobile ? "/hero-movil.jpg" : "/hero.jpg"}
                   alt="Hero"
                   className="w-full h-full object-cover absolute inset-0"
                   style={{
@@ -645,23 +593,6 @@ const HomePage = () => {
                   }}
                 />
               )}
-              {/* En móvil, mostrar el primer fotograma del video cuando no hay scroll suficiente */}
-              {isMobile && videoEnded && firstFrameDataUrl && (
-                <img
-                  src={firstFrameDataUrl}
-                  alt="Hero"
-                  className="w-full h-full object-cover absolute inset-0"
-                  style={{
-                    filter: 'brightness(0.7)',
-                    transform: `scale(${1 + scrollY * 0.0005}) translateY(${scrollY * 0.2}px)`,
-                    transition: 'transform 0.1s ease-out, opacity 0.3s ease-out',
-                    willChange: 'transform',
-                    zIndex: scrollY < 100 ? 2 : 1,
-                    opacity: scrollY < 100 ? 1 : 0
-                  }}
-                />
-              )}
-              {/* Canvas con la secuencia de 81 imágenes */}
               <canvas
                 ref={canvasRef}
                 className="w-full h-full block absolute inset-0"
@@ -670,8 +601,8 @@ const HomePage = () => {
                   transform: `scale(${1 + scrollY * 0.0005}) translateY(${scrollY * 0.2}px)`,
                   transition: 'transform 0.1s ease-out',
                   willChange: 'transform',
-                  zIndex: isMobile && scrollY < 100 ? 1 : 2,
-                  opacity: isLoaded ? (isMobile && scrollY < 100 ? 0 : 1) : 0,
+                  zIndex: 2,
+                  opacity: isLoaded ? 1 : 0,
                   display: isLoaded ? 'block' : 'none'
                 }}
               />
