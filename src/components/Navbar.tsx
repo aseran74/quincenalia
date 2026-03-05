@@ -375,7 +375,16 @@ const Navbar = () => {
   const navContainerClasses = cn(
     "fixed w-full z-50 transition-all",
     NAV_TRANSITION_DURATION,
-    isNavbarScrolled ? "bg-white/80 backdrop-blur-md shadow-sm" : "bg-transparent"
+    "bg-transparent"
+  );
+
+  const pillGlassClasses = cn(
+    "rounded-full transition-all",
+    NAV_TRANSITION_DURATION,
+    "backdrop-blur-xl border shadow-lg",
+    isNavbarScrolled
+      ? "bg-white/25 border-white/30 shadow-black/5"
+      : "bg-white/10 border-white/20 shadow-black/10"
   );
 
   // Estado para controlar los dropdowns abiertos
@@ -398,8 +407,8 @@ const Navbar = () => {
 
   return (
     <nav className={navContainerClasses}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <div className={cn(pillGlassClasses, "flex items-center justify-between h-14 px-4 sm:px-6")}>
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="block w-[150px]" onClick={closeMobileMenu}>
