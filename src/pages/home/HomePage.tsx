@@ -358,6 +358,7 @@ const HomePage = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const heroHeightRatio = isMobile ? 0.75 : 0.85;
 
   useEffect(() => {
     const handleResize = () => {
@@ -383,7 +384,7 @@ const HomePage = () => {
     if (!ctx || !img) return;
 
     canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight * 0.85;
+    canvas.height = window.innerHeight * heroHeightRatio;
 
     const canvasAspect = canvas.width / canvas.height;
     const imgAspect = img.width / img.height;
@@ -410,7 +411,7 @@ const HomePage = () => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-  }, [isMobile]);
+  }, [heroHeightRatio, isMobile]);
 
   // Precarga de imágenes
   useEffect(() => {
@@ -457,7 +458,7 @@ const HomePage = () => {
       
       // Solo hacer transición en desktop, en móvil mostrar solo la primera imagen
       if (!isMobile && isLoaded && videoEnded) {
-        const heroHeight = window.innerHeight * 0.85;
+        const heroHeight = window.innerHeight * heroHeightRatio;
         const progress = Math.min(scrollPos / heroHeight, 1);
         const frameIndex = Math.min(
           TOTAL_IMAGES - 1,
@@ -474,7 +475,7 @@ const HomePage = () => {
     handleScroll();
     
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isLoaded, videoEnded, isMobile, renderCanvasFrame]);
+  }, [heroHeightRatio, isLoaded, videoEnded, isMobile, renderCanvasFrame]);
 
   useEffect(() => {
     const fetchViviendasPorZona = async () => {
@@ -531,7 +532,10 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-background font-poppins">
       <Navbar />
-      <section className="relative h-[85vh] sm:h-screen flex items-center justify-center overflow-hidden">
+      <section
+        className="relative h-[85vh] sm:h-screen flex items-center justify-center overflow-hidden"
+        style={isMobile ? { height: `${heroHeightRatio * 100}vh` } : undefined}
+      >
         {/* Imagen hero con secuencia de imágenes basada en scroll */}
         <div className="absolute inset-0 z-0 w-full h-full hero-image-container bg-black">
           {/* Video que se reproduce primero */}
