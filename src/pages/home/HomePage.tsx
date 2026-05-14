@@ -1,4 +1,3 @@
-// Modificación mínima para forzar commit y push
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
@@ -341,6 +340,7 @@ const IMAGE_SEQUENCE = Array.from({ length: TOTAL_IMAGES }, (_, i) => {
   const fileName = `${IMAGE_BASE_NAME}${num}`;
   return `/fotos-efecto/${IMAGE_FOLDER}/${fileName}.webp`;
 });
+const HERO_MEDIA_FILTER = 'brightness(0.95) saturate(1.08)';
 
 const HomePage = () => {
   const [viviendasPorZona, setViviendasPorZona] = useState<{ [key: string]: number }>({});
@@ -525,9 +525,6 @@ const HomePage = () => {
     }
   };
 
-  // Debug: mostrar el contenido real de viviendasPorZona antes de renderizar las cards de zona
-  console.log('viviendasPorZona:', viviendasPorZona);
-
   return (
     <div className="min-h-screen bg-background font-poppins">
       <Navbar />
@@ -539,7 +536,7 @@ const HomePage = () => {
             ref={videoRef}
             className="w-full h-full object-cover absolute inset-0"
             style={{
-              filter: 'brightness(0.7)',
+              filter: HERO_MEDIA_FILTER,
               transform: `scale(${1 + scrollY * 0.0005}) translateY(${scrollY * 0.2}px)`,
               transition: 'transform 0.1s ease-out, opacity 0.5s ease-out',
               willChange: 'transform',
@@ -587,7 +584,7 @@ const HomePage = () => {
                   alt="Hero"
                   className="w-full h-full object-cover absolute inset-0"
                   style={{
-                    filter: 'brightness(0.7)',
+                    filter: HERO_MEDIA_FILTER,
                     zIndex: 1,
                     opacity: 1
                   }}
@@ -597,7 +594,7 @@ const HomePage = () => {
                 ref={canvasRef}
                 className="w-full h-full block absolute inset-0"
                 style={{
-                  filter: 'brightness(0.7)',
+                  filter: HERO_MEDIA_FILTER,
                   transform: `scale(${1 + scrollY * 0.0005}) translateY(${scrollY * 0.2}px)`,
                   transition: 'transform 0.1s ease-out',
                   willChange: 'transform',
@@ -609,7 +606,7 @@ const HomePage = () => {
             </>
           )}
           {/* Overlay gradiente para asegurar legibilidad */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 z-10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-white/10 z-10" />
         </div>
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-4 sm:mb-6 !leading-tight"
@@ -738,7 +735,7 @@ const HomePage = () => {
                             className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-full"
                             onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-80 group-hover/card:opacity-100 transition-opacity duration-300 rounded-full"></div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/15 to-transparent opacity-75 group-hover/card:opacity-85 transition-opacity duration-300 rounded-full"></div>
                           <div className="absolute bottom-3 left-0 right-0 px-2 text-center">
                             <h3 className="text-lg font-bold text-white truncate" title={zona}>
                               {zona}
@@ -788,7 +785,7 @@ const HomePage = () => {
                           className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-2xl"
                           onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-90 group-hover/card:opacity-95 transition-opacity duration-300 rounded-2xl"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent opacity-80 group-hover/card:opacity-90 transition-opacity duration-300 rounded-2xl"></div>
                         <div className="absolute bottom-2 left-0 right-0 px-3 text-center">
                           <h3 className="text-sm font-bold text-white truncate" title={zona}>
                             {zona}
