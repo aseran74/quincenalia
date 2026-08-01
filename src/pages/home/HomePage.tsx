@@ -190,9 +190,9 @@ function ComoFunciona() {
   ];
 
   return (
-    <section id="reinventada" className="py-16 sm:py-20 bg-gradient-to-b from-white to-slate-50">
+    <section id="reinventada" className="py-10 sm:py-20 bg-gradient-to-b from-white to-slate-50">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4 text-gray-800">
+        <h2 className="text-2xl sm:text-4xl font-bold text-center mb-3 sm:mb-4 text-gray-800">
           Tu Segunda Residencia,{' '}
           <span className="relative inline-block">
             <span className="text-gray-800 font-bold">Reinventada</span>
@@ -200,7 +200,7 @@ function ComoFunciona() {
               viewBox="0 0 180 12"
               width="180"
               height="12"
-              className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[180px]"
+              className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[120px] sm:w-[180px]"
               aria-hidden="true"
             >
               <linearGradient id="linea-reinventada" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
@@ -219,21 +219,21 @@ function ComoFunciona() {
             <span className="text-primary text-4xl align-middle ml-1">.</span>
           </span>
         </h2>
-        <p className="text-lg text-center text-gray-600 mb-10 sm:mb-12 max-w-3xl mx-auto">Descubre cómo Quincenalia combina propiedad, disfrute y rentabilidad de forma única.</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+        <p className="text-base sm:text-lg text-center text-gray-600 mb-8 sm:mb-12 max-w-3xl mx-auto px-1">Descubre cómo Quincenalia combina propiedad, disfrute y rentabilidad de forma única.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
           {steps.map((step, index) => (
             <Card 
               key={index} 
-              className="group bg-white/80 backdrop-blur-sm border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 ease-in-out"
+              className="group bg-white/90 backdrop-blur-sm border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 ease-in-out rounded-2xl"
             >
-              <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                  <div className="bg-primary/10 p-2.5 rounded-full group-hover:bg-primary/20 transition-all duration-300">
-                      <step.icon className="w-7 h-7 text-primary transition-transform duration-300 ease-in-out group-hover:scale-125 group-hover:-rotate-12" />
+              <CardHeader className="flex flex-row items-center gap-3 sm:gap-4 pb-2">
+                  <div className="bg-primary/10 p-2.5 rounded-full group-hover:bg-primary/20 transition-all duration-300 shrink-0">
+                      <step.icon className="w-6 h-6 sm:w-7 sm:h-7 text-primary transition-transform duration-300 ease-in-out group-hover:scale-125 group-hover:-rotate-12" />
                   </div>
-                  <CardTitle className="text-lg font-semibold">{step.title}</CardTitle>
+                  <CardTitle className="text-base sm:text-lg font-semibold">{step.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                  <p className="text-sm text-gray-600">{step.text}</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">{step.text}</p>
               </CardContent>
             </Card>
           ))}
@@ -374,41 +374,45 @@ const HomePage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Función para dibujar un frame en el Canvas (memoizada con useCallback)
+  // Función para dibujar un frame en el Canvas (cover real, sin márgenes negros)
   const renderCanvasFrame = useCallback((index: number) => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     const img = imagesRef.current[index];
 
-    if (!ctx || !img) return;
+    if (!ctx || !img || !img.complete || img.naturalWidth === 0) return;
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight * 0.85;
+    const parent = canvas.parentElement;
+    const w = parent?.clientWidth || window.innerWidth;
+    const h = parent?.clientHeight || window.innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-    const canvasAspect = canvas.width / canvas.height;
-    const imgAspect = img.width / img.height;
-    let drawWidth: number, drawHeight: number, offsetX: number, offsetY: number;
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+    // Cover + ligero overscale en móvil (360x740) para evitar bandas negras
+    const scaleBoost = isMobile ? 1.14 : 1.03;
+    const canvasAspect = w / h;
+    const imgAspect = img.naturalWidth / img.naturalHeight;
+
+    let drawWidth: number;
+    let drawHeight: number;
     if (imgAspect > canvasAspect) {
-      drawHeight = canvas.height;
-      drawWidth = canvas.height * imgAspect;
-      offsetX = (canvas.width - drawWidth) / 2;
-      offsetY = 0;
+      drawHeight = h * scaleBoost;
+      drawWidth = drawHeight * imgAspect;
     } else {
-      drawWidth = canvas.width;
-      drawHeight = canvas.width / imgAspect;
-      offsetX = 0;
-      offsetY = (canvas.height - drawHeight) / 2;
+      drawWidth = w * scaleBoost;
+      drawHeight = drawWidth / imgAspect;
     }
 
-    // Ajuste para móvil: mostrar más de la imagen
-    if (isMobile) {
-      offsetY -= drawHeight * 0.1; // Mostrar más arriba en móvil
-    } else {
-      offsetY -= drawHeight * 0.05; // Desktop
-    }
+    const offsetX = (w - drawWidth) / 2;
+    // En móvil priorizamos el centro-superior sin dejar hueco inferior
+    const offsetY = isMobile ? (h - drawHeight) * 0.4 : (h - drawHeight) / 2;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, w, h);
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
   }, [isMobile]);
 
@@ -432,7 +436,7 @@ const HomePage = () => {
         };
         img.onerror = () => {
           const fallbackImg = new Image();
-          fallbackImg.src = isMobile ? '/hero-movil.jpg' : '/hero.jpg';
+          fallbackImg.src = isMobile ? '/foto-movil.jpg' : '/hero.jpg';
           imagesRef.current[index] = fallbackImg;
           loadedCount++;
           if (loadedCount === TOTAL_IMAGES) {
@@ -457,7 +461,7 @@ const HomePage = () => {
       
       // Solo hacer transición en desktop, en móvil mostrar solo la primera imagen
       if (!isMobile && isLoaded && videoEnded) {
-        const heroHeight = window.innerHeight * 0.85;
+        const heroHeight = window.innerHeight;
         const progress = Math.min(scrollPos / heroHeight, 1);
         const frameIndex = Math.min(
           TOTAL_IMAGES - 1,
@@ -465,7 +469,7 @@ const HomePage = () => {
         );
         requestAnimationFrame(() => renderCanvasFrame(frameIndex));
       } else if (isMobile && isLoaded && videoEnded) {
-        // En móvil, mostrar siempre la primera imagen (000.webp)
+        // En móvil, cover completo de la primera imagen
         requestAnimationFrame(() => renderCanvasFrame(0));
       }
     };
@@ -531,26 +535,29 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-background font-poppins">
       <Navbar />
-      <section className="relative h-[85vh] sm:h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative h-[100svh] min-h-[100svh] sm:h-screen sm:min-h-0 flex items-center justify-center overflow-hidden">
         {/* Imagen hero con secuencia de imágenes basada en scroll */}
-        <div className="absolute inset-0 z-0 w-full h-full hero-image-container bg-black">
+        <div className="absolute inset-0 z-0 w-full h-full hero-image-container bg-[#0a1628]">
           {/* Video que se reproduce primero */}
           <video
             ref={videoRef}
             className="w-full h-full object-cover absolute inset-0"
             style={{
-              filter: 'brightness(0.7)',
-              transform: `scale(${1 + scrollY * 0.0005}) translateY(${scrollY * 0.2}px)`,
+              filter: 'brightness(0.72)',
+              // Overscale en móvil evita bandas negras en 360x740; menos translateY en móvil
+              transform: isMobile
+                ? `scale(${1.18 + scrollY * 0.0003})`
+                : `scale(${1 + scrollY * 0.0005}) translateY(${scrollY * 0.2}px)`,
               transition: 'transform 0.1s ease-out, opacity 0.5s ease-out',
               willChange: 'transform',
-              objectPosition: 'center',
+              objectPosition: isMobile ? 'center 35%' : 'center center',
               zIndex: videoEnded ? 0 : 2,
               opacity: videoEnded ? 0 : 1
             }}
             muted
             playsInline
             preload="auto"
-            poster="/hero.jpg"
+            poster={isMobile ? "/foto-movil.jpg" : "/hero.jpg"}
             onLoadedData={() => {
               // Esperar 2 segundos antes de reproducir el video
               if (videoRef.current) {
@@ -583,11 +590,13 @@ const HomePage = () => {
             <>
               {!isLoaded && (
                 <img
-                  src={isMobile ? "/hero-movil.jpg" : "/hero.jpg"}
-                  alt="Hero"
+                  src={isMobile ? "/foto-movil.jpg" : "/hero.jpg"}
+                  alt="Imagen principal de Quincenalia: costa y propiedades vacacionales"
                   className="w-full h-full object-cover absolute inset-0"
                   style={{
-                    filter: 'brightness(0.7)',
+                    filter: 'brightness(0.72)',
+                    objectPosition: isMobile ? 'center 35%' : 'center center',
+                    transform: isMobile ? 'scale(1.14)' : 'scale(1.02)',
                     zIndex: 1,
                     opacity: 1
                   }}
@@ -597,8 +606,10 @@ const HomePage = () => {
                 ref={canvasRef}
                 className="w-full h-full block absolute inset-0"
                 style={{
-                  filter: 'brightness(0.7)',
-                  transform: `scale(${1 + scrollY * 0.0005}) translateY(${scrollY * 0.2}px)`,
+                  filter: 'brightness(0.72)',
+                  transform: isMobile
+                    ? `scale(${1.02 + scrollY * 0.0002})`
+                    : `scale(${1 + scrollY * 0.0005}) translateY(${scrollY * 0.2}px)`,
                   transition: 'transform 0.1s ease-out',
                   willChange: 'transform',
                   zIndex: 2,
@@ -609,10 +620,10 @@ const HomePage = () => {
             </>
           )}
           {/* Overlay gradiente para asegurar legibilidad */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 z-10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/30 z-10" />
         </div>
-        <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-4 sm:mb-6 !leading-tight"
+        <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-5 pt-16 sm:pt-8 w-full">
+          <h1 className="text-[1.85rem] leading-tight xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-3 sm:mb-6"
               style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
             Ha llegado otra manera de{' '}
             <span className="relative inline-block">
@@ -623,7 +634,7 @@ const HomePage = () => {
                 viewBox="0 0 180 12"
                 width="180"
                 height="12"
-                className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[180px]"
+                className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[120px] sm:w-[180px]"
                 aria-hidden="true"
               >
                 <linearGradient id="linea-grad" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
@@ -641,18 +652,18 @@ const HomePage = () => {
               </svg>
             </span><span className="text-primary">.</span>
           </h1>
-          <p className="text-lg sm:text-xl md:text-2xl mb-8 sm:mb-10 font-light max-w-2xl mx-auto"
+          <p className="text-[0.95rem] sm:text-xl md:text-2xl mb-6 sm:mb-10 font-light max-w-2xl mx-auto leading-relaxed"
              style={{ textShadow: '0 1px 5px rgba(0,0,0,0.4)' }}>
             Accede a propiedades exclusivas por una fracción del coste. Disfruta, rentabiliza e intercambia.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full mb-2">
-          <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-3 text-base font-semibold shadow-lg transform transition hover:scale-105" asChild>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center w-full max-w-sm sm:max-w-none mx-auto mb-2">
+          <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-7 py-3 text-sm sm:text-base font-semibold shadow-lg transform transition hover:scale-105 w-full sm:w-auto" asChild>
             <Link to="/propiedades">
               Explorar Propiedades
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
-            <Button size="lg" variant="outline" className="rounded-full px-8 py-3 text-base font-semibold shadow-lg border-white/70 text-primary hover:bg-white/10 hover:text-primary transition" onClick={() => {
+            <Button size="lg" variant="outline" className="rounded-full px-7 py-3 text-sm sm:text-base font-semibold shadow-lg border-white/80 bg-white/10 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm transition w-full sm:w-auto" onClick={() => {
               const seccion = document.getElementById('reinventada');
               if (seccion) seccion.scrollIntoView({ behavior: 'smooth' });
             }}>
@@ -662,9 +673,9 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-      <section id="zonas-destacadas" className="py-12 sm:py-16 bg-white">
+      <section id="zonas-destacadas" className="py-10 sm:py-16 bg-[#F7F8FA]">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-3 text-gray-800">
+          <h2 className="text-2xl sm:text-4xl font-bold text-center mb-2 sm:mb-3 text-gray-800">
             Explora por{' '}
             <span className="relative inline-block">
               <span className="text-gray-800 font-bold">zonas</span>
@@ -672,7 +683,7 @@ const HomePage = () => {
                 viewBox="0 0 180 12"
                 width="180"
                 height="12"
-                className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[180px]"
+                className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[120px] sm:w-[180px]"
                 aria-hidden="true"
               >
                 <linearGradient id="linea-zonas" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
@@ -688,35 +699,26 @@ const HomePage = () => {
                   strokeLinecap="round"
                 />
               </svg>
-              <span className="text-primary text-4xl align-middle ml-1">.</span>
+              <span className="text-primary text-3xl sm:text-4xl align-middle ml-1">.</span>
             </span>
           </h2>
-          <p className="text-lg text-center text-gray-600 mb-10 sm:mb-12 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-center text-gray-600 mb-6 sm:mb-12 max-w-2xl mx-auto px-2">
             Encuentra tu refugio perfecto en las regiones más deseadas.
           </p>
-          <div className="text-center mb-8">
-            <Button asChild variant="default" size="lg" className="group">
+          <div className="text-center mb-6 sm:mb-8">
+            <Button asChild variant="default" size="lg" className="group rounded-full px-6">
               <Link to="/properties">
                 Ver Todas las Propiedades
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
             </Button>
           </div>
-          {/* Vista móvil: Carrusel horizontal */}
+          {/* Vista móvil: Carrusel horizontal sin flechas que desbordan en 360px */}
           <div className="relative block md:hidden">
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 sm:-translate-x-6 z-10 rounded-full bg-white/80 hover:bg-white shadow-md backdrop-blur-sm"
-              onClick={() => scrollZonaCarrusel('left')}
-              aria-label="Scroll Left"
-            >
-              <ChevronLeft className="h-8 w-8" />
-            </Button>
-            <div className="px-2 py-6">
+            <div className="py-2">
               <div
                 ref={scrollContainerRef}
-                className="flex space-x-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+                className="flex space-x-4 overflow-x-auto pb-3 scrollbar-hide snap-x snap-mandatory px-1"
               >
                 {zonasUnicas.map((zona, index) => {
                   // Buscar el contador usando la zona normalizada
@@ -728,22 +730,22 @@ const HomePage = () => {
                     <Link
                       to={`/properties?zona=${encodeURIComponent(zona)}`}
                       key={index}
-                      className="flex-shrink-0 w-[80vw] max-w-xs h-48 sm:h-56 group/card-link flex items-center justify-center snap-center px-2"
+                      className="flex-shrink-0 w-[72vw] max-w-[280px] snap-center"
                     >
-                      <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-1 rounded-full group/card w-full h-48 sm:h-56 flex flex-col items-center justify-center p-0 border-4 border-primary/30 bg-white relative">
-                        <div className="relative w-full h-full flex items-center justify-center">
+                      <Card className="overflow-hidden transition-all duration-300 ease-in-out active:scale-[0.98] rounded-2xl group/card w-full h-44 border border-primary/20 bg-white relative shadow-sm">
+                        <div className="relative w-full h-full">
                           <img
                             src={getZonaImage(zona)}
                             alt={`Propiedades en ${zona}`}
-                            className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-full"
+                            className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-105"
                             onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-80 group-hover/card:opacity-100 transition-opacity duration-300 rounded-full"></div>
-                          <div className="absolute bottom-3 left-0 right-0 px-2 text-center">
-                            <h3 className="text-lg font-bold text-white truncate" title={zona}>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"></div>
+                          <div className="absolute bottom-3 left-0 right-0 px-3 text-center">
+                            <h3 className="text-base font-bold text-white truncate" title={zona}>
                               {zona}
                             </h3>
-                            <p className="text-xs text-gray-100 mt-0.5">
+                            <p className="text-xs text-white/85 mt-0.5">
                               {countZona} {countZona === 1 ? 'vivienda' : 'viviendas'}
                             </p>
                           </div>
@@ -754,15 +756,7 @@ const HomePage = () => {
                 })}
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 sm:translate-x-6 z-10 rounded-full bg-white/80 hover:bg-white shadow-md backdrop-blur-sm"
-              onClick={() => scrollZonaCarrusel('right')}
-              aria-label="Scroll Right"
-            >
-              <ChevronRight className="h-8 w-8" />
-            </Button>
+            <p className="text-center text-xs text-gray-500 mt-1">Desliza para ver más zonas →</p>
           </div>
 
           {/* Vista PC: Grid de 6x2 cards */}
@@ -806,9 +800,9 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-      <section className="py-12 sm:py-16">
+      <section className="py-10 sm:py-16 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-10 sm:mb-12 text-gray-800">
+          <h2 className="text-2xl sm:text-4xl font-bold text-center mb-8 sm:mb-12 text-gray-800">
             Oportunidades{' '}
             <span className="relative inline-block">
               <span className="text-gray-800 font-bold">exclusivas</span>
@@ -816,7 +810,7 @@ const HomePage = () => {
                 viewBox="0 0 180 12"
                 width="180"
                 height="12"
-                className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[180px]"
+                className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[120px] sm:w-[180px]"
                 aria-hidden="true"
               >
                 <linearGradient id="linea-exclusivas" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
@@ -839,18 +833,18 @@ const HomePage = () => {
         </div>
       </section>
       <ComoFunciona />
-      <section id="contacto" className="py-16 sm:py-20 bg-gradient-to-b from-slate-50 to-white">
+      <section id="contacto" className="py-10 sm:py-20 bg-gradient-to-b from-slate-50 to-white">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
             <div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
-                <span className="text-black text-4xl align-middle mr-1">¿</span>
+              <h2 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-3 sm:mb-4">
+                <span className="text-black text-3xl sm:text-4xl align-middle mr-1">¿</span>
                 Listo para <span className="relative inline-block"><span className="text-gray-800 font-bold">Empezar</span>
                   <svg
                     viewBox="0 0 180 12"
                     width="180"
                     height="12"
-                    className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[180px]"
+                    className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[120px] sm:w-[180px]"
                     aria-hidden="true"
                   >
                     <linearGradient id="linea-empezar" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
@@ -922,16 +916,16 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-      <section id="faq" className="py-16 sm:py-20 bg-slate-50">
+      <section id="faq" className="py-10 sm:py-20 bg-slate-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-10 sm:mb-12 text-gray-800 relative inline-block">
+          <h2 className="text-2xl sm:text-4xl font-bold text-center mb-8 sm:mb-12 text-gray-800">
             <span className="relative inline-block">
               Resolvemos tus Dudas
               <svg
                 viewBox="0 0 220 12"
                 width="220"
                 height="12"
-                className="absolute left-[60%] -translate-x-1/2 top-full mt-0.5 w-[220px]"
+                className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[160px] sm:w-[220px]"
                 aria-hidden="true"
               >
                 <linearGradient id="linea-dudas" x1="0" y1="0" x2="220" y2="0" gradientUnits="userSpaceOnUse">

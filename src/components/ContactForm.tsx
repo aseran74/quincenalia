@@ -129,7 +129,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ agentId, propertyId, classNam
           name="message"
           value={formData.message}
           onChange={handleChange}
-          placeholder="Mensaje (opcional)"
+          placeholder="Mensaje"
           className="w-full min-h-[100px]"
           disabled={loading}
         />

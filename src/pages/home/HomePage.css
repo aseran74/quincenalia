@@ -18,6 +18,15 @@
 .hero-image-container {
   transform-origin: center;
   transition: transform 0.1s ease-out;
+  overflow: hidden;
+}
+
+.hero-image-container video,
+.hero-image-container img,
+.hero-image-container canvas {
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
 }
 
 .hero-image-zoom {
@@ -31,4 +40,12 @@
 .scrollbar-hide {
   -ms-overflow-style: none;  /* IE y Edge */
   scrollbar-width: none;     /* Firefox */
-} 
+}
+
+/* Landing: tipografía y ritmo en pantallas muy estrechas (360px) */
+@media (max-width: 380px) {
+  .landing-section-title {
+    font-size: 1.5rem;
+    line-height: 1.25;
+  }
+}

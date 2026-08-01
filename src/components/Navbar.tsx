@@ -609,7 +609,7 @@ const Navbar = () => {
               </>
             ) : (
               <Link to="/login" className="hidden md:inline-flex">
-                <Button variant={isNavbarScrolled ? "outline" : "secondary"}>
+                <Button variant={isNavbarScrolled ? "outline" : "secondary"} className="rounded-full px-5">
                   Iniciar Sesión
                 </Button>
               </Link>
@@ -737,7 +737,7 @@ const Navbar = () => {
             >
               <Button
                 variant={isNavbarScrolled ? "outline" : "secondary"}
-                className="w-full"
+                className="w-full rounded-full"
               >
                 Iniciar Sesión
               </Button>
