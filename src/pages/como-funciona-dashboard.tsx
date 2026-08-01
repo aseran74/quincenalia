@@ -1,14 +1,25 @@
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
-import { 
-  LayoutDashboard, Calendar, AlertTriangle, 
-  MessageSquare, FileText, Settings, 
-  ArrowRight, Shield, Users, BarChart3,
-  CheckCircle, Clock, Bell, CreditCard
+import {
+  LayoutDashboard, Calendar, AlertTriangle,
+  MessageSquare, FileText, BarChart3,
+  ArrowRight, Shield, Users, CheckCircle,
+  Clock, Sparkles
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { motion } from 'framer-motion';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 28 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
+};
+
+const stagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.12 } },
+};
 
 const ComoFuncionaDashboard = () => {
   const { isAuthenticated } = useAuth();
@@ -16,278 +27,408 @@ const ComoFuncionaDashboard = () => {
   const features = [
     {
       icon: LayoutDashboard,
-      title: 'Panel de Control',
-      description: 'Accede a un dashboard intuitivo donde puedes gestionar todas tus propiedades, reservas y actividades en un solo lugar.',
+      title: 'Panel de control',
+      description: 'Gestiona propiedades, reservas y actividad desde un único panel claro e intuitivo.',
       details: [
-        'Vista general de todas tus propiedades',
-        'Resumen de reservas activas y próximas',
-        'Estadísticas de ocupación y ingresos',
-        'Acceso rápido a funciones principales'
-      ]
+        'Vista general de tus propiedades',
+        'Resumen de reservas activas',
+        'Estadísticas de ocupación',
+        'Accesos rápidos a lo esencial',
+      ],
+      image: '/interior.jpg',
+      accent: 'from-sky-500/20 to-cyan-400/10',
     },
     {
       icon: Calendar,
-      title: 'Gestión de Reservas',
-      description: 'Crea, modifica y gestiona todas tus reservas de forma sencilla. Visualiza tu calendario completo y controla la disponibilidad.',
+      title: 'Gestión de reservas',
+      description: 'Crea y modifica reservas, controla disponibilidad y visualiza el calendario completo.',
       details: [
-        'Crear nuevas reservas en segundos',
-        'Calendario interactivo con todas las fechas',
-        'Gestionar disponibilidad de propiedades',
-        'Confirmaciones automáticas por email'
-      ]
+        'Nuevas reservas en segundos',
+        'Calendario interactivo',
+        'Control de disponibilidad',
+        'Confirmaciones automáticas',
+      ],
+      image: '/hero.jpg',
+      accent: 'from-blue-500/20 to-indigo-400/10',
     },
     {
       icon: AlertTriangle,
-      title: 'Sistema de Incidencias',
-      description: 'Reporta y gestiona incidencias de tus propiedades de manera eficiente. Mantén un registro completo de mantenimientos y reparaciones.',
+      title: 'Sistema de incidencias',
+      description: 'Reporta y sigue incidencias, mantenimientos y reparaciones con trazabilidad.',
       details: [
-        'Crear y reportar incidencias fácilmente',
-        'Seguimiento del estado de cada incidencia',
-        'Comunicación directa con el equipo técnico',
-        'Historial completo de mantenimientos'
-      ]
+        'Reportes fáciles y claros',
+        'Seguimiento de estado',
+        'Comunicación con el equipo',
+        'Historial de mantenimientos',
+      ],
+      image: '/murcia.jpg',
+      accent: 'from-amber-500/20 to-orange-400/10',
     },
     {
       icon: MessageSquare,
       title: 'Mensajería',
-      description: 'Comunícate directamente con huéspedes, propietarios y el equipo de soporte a través de nuestro sistema de mensajería integrado.',
+      description: 'Habla con huéspedes, propietarios y soporte desde el mismo sistema.',
       details: [
-        'Chat en tiempo real con todos los usuarios',
-        'Notificaciones de nuevos mensajes',
+        'Chat en tiempo real',
+        'Notificaciones de mensajes',
         'Historial de conversaciones',
-        'Soporte técnico integrado'
-      ]
+        'Soporte integrado',
+      ],
+      image: '/baleares.webp',
+      accent: 'from-teal-500/20 to-emerald-400/10',
     },
     {
       icon: FileText,
-      title: 'Documentación y Facturas',
-      description: 'Gestiona todos tus documentos, facturas y contratos desde un solo lugar. Todo organizado y accesible cuando lo necesites.',
+      title: 'Documentación y facturas',
+      description: 'Documentos, facturas y contratos organizados y siempre accesibles.',
       details: [
-        'Acceso a todas tus facturas',
-        'Descarga de documentos y contratos',
-        'Registro de pagos y comisiones',
-        'Exportación de informes'
-      ]
+        'Todas tus facturas',
+        'Descarga de contratos',
+        'Registro de pagos',
+        'Exportación de informes',
+      ],
+      image: '/Canarias.webp',
+      accent: 'from-violet-500/15 to-fuchsia-400/10',
     },
     {
       icon: BarChart3,
-      title: 'Estadísticas y Reportes',
-      description: 'Analiza el rendimiento de tus propiedades con reportes detallados y estadísticas en tiempo real.',
+      title: 'Estadísticas y reportes',
+      description: 'Analiza ocupación, rentabilidad y tendencias con datos en tiempo real.',
       details: [
-        'Gráficos de ocupación y rentabilidad',
+        'Gráficos de ocupación',
         'Análisis de tendencias',
         'Reportes personalizables',
-        'Exportación de datos'
-      ]
-    }
+        'Exportación de datos',
+      ],
+      image: '/andalucia.jpg',
+      accent: 'from-rose-500/20 to-pink-400/10',
+    },
   ];
 
   const accessSteps = [
     {
       step: '1',
-      title: 'Regístrate o Inicia Sesión',
-      description: 'Crea tu cuenta de forma gratuita o inicia sesión si ya tienes una cuenta.'
+      title: 'Regístrate o inicia sesión',
+      description: 'Crea tu cuenta gratis o entra si ya tienes una.',
+      image: '/Asturias.webp',
     },
     {
       step: '2',
-      title: 'Verifica tu Cuenta',
-      description: 'Confirma tu email para activar tu cuenta y acceder a todas las funcionalidades.'
+      title: 'Verifica tu cuenta',
+      description: 'Confirma el email y activa todas las funciones.',
+      image: '/Galicia.webp',
     },
     {
       step: '3',
-      title: 'Accede al Dashboard',
-      description: 'Una vez verificado, podrás acceder a tu panel personalizado según tu rol (propietario, admin, agente).'
+      title: 'Accede al dashboard',
+      description: 'Entra a tu panel según tu rol: owner, admin o agente.',
+      image: '/Euskadi.webp',
     },
     {
       step: '4',
-      title: 'Comienza a Gestionar',
-      description: 'Explora todas las herramientas disponibles y comienza a gestionar tus propiedades y reservas.'
-    }
+      title: 'Empieza a gestionar',
+      description: 'Explora las herramientas y gestiona propiedades y reservas.',
+      image: '/Levante.webp',
+    },
   ];
 
   const benefits = [
     {
       icon: Shield,
-      title: 'Seguro y Confiable',
-      description: 'Tus datos están protegidos con encriptación de nivel empresarial'
+      title: 'Seguro y confiable',
+      description: 'Tus datos protegidos con estándares de seguridad',
     },
     {
       icon: Clock,
       title: 'Acceso 24/7',
-      description: 'Gestiona todo desde cualquier lugar y en cualquier momento'
+      description: 'Gestiona desde cualquier lugar y en cualquier momento',
     },
     {
       icon: Users,
-      title: 'Soporte Dedicado',
-      description: 'Equipo de soporte disponible para ayudarte cuando lo necesites'
+      title: 'Soporte dedicado',
+      description: 'Equipo disponible cuando lo necesites',
     },
     {
       icon: CheckCircle,
-      title: 'Fácil de Usar',
-      description: 'Interfaz intuitiva diseñada para que cualquier persona pueda usarla'
-    }
+      title: 'Fácil de usar',
+      description: 'Interfaz clara para cualquier perfil de usuario',
+    },
   ];
 
+  const primaryTo = isAuthenticated ? '/dashboard' : '/login';
+  const primaryLabel = isAuthenticated ? 'Ir al dashboard' : 'Acceder al dashboard';
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-[#F2F3F4]">
       <Navbar />
-      
-      {/* Hero Section */}
-      <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-blue-800 text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm mb-6">
-            <LayoutDashboard className="w-10 h-10" />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Cómo Funciona el Dashboard
-          </h1>
-          <p className="text-xl md:text-2xl text-blue-100 mb-8">
-            Gestiona tus propiedades, reservas e incidencias desde un panel centralizado
-          </p>
-          {!isAuthenticated && (
-            <Link to="/login">
-              <Button size="lg" variant="secondary" className="text-lg px-8">
-                Acceder al Dashboard
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-          )}
-        </div>
+
+      {/* Hero */}
+      <section className="relative min-h-[72vh] flex items-center justify-center overflow-hidden pt-20">
+        <img
+          src="/hero3.jpg"
+          alt="Dashboard de gestión Quincenalia"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#064D82]/75 via-[#064D82]/55 to-[#0a1628]/90" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_transparent_0%,_rgba(0,0,0,0.35)_100%)]" />
+
+        <motion.div
+          className="relative z-10 max-w-3xl mx-auto text-center px-5 py-16 text-white"
+          initial="hidden"
+          animate="show"
+          variants={stagger}
+        >
+          <motion.div
+            variants={fadeUp}
+            className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur-md border border-white/25 px-4 py-1.5 mb-6"
+          >
+            <Sparkles className="w-4 h-4 text-cyan-200" />
+            <span className="text-sm font-medium text-white/95">Panel de gestión</span>
+          </motion.div>
+
+          <motion.h1
+            variants={fadeUp}
+            className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-4 leading-tight"
+            style={{ textShadow: '0 2px 16px rgba(0,0,0,0.35)' }}
+          >
+            Cómo funciona el{' '}
+            <span className="relative inline-block">
+              dashboard
+              <svg viewBox="0 0 200 12" className="absolute left-1/2 -translate-x-1/2 top-full mt-1 w-[160px] sm:w-[200px]" aria-hidden="true">
+                <path d="M 0 6 Q 50 0, 100 6 T 200 6" fill="none" stroke="#67e8f9" strokeWidth="3" strokeLinecap="round" />
+              </svg>
+            </span>
+          </motion.h1>
+
+          <motion.p variants={fadeUp} className="text-lg sm:text-xl text-white/85 mb-8 max-w-2xl mx-auto leading-relaxed">
+            Gestiona propiedades, reservas e incidencias desde un panel centralizado, claro y siempre disponible.
+          </motion.p>
+
+          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button asChild size="lg" className="rounded-full px-8 bg-white text-[#064D82] hover:bg-white/90 font-semibold shadow-lg">
+              <Link to={primaryTo}>
+                {primaryLabel}
+                {isAuthenticated ? <LayoutDashboard className="ml-2 w-5 h-5" /> : <ArrowRight className="ml-2 w-5 h-5" />}
+              </Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="rounded-full px-8 border-white/70 bg-white/10 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm"
+            >
+              <a href="#funciones">Ver funcionalidades</a>
+            </Button>
+          </motion.div>
+        </motion.div>
       </section>
 
-      {/* Access Steps */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
+      {/* Access steps with photos */}
+      <section className="py-14 sm:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Cómo Acceder al Dashboard
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              El proceso es simple y rápido. En pocos minutos estarás gestionando tus propiedades
-            </p>
-          </div>
+          <motion.div
+            className="text-center mb-10 sm:mb-12"
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.4 }}
+            variants={stagger}
+          >
+            <motion.p variants={fadeUp} className="text-sm font-semibold uppercase tracking-wider text-[#064D82] mb-2">
+              Acceso
+            </motion.p>
+            <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
+              Cómo acceder al dashboard
+            </motion.h2>
+            <motion.p variants={fadeUp} className="text-slate-600 text-lg max-w-2xl mx-auto">
+              En pocos minutos estarás gestionando tus propiedades
+            </motion.p>
+          </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {accessSteps.map((item, index) => (
-              <Card key={index} className="text-center hover:shadow-lg transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-600 text-white text-2xl font-bold mb-4">
-                    {item.step}
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5"
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.15 }}
+            variants={stagger}
+          >
+            {accessSteps.map((item) => (
+              <motion.div key={item.step} variants={fadeUp}>
+                <Card className="overflow-hidden border-0 rounded-2xl shadow-sm ring-1 ring-black/5 h-full group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/hero.jpg'; }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                    <span className="absolute top-3 left-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#064D82] text-sm font-bold shadow">
+                      {item.step}
+                    </span>
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                  <p className="text-gray-600">{item.description}</p>
-                </CardContent>
-              </Card>
+                  <CardContent className="pt-4 pb-5 px-4">
+                    <h3 className="text-base font-semibold text-slate-900 mb-1">{item.title}</h3>
+                    <p className="text-sm text-slate-600 leading-relaxed">{item.description}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      {/* Features with photos */}
+      <section id="funciones" className="py-14 sm:py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Funcionalidades del Dashboard
-            </h2>
-            <p className="text-lg text-gray-600">
-              Todo lo que necesitas para gestionar tus propiedades en un solo lugar
-            </p>
-          </div>
+          <motion.div
+            className="text-center mb-12 sm:mb-16"
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.4 }}
+            variants={stagger}
+          >
+            <motion.p variants={fadeUp} className="text-sm font-semibold uppercase tracking-wider text-[#064D82] mb-2">
+              Funciones
+            </motion.p>
+            <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
+              Todo en un solo lugar
+            </motion.h2>
+            <motion.p variants={fadeUp} className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto">
+              Herramientas pensadas para propietarios, agentes y administración
+            </motion.p>
+          </motion.div>
 
-          <div className="space-y-8">
+          <div className="space-y-10 sm:space-y-14">
             {features.map((feature, index) => {
               const Icon = feature.icon;
+              const reverse = index % 2 === 1;
               return (
-                <Card key={index} className="overflow-hidden border-2 hover:border-blue-500 transition-all duration-300">
-                  <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center">
-                        <Icon className="w-6 h-6" />
-                      </div>
-                      <div className="flex-1">
-                        <CardTitle className="text-2xl mb-2">{feature.title}</CardTitle>
-                        <p className="text-gray-700">{feature.description}</p>
+                <motion.article
+                  key={feature.title}
+                  className={`grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-center ${reverse ? 'lg:[&>*:first-child]:order-2' : ''}`}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={{ once: true, amount: 0.25 }}
+                  variants={stagger}
+                >
+                  <motion.div variants={fadeUp} className="relative group">
+                    <div className={`absolute -inset-3 rounded-[1.75rem] bg-gradient-to-br ${feature.accent} blur-xl opacity-70 group-hover:opacity-100 transition-opacity`} />
+                    <div className="relative overflow-hidden rounded-2xl shadow-lg ring-1 ring-black/5 aspect-[16/11]">
+                      <img
+                        src={feature.image}
+                        alt={feature.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/hero.jpg'; }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+                      <div className="absolute bottom-4 left-4 inline-flex items-center gap-2 rounded-full bg-white/95 backdrop-blur px-3 py-1.5 shadow-sm">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#064D82] text-white">
+                          <Icon className="w-4 h-4" />
+                        </span>
+                        <span className="text-xs font-semibold text-slate-800">{feature.title}</span>
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {feature.details.map((detail, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-gray-700">{detail}</span>
+                  </motion.div>
+
+                  <motion.div variants={fadeUp}>
+                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#064D82] text-white shadow-md mb-4 transition-transform duration-300 hover:scale-110 hover:-rotate-6">
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-3">{feature.title}</h3>
+                    <p className="text-slate-600 leading-relaxed mb-5">{feature.description}</p>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {feature.details.map((detail) => (
+                        <li
+                          key={detail}
+                          className="flex items-start gap-2 rounded-xl bg-[#F7F8FA] ring-1 ring-black/5 px-3 py-2.5 text-sm text-slate-700"
+                        >
+                          <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                          <span>{detail}</span>
                         </li>
                       ))}
                     </ul>
-                  </CardContent>
-                </Card>
+                  </motion.div>
+                </motion.article>
               );
             })}
           </div>
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
+      {/* Benefits */}
+      <section className="py-14 sm:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Ventajas del Dashboard
-            </h2>
-            <p className="text-lg text-gray-600">
-              Por qué elegir nuestro sistema de gestión
-            </p>
-          </div>
+          <motion.div
+            className="text-center mb-10 sm:mb-12"
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.4 }}
+            variants={stagger}
+          >
+            <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
+              Ventajas del dashboard
+            </motion.h2>
+            <motion.p variants={fadeUp} className="text-slate-600 text-lg">
+              Por qué gestionar con Quincenalia
+            </motion.p>
+          </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {benefits.map((benefit, index) => {
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5"
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.2 }}
+            variants={stagger}
+          >
+            {benefits.map((benefit) => {
               const Icon = benefit.icon;
               return (
-                <Card key={index} className="text-center hover:shadow-lg transition-shadow">
-                  <CardContent className="pt-6">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
-                      <Icon className="w-8 h-8" />
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2">{benefit.title}</h3>
-                    <p className="text-gray-600">{benefit.description}</p>
-                  </CardContent>
-                </Card>
+                <motion.div key={benefit.title} variants={fadeUp}>
+                  <Card className="h-full border-0 rounded-2xl shadow-sm ring-1 ring-black/5 bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+                    <CardContent className="pt-7 pb-6 px-5 text-center">
+                      <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#064D82]/10 text-[#064D82] mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+                        <Icon className="w-7 h-7" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-slate-900 mb-1.5">{benefit.title}</h3>
+                      <p className="text-sm text-slate-600 leading-relaxed">{benefit.description}</p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-blue-800 text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+      {/* CTA */}
+      <section className="relative py-16 sm:py-20 px-4 overflow-hidden">
+        <img src="/Costacatalana.webp" alt="" className="absolute inset-0 w-full h-full object-cover" aria-hidden="true" />
+        <div className="absolute inset-0 bg-[#064D82]/85" />
+        <motion.div
+          className="relative z-10 max-w-3xl mx-auto text-center text-white"
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.4 }}
+          variants={stagger}
+        >
+          <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-bold mb-4">
             ¿Listo para comenzar?
-          </h2>
-          <p className="text-xl text-blue-100 mb-8">
-            Accede a tu dashboard y comienza a gestionar tus propiedades hoy mismo
-          </p>
-          {isAuthenticated ? (
-            <Link to="/dashboard">
-              <Button size="lg" variant="secondary" className="text-lg px-8">
-                Ir al Dashboard
-                <LayoutDashboard className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-          ) : (
-            <Link to="/login">
-              <Button size="lg" variant="secondary" className="text-lg px-8">
-                Iniciar Sesión
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-          )}
-        </div>
+          </motion.h2>
+          <motion.p variants={fadeUp} className="text-lg text-white/85 mb-8">
+            Accede a tu dashboard y gestiona tus propiedades hoy mismo
+          </motion.p>
+          <motion.div variants={fadeUp}>
+            <Button asChild size="lg" className="rounded-full px-8 bg-white text-[#064D82] hover:bg-white/90 font-semibold shadow-xl">
+              <Link to={primaryTo}>
+                {isAuthenticated ? 'Ir al dashboard' : 'Iniciar sesión'}
+                {isAuthenticated ? <LayoutDashboard className="ml-2 w-5 h-5" /> : <ArrowRight className="ml-2 w-5 h-5" />}
+              </Link>
+            </Button>
+          </motion.div>
+        </motion.div>
       </section>
     </div>
   );
 };
 
 export default ComoFuncionaDashboard;
-

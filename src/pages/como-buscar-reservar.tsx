@@ -1,218 +1,336 @@
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
-import { 
-  Search, Calendar, CreditCard, CheckCircle, 
-  ArrowRight, Shield, Clock, Star, 
-  MapPin, Filter, Heart, Eye
+import {
+  Search, Calendar, CreditCard, CheckCircle,
+  ArrowRight, Shield, Clock, Star,
+  Heart, Eye, Sparkles, Filter
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 28 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
+};
+
+const stagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.12 } },
+};
 
 const ComoBuscarReservar = () => {
   const steps = [
     {
       icon: Search,
-      title: '1. Busca tu propiedad ideal',
-      description: 'Utiliza nuestros filtros avanzados para encontrar la propiedad perfecta según tus necesidades: ubicación, fechas, tipo de alojamiento y presupuesto.',
+      title: 'Busca tu propiedad ideal',
+      description: 'Usa filtros avanzados por ubicación, fechas, tipo y presupuesto para encontrar tu opción perfecta.',
       details: [
-        'Filtra por destino, fechas disponibles y tipo de propiedad',
-        'Explora fotos de alta calidad y descripciones detalladas',
-        'Consulta la disponibilidad en tiempo real',
-        'Guarda tus favoritos para comparar opciones'
-      ]
+        'Filtra por destino, fechas y tipo de propiedad',
+        'Explora fotos y descripciones detalladas',
+        'Consulta disponibilidad en tiempo real',
+        'Guarda favoritos para comparar',
+      ],
+      image: '/hero.jpg',
+      accent: 'from-sky-500/20 to-cyan-400/10',
     },
     {
       icon: Eye,
-      title: '2. Explora y compara',
-      description: 'Revisa todas las características, servicios incluidos, ubicación y opiniones de otros usuarios antes de decidir.',
+      title: 'Explora y compara',
+      description: 'Revisa características, servicios, ubicación y valoraciones antes de decidir.',
       details: [
-        'Visualiza la propiedad en 360° con nuestras galerías',
-        'Lee reseñas y valoraciones de otros huéspedes',
-        'Consulta el mapa y puntos de interés cercanos',
-        'Compara precios y servicios incluidos'
-      ]
+        'Galerías de alta calidad',
+        'Mapa y puntos de interés cercanos',
+        'Compara precios y servicios',
+        'Información clara y transparente',
+      ],
+      image: '/interior.jpg',
+      accent: 'from-blue-500/20 to-indigo-400/10',
     },
     {
       icon: Calendar,
-      title: '3. Selecciona tus fechas',
-      description: 'Elige las fechas de tu estancia. Nuestro calendario te muestra la disponibilidad en tiempo real y te permite seleccionar el período exacto que necesitas.',
+      title: 'Selecciona tus fechas',
+      description: 'El calendario muestra disponibilidad real para que elijas el período exacto que necesitas.',
       details: [
-        'Calendario interactivo con disponibilidad actualizada',
-        'Selección flexible de fechas de entrada y salida',
-        'Visualización de precios por período',
-        'Confirmación instantánea de disponibilidad'
-      ]
+        'Calendario interactivo actualizado',
+        'Entrada y salida flexibles',
+        'Precios por período visibles',
+        'Confirmación de disponibilidad',
+      ],
+      image: '/baleares.webp',
+      accent: 'from-teal-500/20 to-emerald-400/10',
     },
     {
       icon: CreditCard,
-      title: '4. Reserva sin coste alguno',
-      description: 'Realiza tu reserva completamente gratis. No cobramos comisiones de reserva, ni cargos ocultos. El proceso es 100% transparente y sin sorpresas.',
+      title: 'Reserva sin coste alguno',
+      description: 'Sin comisiones de reserva ni cargos ocultos. El proceso es 100% transparente.',
       details: [
         'Sin comisiones de reserva',
-        'Sin cargos ocultos ni gastos adicionales',
-        'Proceso de pago seguro y transparente',
-        'Confirmación inmediata por email'
-      ]
+        'Sin gastos sorpresa',
+        'Pago seguro y claro',
+        'Confirmación inmediata por email',
+      ],
+      image: '/Canarias.webp',
+      accent: 'from-amber-500/20 to-orange-400/10',
     },
     {
       icon: CheckCircle,
-      title: '5. Confirma y disfruta',
-      description: 'Recibe la confirmación de tu reserva y toda la información necesaria para tu estancia. ¡Solo queda disfrutar de tu experiencia!',
+      title: 'Confirma y disfruta',
+      description: 'Recibe la confirmación y toda la información necesaria. Solo queda disfrutar.',
       details: [
-        'Confirmación instantánea por email',
-        'Acceso a información completa de la propiedad',
-        'Datos de contacto del propietario',
-        'Guía de la zona y recomendaciones locales'
-      ]
-    }
+        'Confirmación al instante',
+        'Datos completos de la propiedad',
+        'Contacto del gestor',
+        'Recomendaciones de la zona',
+      ],
+      image: '/andalucia.jpg',
+      accent: 'from-rose-500/20 to-pink-400/10',
+    },
   ];
 
   const benefits = [
     {
       icon: Shield,
       title: 'Reserva segura',
-      description: 'Todas las reservas están protegidas y verificadas'
+      description: 'Todas las reservas están protegidas y verificadas',
     },
     {
       icon: Clock,
       title: 'Confirmación inmediata',
-      description: 'Recibe la confirmación al instante, sin esperas'
+      description: 'Recibe la confirmación al instante, sin esperas',
     },
     {
       icon: Star,
       title: 'Propiedades verificadas',
-      description: 'Todas las propiedades pasan por un proceso de verificación'
+      description: 'Cada propiedad pasa un proceso de verificación',
     },
     {
       icon: Heart,
       title: 'Sin compromiso',
-      description: 'Puedes cancelar según nuestras políticas flexibles'
-    }
+      description: 'Cancelación según políticas flexibles',
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-[#F2F3F4]">
       <Navbar />
-      
-      {/* Hero Section */}
-      <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-blue-800 text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm mb-6">
-            <Search className="w-10 h-10" />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Cómo Buscar y Reservar
-          </h1>
-          <p className="text-xl md:text-2xl text-blue-100 mb-8">
-            Encuentra tu propiedad ideal y reserva <strong className="text-white">sin coste alguno</strong>
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/properties">
-              <Button size="lg" variant="secondary" className="text-lg px-8">
-                Explorar Propiedades
+
+      {/* Hero */}
+      <section className="relative min-h-[72vh] flex items-center justify-center overflow-hidden pt-20">
+        <img
+          src="/hero6.jpg"
+          alt="Costa y propiedades vacacionales Quincenalia"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#064D82]/75 via-[#064D82]/55 to-[#0a1628]/90" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_transparent_0%,_rgba(0,0,0,0.35)_100%)]" />
+
+        <motion.div
+          className="relative z-10 max-w-3xl mx-auto text-center px-5 py-16 text-white"
+          initial="hidden"
+          animate="show"
+          variants={stagger}
+        >
+          <motion.div
+            variants={fadeUp}
+            className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur-md border border-white/25 px-4 py-1.5 mb-6"
+          >
+            <Sparkles className="w-4 h-4 text-cyan-200" />
+            <span className="text-sm font-medium text-white/95">Guía paso a paso</span>
+          </motion.div>
+
+          <motion.h1
+            variants={fadeUp}
+            className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-4 leading-tight"
+            style={{ textShadow: '0 2px 16px rgba(0,0,0,0.35)' }}
+          >
+            Cómo buscar y{' '}
+            <span className="relative inline-block">
+              reservar
+              <svg viewBox="0 0 180 12" className="absolute left-1/2 -translate-x-1/2 top-full mt-1 w-[140px] sm:w-[180px]" aria-hidden="true">
+                <path d="M 0 6 Q 45 0, 90 6 T 180 6" fill="none" stroke="#67e8f9" strokeWidth="3" strokeLinecap="round" />
+              </svg>
+            </span>
+          </motion.h1>
+
+          <motion.p variants={fadeUp} className="text-lg sm:text-xl text-white/85 mb-8 max-w-2xl mx-auto leading-relaxed">
+            Encuentra tu propiedad ideal y reserva <strong className="text-white">sin coste alguno</strong>. Simple, rápido y transparente.
+          </motion.p>
+
+          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button asChild size="lg" className="rounded-full px-8 bg-white text-[#064D82] hover:bg-white/90 font-semibold shadow-lg">
+              <Link to="/properties">
+                Explorar propiedades
                 <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-          </div>
-        </div>
+              </Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="rounded-full px-8 border-white/70 bg-white/10 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm"
+            >
+              <a href="#pasos">
+                <Filter className="mr-2 w-5 h-5" />
+                Ver los 5 pasos
+              </a>
+            </Button>
+          </motion.div>
+        </motion.div>
       </section>
 
-      {/* Steps Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
+      {/* Steps */}
+      <section id="pasos" className="py-14 sm:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Proceso Simple en 5 Pasos
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Desde la búsqueda hasta la confirmación, todo el proceso es rápido, fácil y completamente gratuito
-            </p>
-          </div>
+          <motion.div
+            className="text-center mb-12 sm:mb-16"
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.4 }}
+            variants={stagger}
+          >
+            <motion.p variants={fadeUp} className="text-sm font-semibold uppercase tracking-wider text-[#064D82] mb-2">
+              Proceso
+            </motion.p>
+            <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
+              5 pasos, sin complicaciones
+            </motion.h2>
+            <motion.p variants={fadeUp} className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto">
+              Desde la búsqueda hasta la confirmación: rápido, fácil y gratis.
+            </motion.p>
+          </motion.div>
 
-          <div className="space-y-8">
+          <div className="space-y-10 sm:space-y-14">
             {steps.map((step, index) => {
               const Icon = step.icon;
+              const reverse = index % 2 === 1;
               return (
-                <Card key={index} className="overflow-hidden border-2 hover:border-blue-500 transition-all duration-300">
-                  <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center">
-                        <Icon className="w-6 h-6" />
-                      </div>
-                      <div className="flex-1">
-                        <CardTitle className="text-2xl mb-2">{step.title}</CardTitle>
-                        <p className="text-gray-700">{step.description}</p>
+                <motion.article
+                  key={step.title}
+                  className={`grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-center ${reverse ? 'lg:[&>*:first-child]:order-2' : ''}`}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={{ once: true, amount: 0.25 }}
+                  variants={stagger}
+                >
+                  <motion.div variants={fadeUp} className="relative group">
+                    <div className={`absolute -inset-3 rounded-[1.75rem] bg-gradient-to-br ${step.accent} blur-xl opacity-70 group-hover:opacity-100 transition-opacity`} />
+                    <div className="relative overflow-hidden rounded-2xl shadow-lg ring-1 ring-black/5 aspect-[16/11]">
+                      <img
+                        src={step.image}
+                        alt={step.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/hero.jpg'; }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+                      <div className="absolute top-4 left-4 inline-flex items-center gap-2 rounded-full bg-white/95 backdrop-blur px-3 py-1.5 shadow-sm">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#064D82] text-white text-xs font-bold">
+                          {index + 1}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-800">Paso {index + 1}</span>
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {step.details.map((detail, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-gray-700">{detail}</span>
+                  </motion.div>
+
+                  <motion.div variants={fadeUp}>
+                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#064D82] text-white shadow-md mb-4 transition-transform duration-300 hover:scale-110 hover:-rotate-6">
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-3">{step.title}</h3>
+                    <p className="text-slate-600 leading-relaxed mb-5">{step.description}</p>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {step.details.map((detail) => (
+                        <li
+                          key={detail}
+                          className="flex items-start gap-2 rounded-xl bg-white/80 ring-1 ring-black/5 px-3 py-2.5 text-sm text-slate-700"
+                        >
+                          <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                          <span>{detail}</span>
                         </li>
                       ))}
                     </ul>
-                  </CardContent>
-                </Card>
+                  </motion.div>
+                </motion.article>
               );
             })}
           </div>
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      {/* Benefits */}
+      <section className="py-14 sm:py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Ventajas de Reservar con Nosotros
-            </h2>
-            <p className="text-lg text-gray-600">
+          <motion.div
+            className="text-center mb-10 sm:mb-12"
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.4 }}
+            variants={stagger}
+          >
+            <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
+              Por qué reservar con Quincenalia
+            </motion.h2>
+            <motion.p variants={fadeUp} className="text-slate-600 text-lg">
               Tu tranquilidad es nuestra prioridad
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {benefits.map((benefit, index) => {
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5"
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.2 }}
+            variants={stagger}
+          >
+            {benefits.map((benefit) => {
               const Icon = benefit.icon;
               return (
-                <Card key={index} className="text-center hover:shadow-lg transition-shadow">
-                  <CardContent className="pt-6">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
-                      <Icon className="w-8 h-8" />
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2">{benefit.title}</h3>
-                    <p className="text-gray-600">{benefit.description}</p>
-                  </CardContent>
-                </Card>
+                <motion.div key={benefit.title} variants={fadeUp}>
+                  <Card className="h-full border-0 rounded-2xl shadow-sm ring-1 ring-black/5 bg-[#F7F8FA] hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+                    <CardContent className="pt-7 pb-6 px-5 text-center">
+                      <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#064D82]/10 text-[#064D82] mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+                        <Icon className="w-7 h-7" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-slate-900 mb-1.5">{benefit.title}</h3>
+                      <p className="text-sm text-slate-600 leading-relaxed">{benefit.description}</p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-blue-800 text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+      {/* CTA */}
+      <section className="relative py-16 sm:py-20 px-4 overflow-hidden">
+        <img src="/murcia.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" aria-hidden="true" />
+        <div className="absolute inset-0 bg-[#064D82]/85" />
+        <motion.div
+          className="relative z-10 max-w-3xl mx-auto text-center text-white"
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.4 }}
+          variants={stagger}
+        >
+          <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-bold mb-4">
             ¿Listo para encontrar tu propiedad ideal?
-          </h2>
-          <p className="text-xl text-blue-100 mb-8">
-            Comienza tu búsqueda ahora, es completamente gratis
-          </p>
-          <Link to="/properties">
-            <Button size="lg" variant="secondary" className="text-lg px-8">
-              Buscar Propiedades
-              <Search className="ml-2 w-5 h-5" />
+          </motion.h2>
+          <motion.p variants={fadeUp} className="text-lg text-white/85 mb-8">
+            Empieza ahora. Buscar y reservar es completamente gratis.
+          </motion.p>
+          <motion.div variants={fadeUp}>
+            <Button asChild size="lg" className="rounded-full px-8 bg-white text-[#064D82] hover:bg-white/90 font-semibold shadow-xl">
+              <Link to="/properties">
+                Buscar propiedades
+                <Search className="ml-2 w-5 h-5" />
+              </Link>
             </Button>
-          </Link>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
     </div>
   );
 };
 
 export default ComoBuscarReservar;
-
