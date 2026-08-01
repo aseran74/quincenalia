@@ -869,7 +869,7 @@ const HomePage = () => {
               </p>
               <div className="space-y-6">
                 <a 
-                  href="tel:+34666777888" 
+                  href="tel:+34616462861" 
                   className="group flex items-center p-4 rounded-xl hover:bg-primary/5 transition-all duration-300 ease-in-out transform hover:shadow-lg border border-transparent hover:border-primary/20"
                 >
                   <div className="bg-primary/10 p-3 rounded-full mr-4 group-hover:bg-primary/20 transition-all duration-300">
@@ -877,7 +877,7 @@ const HomePage = () => {
                   </div>
                   <div>
                     <p className="font-semibold text-gray-800 text-sm">Llámanos</p>
-                    <p className="text-gray-700 group-hover:text-primary text-base transition-colors">+34 666 777 888</p>
+                    <p className="text-gray-700 group-hover:text-primary text-base transition-colors">+34 616 462 861</p>
                   </div>
                 </a>
                 <a 
