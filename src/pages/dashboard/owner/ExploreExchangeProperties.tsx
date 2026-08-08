@@ -8,13 +8,12 @@ import { es } from 'date-fns/locale';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Calendar as DatePickerCalendar } from '@/components/ui/calendar';
 import PropertyFilters from '@/components/properties/PropertyFilters';
 import { DateRange } from 'react-day-picker';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarIcon, MapPin, Bed, Bath, Square, Home, Star, Filter, Eye, EyeOff, Sparkles, ArrowLeft, ArrowRight, LayoutGrid, Map as MapIcon, SlidersHorizontal, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { DayPicker } from 'react-day-picker';
-import 'react-day-picker/dist/style.css';
 import { Select } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
@@ -349,13 +348,13 @@ const ExploreExchangeProperties: React.FC = () => {
               </Button>
             </PopoverTrigger>
             <PopoverContent align="start" className="w-auto p-0">
-              <DayPicker
+              <DatePickerCalendar
                 mode="range"
                 selected={dateRange}
                 onSelect={setDateRange}
-                    numberOfMonths={isMobile ? 1 : 2}
+                numberOfMonths={isMobile ? 1 : 2}
                 locale={es}
-                    className="rounded-md border"
+                className="rounded-md border"
               />
               {(dateRange?.from || dateRange?.to) && (
                     <div className="px-4 py-3 border-t bg-gray-50">
