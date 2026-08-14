@@ -308,7 +308,7 @@ export const PropertiesPage = () => {
     const monthly = minShare ? calcularCuotaHipoteca(minShare) : null;
     return (
       <Link to={`/properties/${property.id}`} className="group block h-full">
-        <Card className="overflow-hidden h-full flex flex-col border-0 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 bg-white ring-1 ring-black/5 hover:-translate-y-0.5">
+        <Card className="overflow-hidden h-full flex flex-col border-0 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 bg-white ring-1 ring-slate-200/80 hover:-translate-y-0.5">
           <div className="relative w-full aspect-[4/3] overflow-hidden">
             <img
               src={imageUrl}
@@ -451,22 +451,30 @@ export const PropertiesPage = () => {
     setFilters(prevFilters => ({ ...prevFilters, location: '' }));
   };
 
-  const filterPanel = (      <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-sm rounded-2xl ring-1 ring-black/5">
+  const filterTile = (bg: string, dark = false) =>
+    `relative rounded-2xl p-3.5 h-full ${dark ? '' : bg === '#FFFFFF' ? 'ring-1 ring-slate-200/80' : ''}`;
+  const filterLabel = (dark = false) =>
+    `block text-xs font-medium mb-1.5 ${dark ? 'text-white/80' : 'text-slate-600'}`;
+  const filterControl = (dark = false) =>
+    dark
+      ? 'w-full justify-between text-sm h-10 font-normal rounded-xl bg-white/15 border-white/25 text-white hover:bg-white/25 hover:text-white'
+      : 'w-full justify-between text-sm h-10 font-normal rounded-xl bg-white/80 border-0 text-slate-800 hover:bg-white';
+
+  const filterPanel = (      <Card className="bg-white border-0 shadow-md shadow-slate-200/50 rounded-2xl ring-1 ring-slate-200/80">
         <CardContent className="p-4 md:p-5">
           <div className="flex items-center gap-2 mb-4">
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <SlidersHorizontal className="w-4 h-4 text-primary" />
+            <div className="h-8 w-8 rounded-full bg-[#5C0FF5]/10 flex items-center justify-center">
+              <SlidersHorizontal className="w-4 h-4 text-[#5C0FF5]" />
             </div>
             <div>
               <p className="text-sm font-semibold text-slate-900">Filtros de búsqueda</p>
               <p className="text-xs text-slate-500">Combina zona, quincena, tipo y más</p>
             </div>
           </div>
-          {/* MODIFIED: Adjusted grid for better responsiveness */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-5 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 items-stretch">
             {/* 1. ¿Dónde buscas? */}
-            <div className="relative">
-              <label htmlFor="filterLocation" className="block text-xs font-medium text-slate-500 mb-1.5">¿Dónde buscas?</label>
+            <div className={filterTile('#CFB8FC')} style={{ backgroundColor: '#CFB8FC' }}>
+              <label htmlFor="filterLocation" className={filterLabel()}>¿Dónde buscas?</label>
               {isAutocompleteLoaded ? (
                 <Autocomplete
                   onLoad={(ref) => autocompleteRef.current = ref}
@@ -478,7 +486,7 @@ export const PropertiesPage = () => {
                     ref={locationInputRef}
                     type="text"
                     placeholder="Ciudad, zona, playa..."
-                    className="w-full text-sm pr-8 h-10 rounded-xl bg-slate-50 border-slate-200 focus-visible:ring-primary/30"
+                    className="w-full text-sm pr-8 h-10 rounded-xl bg-white/80 border-0 focus-visible:ring-[#5C0FF5]/30"
                     defaultValue={filters.location}
                     onBlur={e => {
                       if (!autocompleteRef.current?.getPlace()) { 
@@ -493,25 +501,25 @@ export const PropertiesPage = () => {
                   ref={locationInputRef}
                   type="text"
                   placeholder="Cargando autocompletado..."
-                  className="w-full text-sm pr-8 h-10 rounded-xl bg-slate-50 border-slate-200"
+                  className="w-full text-sm pr-8 h-10 rounded-xl bg-white/80 border-0"
                   value={filters.location}
                   onChange={e => setFilters(prev => ({ ...prev, location: e.target.value }))}
                   disabled={!isAutocompleteLoaded}
                 />
               )}
               {filters.location && (
-                <Button variant="ghost" size="icon" className="absolute right-1 top-[29px] h-7 w-7 p-0" onClick={clearLocationFilter} aria-label="Limpiar ubicación">
+                <Button variant="ghost" size="icon" className="absolute right-4 top-[42px] h-7 w-7 p-0" onClick={clearLocationFilter} aria-label="Limpiar ubicación">
                   <XIcon className="h-4 w-4 text-muted-foreground"/>
                 </Button>
               )}
             </div>
 
             {/* 2. Zona (multi) */}
-            <div className="relative w-full" ref={zonaChecklistRef}>
-              <label htmlFor="filterZonaButton" className="block text-xs font-medium text-muted-foreground mb-1.5">Zona</label>
+            <div className={filterTile('#E8DAD9')} style={{ backgroundColor: '#E8DAD9' }} ref={zonaChecklistRef}>
+              <label htmlFor="filterZonaButton" className={filterLabel()}>Zona</label>
               <Button
                 id="filterZonaButton" type="button" variant="outline"
-                className="w-full justify-between text-sm h-10 font-normal rounded-xl bg-slate-50 border-slate-200"
+                className={filterControl()}
                 onClick={() => { setShowZonaChecklist(v => !v); setShowTypeChecklist(false); setShowQuincenaChecklist(false); }}
                 aria-expanded={showZonaChecklist}
               >
@@ -523,7 +531,7 @@ export const PropertiesPage = () => {
                 <ChevronDown className={`ml-2 h-4 w-4 transition-transform flex-shrink-0 ${showZonaChecklist ? 'rotate-180' : ''}`} />
               </Button>
               {showZonaChecklist && (
-                <div className="absolute z-30 mt-1 w-full min-w-[220px] bg-popover border border-border rounded-md shadow-lg p-2 max-h-60 overflow-y-auto">
+                <div className="absolute z-30 mt-1 left-3 right-3 min-w-[220px] bg-popover border border-border rounded-md shadow-lg p-2 max-h-60 overflow-y-auto">
                   <div className="grid grid-cols-1 gap-1">
                     {zonasUnicas.map(z => (
                       <div key={z} className="flex items-center space-x-2 hover:bg-accent rounded p-1.5">
@@ -546,11 +554,11 @@ export const PropertiesPage = () => {
             </div>
 
             {/* 2.5 Quincena (multi) */}
-            <div className="relative w-full" ref={quincenaChecklistRef}>
-              <label htmlFor="filterQuincenaButton" className="block text-xs font-medium text-muted-foreground mb-1.5">Quincena</label>
+            <div className={filterTile('#FFFFFF')} style={{ backgroundColor: '#FFFFFF' }} ref={quincenaChecklistRef}>
+              <label htmlFor="filterQuincenaButton" className={filterLabel()}>Quincena</label>
               <Button
                 id="filterQuincenaButton" type="button" variant="outline"
-                className="w-full justify-between text-sm h-10 font-normal rounded-xl bg-slate-50 border-slate-200"
+                className={filterControl()}
                 onClick={() => { setShowQuincenaChecklist(v => !v); setShowTypeChecklist(false); setShowZonaChecklist(false); }}
                 aria-expanded={showQuincenaChecklist}
               >
@@ -563,7 +571,7 @@ export const PropertiesPage = () => {
                 <ChevronDown className={`ml-2 h-4 w-4 transition-transform flex-shrink-0 ${showQuincenaChecklist ? 'rotate-180' : ''}`} />
               </Button>
               {showQuincenaChecklist && (
-                <div className="absolute z-30 mt-1 w-full min-w-[200px] bg-popover border border-border rounded-md shadow-lg p-2">
+                <div className="absolute z-30 mt-1 left-3 right-3 min-w-[200px] bg-popover border border-border rounded-md shadow-lg p-2">
                   <div className="grid grid-cols-1 gap-1">
                     {QUINCENA_OPTIONS.map(opt => (
                       <div key={opt.value} className="flex items-center space-x-2 hover:bg-accent rounded p-1.5">
@@ -586,11 +594,11 @@ export const PropertiesPage = () => {
             </div>
 
             {/* 3. Tipo de Vivienda */}
-            <div className="relative w-full" ref={typeChecklistRef}>
-              <label htmlFor="filterTypeButton" className="block text-xs font-medium text-muted-foreground mb-1.5">Tipo de Vivienda</label>
+            <div className={filterTile('#FFFFFF')} style={{ backgroundColor: '#FFFFFF' }} ref={typeChecklistRef}>
+              <label htmlFor="filterTypeButton" className={filterLabel()}>Tipo de Vivienda</label>
               <Button
                 id="filterTypeButton" type="button" variant="outline"
-                className="w-full justify-between text-sm h-10 font-normal rounded-xl bg-slate-50 border-slate-200"
+                className={filterControl()}
                 onClick={() => { setShowTypeChecklist(v => !v); setShowZonaChecklist(false); setShowQuincenaChecklist(false); }} aria-expanded={showTypeChecklist}
               >
                 <span className="truncate pr-2">
@@ -602,7 +610,7 @@ export const PropertiesPage = () => {
               </Button>
               {showTypeChecklist && (
                 <div
-                  className="absolute z-30 mt-1 w-full min-w-[250px] max-w-[350px] bg-popover border border-border rounded-md shadow-lg p-2"
+                  className="absolute z-30 mt-1 left-3 right-3 min-w-[250px] max-w-[350px] bg-popover border border-border rounded-md shadow-lg p-2"
                   style={{ maxHeight: '240px', overflowY: 'auto' }}
                 >
                   <div className="grid grid-cols-1 gap-1">
@@ -626,13 +634,13 @@ export const PropertiesPage = () => {
             </div>
 
             {/* 4. Dormitorios */}
-            <div>
-              <label htmlFor="filterBedrooms" className="block text-xs font-medium text-muted-foreground mb-1.5">Dormitorios (mín.)</label>
+            <div className={filterTile('#CFB8FC')} style={{ backgroundColor: '#CFB8FC' }}>
+              <label htmlFor="filterBedrooms" className={filterLabel()}>Dormitorios (mín.)</label>
               <Select
                 value={String(filters.bedrooms)}
                 onValueChange={value => setFilters({ ...filters, bedrooms: value === 'any' ? 'any' : Number(value) })}
               >
-                <SelectTrigger id="filterBedrooms" className="text-sm h-10">
+                <SelectTrigger id="filterBedrooms" className="text-sm h-10 rounded-xl bg-white/80 border-0">
                   <SelectValue placeholder="Cualquiera" />
                 </SelectTrigger>
                 <SelectContent>
@@ -644,15 +652,14 @@ export const PropertiesPage = () => {
               </Select>
             </div>
             
-            {/* --- START REORDERED AND RESTRUCTURED SECTION --- */}
-            {/* 5. Baños (mín.) - Moved and reordered */}
-            <div>
-              <label htmlFor="filterBathrooms" className="block text-xs font-medium text-muted-foreground mb-1.5">Baños (mín.)</label>
+            {/* 5. Baños */}
+            <div className={filterTile('#E8DAD9')} style={{ backgroundColor: '#E8DAD9' }}>
+              <label htmlFor="filterBathrooms" className={filterLabel()}>Baños (mín.)</label>
               <Select
                 value={String(filters.bathrooms)}
                 onValueChange={value => setFilters({ ...filters, bathrooms: value === 'any' ? 'any' : Number(value) })}
               >
-                <SelectTrigger id="filterBathrooms" className="text-sm h-10 w-full"> {/* MODIFIED: h-10 */}
+                <SelectTrigger id="filterBathrooms" className="text-sm h-10 w-full rounded-xl bg-white/80 border-0">
                   <SelectValue placeholder="Cualquiera" />
                 </SelectTrigger>
                 <SelectContent>
@@ -664,10 +671,10 @@ export const PropertiesPage = () => {
               </Select>
             </div>
 
-            {/* 6-7. Precio con step bar (0 → 1.000.000€, paso 5.000€) */}
-            <div className="sm:col-span-2 md:col-span-2 lg:col-span-2">
+            {/* 6-7. Precio */}
+            <div className={`${filterTile('#FFFFFF')} sm:col-span-2 md:col-span-2 lg:col-span-2`} style={{ backgroundColor: '#FFFFFF' }}>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-medium text-slate-500">Precio copropiedad</label>
+                <label className={filterLabel()}>Precio copropiedad</label>
                 <span className="text-xs font-semibold text-slate-800 tabular-nums">
                   {formatPriceLabel(priceRange[0])} – {formatPriceLabel(priceRange[1])}
                 </span>
@@ -705,22 +712,21 @@ export const PropertiesPage = () => {
               </div>
             </div>
             
-            {/* 8. Más filtros Button - Reordered */}
-            <div className="w-full sm:w-auto flex items-end"> {/* This wrapper helps align the button correctly */}
+            {/* 8. Más filtros */}
+            <div className={filterTile('#FFFFFF')} style={{ backgroundColor: '#FFFFFF' }}>
               <Button
                 variant="ghost"
-                className="text-sm px-3 h-10 flex items-center text-primary hover:bg-primary/90 hover:text-primary-foreground gap-2 font-semibold w-full" // MODIFIED: hover styles, text-sm
+                className="text-sm px-3 h-10 flex items-center text-[#5C0FF5] hover:bg-[#CFB8FC]/40 hover:text-[#5C0FF5] gap-2 font-semibold w-full"
                 onClick={() => setShowAdvancedFilters(v => !v)}
               >
-                <SlidersHorizontal className="w-4 h-4 mr-1" /> {/* MODIFIED: slightly smaller icon */}
+                <SlidersHorizontal className="w-4 h-4 mr-1" />
                 {showAdvancedFilters ? 'Menos filtros' : 'Más filtros'}
                 {showAdvancedFilters ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
               </Button>
             </div>
-            {/* --- END REORDERED AND RESTRUCTURED SECTION --- */}
 
             {/* 9. Obra nueva */}
-            <div className="flex items-center gap-2 mb-2">
+            <div className={`${filterTile('#E8DAD9')} flex items-center gap-2`} style={{ backgroundColor: '#E8DAD9' }}>
               <input
                 type="checkbox"
                 id="filterObraNueva"
@@ -728,8 +734,8 @@ export const PropertiesPage = () => {
                 onChange={e => setFilters(prev => ({ ...prev, obraNueva: e.target.checked }))}
                 className="mr-1"
               />
-              <Building2 className="w-5 h-5 text-orange-400 mr-1" />
-              <label htmlFor="filterObraNueva" className="text-sm cursor-pointer select-none">Obra nueva</label>
+              <Building2 className="w-5 h-5 text-[#5C0FF5] mr-1" />
+              <label htmlFor="filterObraNueva" className="text-sm cursor-pointer select-none text-slate-800">Obra nueva</label>
             </div>
           </div>
 
@@ -831,10 +837,10 @@ export const PropertiesPage = () => {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen bg-[#F2F3F4]">
+        <div className="min-h-screen bg-white">
           <div className="container mx-auto p-4 animate-pulse pt-24">
-            <div className="h-10 bg-white rounded-xl w-1/3 mb-6" />
-            <div className="h-36 bg-white rounded-2xl mb-6" />
+            <div className="h-10 bg-slate-100 rounded-xl w-1/3 mb-6" />
+            <div className="h-36 bg-slate-100 rounded-2xl mb-6" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
                 <Card key={i} className="overflow-hidden rounded-2xl border-0">
@@ -856,25 +862,26 @@ export const PropertiesPage = () => {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-[#F2F3F4]">
-      <div className={`${view === 'map' ? 'max-w-[1600px] w-full mx-auto px-3 sm:px-4' : 'container mx-auto px-4'} py-6 pt-24`}>
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-5 sm:mb-6">
+      <div className="min-h-screen bg-white">
+        <div className={`${view === 'map' ? 'max-w-[1600px] w-full mx-auto px-3 sm:px-4' : 'container mx-auto px-4'} py-6 pt-24 pb-12`}>
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-5 sm:mb-7">
           <div>
-            <Button asChild variant="ghost" className="rounded-full px-3 mb-2 text-slate-600 hover:text-slate-900 -ml-2">
+            <Button asChild variant="ghost" className="rounded-full px-3 mb-2 text-slate-600 hover:text-slate-900 hover:bg-white/70 -ml-2">
               <Link to="/"> <ArrowLeft className="w-4 h-4 mr-1.5" /> Volver </Link>
             </Button>
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1.5">Buscador</p>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Explorar propiedades</h1>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-slate-500 mt-1.5">
               {filteredProperties.length} {filteredProperties.length === 1 ? 'resultado' : 'resultados'}
               {numActiveFilters > 0 && ` · ${numActiveFilters} filtro${numActiveFilters === 1 ? '' : 's'} activo${numActiveFilters === 1 ? '' : 's'}`}
             </p>
           </div>
           <Tabs value={view} onValueChange={(v) => setView(v as 'grid' | 'map')} className="w-full sm:w-auto">
-            <TabsList className="grid w-full grid-cols-2 sm:w-auto rounded-full bg-white p-1 shadow-sm ring-1 ring-black/5 h-auto">
-              <TabsTrigger value="grid" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2">
+            <TabsList className="grid w-full grid-cols-2 sm:w-auto rounded-full bg-[#CFB8FC] p-1 shadow-sm h-auto">
+              <TabsTrigger value="grid" className="rounded-full data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm text-slate-800 px-4 py-2">
                 <LayoutGrid className="h-4 w-4 mr-2" /> Lista
               </TabsTrigger>
-              <TabsTrigger value="map" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground px-4 py-2">
+              <TabsTrigger value="map" className="rounded-full data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm text-slate-800 px-4 py-2">
                 <MapPin className="h-4 w-4 mr-2" /> Mapa
               </TabsTrigger>
             </TabsList>
@@ -883,7 +890,7 @@ export const PropertiesPage = () => {
 
         <div className="block sm:hidden mb-4">
           <Button
-            className="w-full flex items-center justify-center gap-2 bg-white text-slate-900 hover:bg-slate-50 rounded-full shadow-sm ring-1 ring-black/5"
+            className="w-full flex items-center justify-center gap-2 bg-white text-slate-900 hover:bg-slate-50 rounded-full shadow-sm ring-1 ring-slate-200/80"
             onClick={() => setShowFilters((v) => !v)}
             aria-expanded={showFilters}
             aria-controls="filtros-busqueda"
@@ -911,7 +918,7 @@ export const PropertiesPage = () => {
                 <PropertyCard key={property.id} property={property} />
               ))
             ) : (
-              <div className="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-16 text-slate-500 bg-white rounded-2xl ring-1 ring-black/5 shadow-sm">
+              <div className="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-16 text-slate-500 bg-white rounded-2xl ring-1 ring-slate-200/80 shadow-sm">
                   <Search className="mx-auto h-10 w-10 text-slate-300 mb-3" />
                   <p className="font-semibold text-slate-800">No hay propiedades que coincidan</p>
                   <p className="text-sm mt-1">Prueba a modificar o limpiar los filtros.</p>
@@ -924,7 +931,7 @@ export const PropertiesPage = () => {
             <div className="flex flex-col lg:flex-row gap-3 lg:gap-4 h-[520px] md:h-[620px] lg:h-[calc(100vh-170px)] lg:min-h-[680px]">
               {/* Columna lateral con cards pequeñas - Solo en escritorio */}
               <div className="hidden lg:block w-full lg:w-72 xl:w-80 flex-shrink-0">
-                <div className="bg-white border-0 rounded-2xl shadow-sm ring-1 ring-black/5 p-3 h-full overflow-y-auto">
+                <div className="bg-white border-0 rounded-2xl shadow-sm ring-1 ring-slate-200/80 p-3 h-full overflow-y-auto">
                   <h3 className="text-sm font-semibold text-slate-900 mb-3 sticky top-0 bg-white pb-2 z-10">
                     {filteredProperties.length} {filteredProperties.length === 1 ? 'propiedad' : 'propiedades'}
                   </h3>
@@ -951,7 +958,7 @@ export const PropertiesPage = () => {
               </div>
               
               {/* Mapa - Columna principal más grande en PC */}
-              <div className="flex-1 w-full rounded-2xl overflow-hidden shadow-sm relative bg-slate-200 min-h-[420px] lg:min-h-0 ring-1 ring-black/5">
+              <div className="flex-1 w-full rounded-2xl overflow-hidden shadow-sm relative bg-slate-200 min-h-[420px] lg:min-h-0 ring-1 ring-slate-200/80">
                 <GoogleMap
                   mapContainerStyle={{ width: '100%', height: '100%' }}
                   center={selectedMapProperty && selectedMapProperty.latitude && selectedMapProperty.longitude 

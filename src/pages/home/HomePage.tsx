@@ -17,8 +17,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import ContactForm from '@/components/ContactForm';
 import './HomePage.css'; // Asegúrate de que este archivo exista y no cause conflictos
 import { supabase } from '@/lib/supabase';
-import { motion, useReducedMotion } from 'framer-motion';
-import { fadeUp, fadeIn, stagger, scaleIn, viewportOnce } from '@/components/landing/motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { fadeUp, fadeIn, stagger, staggerFast, scaleIn, viewportOnce } from '@/components/landing/motion';
 
 const FAQS = [
   {
@@ -131,43 +131,47 @@ const FAQS = [
 ];
 
 function FAQAccordion() {
-  const halfIndex = Math.ceil(FAQS.length / 2);
-  const leftFAQs = FAQS.slice(0, halfIndex);
-  const rightFAQs = FAQS.slice(halfIndex);
+  const reduceMotion = useReducedMotion();
+  const halfIndex = Math.ceil(FAQS.length / 2); 
+  const columns = [FAQS.slice(0, halfIndex), FAQS.slice(halfIndex)];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-      <Accordion type="single" collapsible className="w-full space-y-3">
-        {leftFAQs.map((faq) => (
-          <AccordionItem value={faq.id} key={faq.id} className="border border-border rounded-lg bg-background shadow-sm transition-shadow hover:shadow-lg">
-            <AccordionTrigger className="group px-4 py-3 text-sm sm:text-base font-medium text-left hover:no-underline [&[data-state=open]>svg]:rotate-90">
-              <div className="flex items-center gap-3">
-                <faq.icon className="w-5 h-5 text-primary flex-shrink-0 transition-transform duration-300 ease-in-out group-hover:scale-125 group-hover:-rotate-12" />
-                <span>{faq.question}</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4 pt-0">
-              {faq.answer}
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
-      <Accordion type="single" collapsible className="w-full space-y-3">
-        {rightFAQs.map((faq) => (
-          <AccordionItem value={faq.id} key={faq.id} className="border border-border rounded-lg bg-background shadow-sm transition-shadow hover:shadow-lg">
-            <AccordionTrigger className="group px-4 py-3 text-sm sm:text-base font-medium text-left hover:no-underline [&[data-state=open]>svg]:rotate-90">
-               <div className="flex items-center gap-3">
-                <faq.icon className="w-5 h-5 text-primary flex-shrink-0 transition-transform duration-300 ease-in-out group-hover:scale-125 group-hover:-rotate-12" />
-                <span>{faq.question}</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4 pt-0">
-              {faq.answer}
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
-    </div>
+    <motion.div
+      className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4"
+      initial={reduceMotion ? false : 'hidden'}
+      whileInView={reduceMotion ? undefined : 'show'}
+      viewport={viewportOnce}
+      variants={staggerFast}
+    >
+      {columns.map((col, colIdx) => (
+        <Accordion key={colIdx} type="single" collapsible className="w-full space-y-3">
+          {col.map((faq) => (
+            <motion.div
+              key={faq.id}
+              variants={fadeUp}
+              transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
+            >
+              <AccordionItem
+                value={faq.id}
+                className="group/item relative border border-slate-200/80 rounded-2xl bg-white shadow-sm transition-[border-color,box-shadow] duration-200 data-[state=open]:border-primary/35 data-[state=open]:shadow-md hover:border-primary/20 hover:shadow-md before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:origin-top before:scale-y-0 before:rounded-l-2xl before:bg-primary before:transition-transform before:duration-200 before:ease-[cubic-bezier(0.23,1,0.32,1)] data-[state=open]:before:scale-y-100"
+              >
+                <AccordionTrigger className="group px-4 py-3.5 text-sm sm:text-base font-medium text-left hover:no-underline [&[data-state=open]>svg]:rotate-180">
+                  <div className="flex items-center gap-3 pr-2">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-[background-color,color,transform] duration-200 group-data-[state=open]:bg-primary group-data-[state=open]:text-white">
+                      <faq.icon className="w-4 h-4" />
+                    </span>
+                    <span className="leading-snug">{faq.question}</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4 pt-0 pl-[3.75rem] text-slate-600">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            </motion.div>
+          ))}
+        </Accordion>
+      ))}
+    </motion.div>
   );
 }
 
@@ -176,12 +180,48 @@ function ComoFunciona() {
   const reduceMotion = useReducedMotion();
 
   const steps = [
-    { icon: Home, title: "Compra Inteligente", text: "Adquieres legalmente un proindiviso del 25% (o 50%) de una propiedad vacacional." },
-    { icon: Calendar, title: "Uso Garantizado", text: "Mediante un contrato de uso y disfrute, tienes tus 15 días fijos en temporada alta (Jul/Ago) + 10 semanas flexibles al año, tu verano asegurado ¡para siempre!" },
-    { icon: PiggyBank, title: "Gastos Compartidos", text: "Divide los costes fijos (IBI, comunidad, seguros...) entre 4. ¡Mucho más económico!" },
-    { icon: Briefcase, title: "Gestión Integral", text: "Nos encargamos de TODO: limpieza, mantenimiento, facturas, impuestos... Tú solo disfruta." },
-    { icon: Banknote, title: "Rentabilidad Extra", text: "Alquilamos tu propiedad en las semanas que no usas a través de las mejores plataformas (Airbnb, Booking...). ¡Ingresos pasivos!" },
-    { icon: Globe, title: "Viaja por el Mundo", text: "Intercambia tus semanas flexibles por estancias en otras propiedades exclusivas globalmente con nuestro sistema de puntos." }
+    {
+      icon: Home,
+      title: 'Compra Inteligente',
+      text: 'Adquieres legalmente un proindiviso del 25% (o 50%) de una propiedad vacacional.',
+      bg: '#CFB8FC',
+      dark: false,
+    },
+    {
+      icon: Calendar,
+      title: 'Uso Garantizado',
+      text: 'Mediante un contrato de uso y disfrute, tienes tus 15 días fijos en temporada alta (Jul/Ago) + 10 semanas flexibles al año, tu verano asegurado ¡para siempre!',
+      bg: '#E8DAD9',
+      dark: false,
+    },
+    {
+      icon: PiggyBank,
+      title: 'Gastos Compartidos',
+      text: 'Divide los costes fijos (IBI, comunidad, seguros...) entre 4. ¡Mucho más económico!',
+      bg: '#5C0FF5',
+      dark: true,
+    },
+    {
+      icon: Briefcase,
+      title: 'Gestión Integral',
+      text: 'Nos encargamos de TODO: limpieza, mantenimiento, facturas, impuestos... Tú solo disfruta.',
+      bg: '#FFFFFF',
+      dark: false,
+    },
+    {
+      icon: Banknote,
+      title: 'Rentabilidad Extra',
+      text: 'Alquilamos tu propiedad en las semanas que no usas a través de las mejores plataformas (Airbnb, Booking...). ¡Ingresos pasivos!',
+      bg: '#CFB8FC',
+      dark: false,
+    },
+    {
+      icon: Globe,
+      title: 'Viaja por el Mundo',
+      text: 'Intercambia tus semanas flexibles por estancias en otras propiedades exclusivas globalmente con nuestro sistema de puntos.',
+      bg: '#E8DAD9',
+      dark: false,
+    },
   ];
 
   const beneficiosClave = [
@@ -193,7 +233,7 @@ function ComoFunciona() {
   ];
 
   return (
-    <section id="reinventada" className="py-10 sm:py-20 bg-gradient-to-b from-white to-slate-50">
+    <section id="reinventada" className="py-10 sm:py-20 bg-white">
       <div className="container mx-auto px-4">
         <motion.div
           className="text-center mb-8 sm:mb-12"
@@ -242,17 +282,18 @@ function ComoFunciona() {
         >
           {steps.map((step, index) => (
             <motion.div key={index} variants={scaleIn}>
-            <Card 
-              className="group h-full bg-white/90 backdrop-blur-sm border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 ease-in-out rounded-2xl hover:-translate-y-1"
+            <Card
+              className={`group h-full border-0 shadow-sm hover:shadow-xl transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] rounded-2xl hover-lift pressable ${step.bg === '#FFFFFF' ? 'ring-1 ring-slate-200/80' : ''}`}
+              style={{ backgroundColor: step.bg }}
             >
               <CardHeader className="flex flex-row items-center gap-3 sm:gap-4 pb-2">
-                  <div className="bg-primary/10 p-2.5 rounded-full group-hover:bg-primary/20 transition-all duration-300 shrink-0">
-                      <step.icon className="w-6 h-6 sm:w-7 sm:h-7 text-primary transition-transform duration-300 ease-in-out group-hover:scale-125 group-hover:-rotate-12" />
+                  <div className={`p-2.5 rounded-full transition-[background-color] duration-200 shrink-0 ${step.dark ? 'bg-white/20 group-hover:bg-white/30' : 'bg-white/70 group-hover:bg-white'}`}>
+                      <step.icon className={`w-6 h-6 sm:w-7 sm:h-7 transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${step.dark ? 'text-white' : 'text-[#5C0FF5]'}`} />
                   </div>
-                  <CardTitle className="text-base sm:text-lg font-semibold">{step.title}</CardTitle>
+                  <CardTitle className={`text-base sm:text-lg font-semibold ${step.dark ? 'text-white' : 'text-slate-900'}`}>{step.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                  <p className="text-sm text-gray-600 leading-relaxed">{step.text}</p>
+                  <p className={`text-sm leading-relaxed ${step.dark ? 'text-white/85' : 'text-slate-700'}`}>{step.text}</p>
               </CardContent>
             </Card>
             </motion.div>
@@ -554,7 +595,7 @@ const HomePage = () => {
   console.log('viviendasPorZona:', viviendasPorZona);
 
   return (
-    <div className="min-h-screen bg-background font-poppins">
+    <div className="min-h-screen bg-white font-poppins">
       <Navbar />
       <section className="relative h-[100svh] min-h-[100svh] sm:h-screen sm:min-h-0 flex items-center justify-center overflow-hidden">
         {/* Imagen hero con secuencia de imágenes basada en scroll */}
@@ -692,13 +733,13 @@ const HomePage = () => {
             variants={fadeUp}
             className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center w-full max-w-sm sm:max-w-none mx-auto mb-2"
           >
-          <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-7 py-3 text-sm sm:text-base font-semibold shadow-lg transform transition hover:scale-105 w-full sm:w-auto" asChild>
+          <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-7 py-3 text-sm sm:text-base font-semibold shadow-lg w-full sm:w-auto" asChild>
             <Link to="/propiedades">
               Explorar Propiedades
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
-            <Button size="lg" variant="outline" className="rounded-full px-7 py-3 text-sm sm:text-base font-semibold shadow-lg border-white/80 bg-white/10 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm transition w-full sm:w-auto" onClick={() => {
+            <Button size="lg" variant="outline" className="rounded-full px-7 py-3 text-sm sm:text-base font-semibold shadow-lg border-white/80 bg-white/10 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm w-full sm:w-auto" onClick={() => {
               const seccion = document.getElementById('reinventada');
               if (seccion) seccion.scrollIntoView({ behavior: 'smooth' });
             }}>
@@ -708,7 +749,7 @@ const HomePage = () => {
           </motion.div>
         </motion.div>
       </section>
-      <section id="zonas-destacadas" className="py-10 sm:py-16 bg-[#F7F8FA]">
+      <section id="zonas-destacadas" className="py-10 sm:py-16 bg-white">
         <div className="container mx-auto px-4">
           <motion.div
             className="text-center mb-6 sm:mb-12"
@@ -751,7 +792,7 @@ const HomePage = () => {
             <Button asChild variant="default" size="lg" className="group rounded-full px-6">
               <Link to="/properties">
                 Ver Todas las Propiedades
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
+                <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:translate-x-1" />
               </Link>
             </Button>
             </motion.div>
@@ -775,12 +816,12 @@ const HomePage = () => {
                       key={index}
                       className="flex-shrink-0 w-[72vw] max-w-[280px] snap-center"
                     >
-                      <Card className="overflow-hidden transition-all duration-300 ease-in-out active:scale-[0.98] rounded-2xl group/card w-full h-44 border border-primary/20 bg-white relative shadow-sm">
+                      <Card className="overflow-hidden transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] pressable rounded-2xl group/card w-full h-44 border border-primary/20 bg-white relative shadow-sm">
                         <div className="relative w-full h-full">
                           <img
                             src={getZonaImage(zona)}
                             alt={`Propiedades en ${zona}`}
-                            className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-105"
+                            className="w-full h-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.77,0,0.175,1)] group-hover/card:scale-[1.04]"
                             onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"></div>
@@ -823,12 +864,12 @@ const HomePage = () => {
                     to={`/properties?zona=${encodeURIComponent(zona)}`}
                     className="group/card-link block"
                   >
-                    <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-2 hover:scale-105 rounded-2xl group/card bg-white relative h-32 border-2 border-primary/20 hover:border-primary/40">
+                    <Card className="overflow-hidden transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:shadow-xl hover-lift pressable rounded-2xl group/card bg-white relative h-32 border-2 border-primary/20 hover:border-primary/40">
                       <div className="relative w-full h-full">
                         <img
                           src={getZonaImage(zona)}
                           alt={`Propiedades en ${zona}`}
-                          className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/card:scale-110 rounded-2xl"
+                          className="w-full h-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.77,0,0.175,1)] group-hover/card:scale-[1.04] rounded-2xl"
                           onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-90 group-hover/card:opacity-95 transition-opacity duration-300 rounded-2xl"></div>
@@ -892,10 +933,8 @@ const HomePage = () => {
         </div>
       </section>
       <ComoFunciona />
-      <section id="contacto" className="relative py-14 sm:py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#F7F8FA] via-white to-slate-50 pointer-events-none" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[min(900px,90vw)] h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="container relative mx-auto px-4 max-w-6xl">
+      <section id="contacto" className="py-14 sm:py-24 bg-white">
+        <div className="container mx-auto px-4 max-w-6xl">
           {/* Cabecera a ancho completo */}
           <motion.div
             className="text-center max-w-3xl mx-auto mb-10 sm:mb-14"
@@ -1024,7 +1063,7 @@ const HomePage = () => {
                     );
 
                     const cardClass =
-                      'group flex flex-1 items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-all duration-300 hover:border-primary/25 hover:shadow-md min-h-[4.5rem]';
+                      'group flex flex-1 items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-[border-color,box-shadow,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-primary/25 hover:shadow-md pressable min-h-[4.5rem]';
 
                     return item.href ? (
                       <a key={item.label} href={item.href} className={cardClass}>
@@ -1067,7 +1106,7 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-      <section id="faq" className="py-12 sm:py-20 bg-slate-50 border-t border-slate-100">
+      <section id="faq" className="py-12 sm:py-20 bg-white">
         <div className="container mx-auto px-4 max-w-4xl">
           <motion.div
             className="text-center mb-8 sm:mb-10"
@@ -1080,7 +1119,13 @@ const HomePage = () => {
               variants={fadeUp}
               className="inline-flex items-center gap-2 rounded-full bg-white border border-slate-200 text-slate-600 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider mb-4"
             >
-              <HelpCircle className="w-3.5 h-3.5" />
+              <motion.span
+                animate={reduceMotion ? undefined : { rotate: [0, -10, 8, 0] }}
+                transition={{ duration: 0.55, delay: 0.25, ease: [0.23, 1, 0.32, 1] }}
+                className="inline-flex"
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
+              </motion.span>
               FAQ
             </motion.span>
             <motion.h2 variants={fadeUp} className="text-2xl sm:text-4xl font-bold text-slate-900 mb-3">
@@ -1098,12 +1143,16 @@ const HomePage = () => {
                     <stop offset="0.5" stopColor="#0ea5e9" />
                     <stop offset="1" stopColor="#2563eb" />
                   </linearGradient>
-                  <path
+                  <motion.path
                     d="M 0 10 Q 110 0, 220 10"
                     fill="none"
                     stroke="url(#linea-dudas)"
                     strokeWidth="3"
                     strokeLinecap="round"
+                    initial={reduceMotion ? { pathLength: 1 } : { pathLength: 0 }}
+                    whileInView={{ pathLength: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
                   />
                 </svg>
                 <span className="text-primary align-middle ml-0.5">.</span>
@@ -1113,22 +1162,35 @@ const HomePage = () => {
               Gastos, tarifas, alquiler, intercambio… las respuestas a lo más habitual.
             </motion.p>
           </motion.div>
-          <div className={`transition-all duration-500 ease-in-out overflow-hidden ${faqExpandido ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-            <div className="max-w-4xl mx-auto">
-              <FAQAccordion />
-              <div className="text-center mt-8">
-                <Button
-                  variant="outline"
-                  onClick={() => setFaqExpandido(false)}
-                  className="rounded-full px-6 border-slate-200 hover:bg-white"
-                >
-                  Ocultar preguntas
-                </Button>
-              </div>
-            </div>
-          </div>
+          <AnimatePresence initial={false}>
+            {faqExpandido && (
+              <motion.div
+                key="faq-list"
+                initial={reduceMotion ? false : { opacity: 0, transform: 'translateY(12px)' }}
+                animate={{ opacity: 1, transform: 'translateY(0px)' }}
+                exit={reduceMotion ? undefined : { opacity: 0, transform: 'translateY(-6px)' }}
+                transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+                className="max-w-4xl mx-auto"
+              >
+                <FAQAccordion />
+                <div className="text-center mt-8">
+                  <Button
+                    variant="outline"
+                    onClick={() => setFaqExpandido(false)}
+                    className="rounded-full px-6 border-slate-200 hover:bg-white"
+                  >
+                    Ocultar preguntas
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           {!faqExpandido && (
-            <div className="text-center">
+            <motion.div
+              className="text-center"
+              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
               <Button
                 variant="default"
                 onClick={() => setFaqExpandido(true)}
@@ -1137,7 +1199,7 @@ const HomePage = () => {
                 Ver preguntas frecuentes
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
-            </div>
+            </motion.div>
           )}
         </div>
       </section>

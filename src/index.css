@@ -36,6 +36,11 @@
 
     --radius: 0.5rem;
 
+    /* Emil Kowalski motion tokens */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
     --sidebar-background: 210 100% 15%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 210 100% 40%;
@@ -84,6 +89,36 @@
 
   body {
     @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer utilities {
+  /* Press feedback — Emil recipe: scale 0.97 / 160ms ease-out */
+  .pressable {
+    transition: transform 160ms var(--ease-out);
+  }
+  .pressable:active {
+    transform: scale(0.97);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .hover-lift {
+      transition: transform 200ms var(--ease-out), box-shadow 200ms ease;
+    }
+    .hover-lift:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pressable,
+    .hover-lift {
+      transition: none;
+    }
+    .pressable:active,
+    .hover-lift:hover {
+      transform: none;
+    }
   }
 }
 
