@@ -11,12 +11,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-    PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin, ChevronLeft, HelpCircle, Cookie, Star, Users, FileText, Presentation // Asegúrate de que CheckCircle y ShieldAlert estén aquí si los usas
+    PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin, ChevronLeft, HelpCircle, Cookie, Star, Users, FileText, Presentation, Clock, Send
 } from 'lucide-react'; // Iconos usados y potencialmente nuevos
 import { Link, useNavigate } from 'react-router-dom';
 import ContactForm from '@/components/ContactForm';
 import './HomePage.css'; // Asegúrate de que este archivo exista y no cause conflictos
 import { supabase } from '@/lib/supabase';
+import { motion, useReducedMotion } from 'framer-motion';
+import { fadeUp, fadeIn, stagger, scaleIn, viewportOnce } from '@/components/landing/motion';
 
 const FAQS = [
   {
@@ -171,6 +173,7 @@ function FAQAccordion() {
 
 function ComoFunciona() {
   const [expandido, setExpandido] = useState(false);
+  const reduceMotion = useReducedMotion();
 
   const steps = [
     { icon: Home, title: "Compra Inteligente", text: "Adquieres legalmente un proindiviso del 25% (o 50%) de una propiedad vacacional." },
@@ -192,39 +195,55 @@ function ComoFunciona() {
   return (
     <section id="reinventada" className="py-10 sm:py-20 bg-gradient-to-b from-white to-slate-50">
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl sm:text-4xl font-bold text-center mb-3 sm:mb-4 text-gray-800">
-          Tu Segunda Residencia,{' '}
-          <span className="relative inline-block">
-            <span className="text-gray-800 font-bold">Reinventada</span>
-            <svg
-              viewBox="0 0 180 12"
-              width="180"
-              height="12"
-              className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[120px] sm:w-[180px]"
-              aria-hidden="true"
-            >
-              <linearGradient id="linea-reinventada" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#22d3ee" />
-                <stop offset="0.5" stopColor="#0ea5e9" />
-                <stop offset="1" stopColor="#2563eb" />
-              </linearGradient>
-              <path
-                d="M 0 10 Q 90 0, 180 10"
-                fill="none"
-                stroke="url(#linea-reinventada)"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-            </svg>
-            <span className="text-primary text-4xl align-middle ml-1">.</span>
-          </span>
-        </h2>
-        <p className="text-base sm:text-lg text-center text-gray-600 mb-8 sm:mb-12 max-w-3xl mx-auto px-1">Descubre cómo Quincenalia combina propiedad, disfrute y rentabilidad de forma única.</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
+        <motion.div
+          className="text-center mb-8 sm:mb-12"
+          initial={reduceMotion ? false : 'hidden'}
+          whileInView={reduceMotion ? undefined : 'show'}
+          viewport={viewportOnce}
+          variants={stagger}
+        >
+          <motion.h2 variants={fadeUp} className="text-2xl sm:text-4xl font-bold text-center mb-3 sm:mb-4 text-gray-800">
+            Tu Segunda Residencia,{' '}
+            <span className="relative inline-block">
+              <span className="text-gray-800 font-bold">Reinventada</span>
+              <svg
+                viewBox="0 0 180 12"
+                width="180"
+                height="12"
+                className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[120px] sm:w-[180px]"
+                aria-hidden="true"
+              >
+                <linearGradient id="linea-reinventada" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#22d3ee" />
+                  <stop offset="0.5" stopColor="#0ea5e9" />
+                  <stop offset="1" stopColor="#2563eb" />
+                </linearGradient>
+                <path
+                  d="M 0 10 Q 90 0, 180 10"
+                  fill="none"
+                  stroke="url(#linea-reinventada)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className="text-primary text-4xl align-middle ml-1">.</span>
+            </span>
+          </motion.h2>
+          <motion.p variants={fadeUp} className="text-base sm:text-lg text-center text-gray-600 max-w-3xl mx-auto px-1">
+            Descubre cómo Quincenalia combina propiedad, disfrute y rentabilidad de forma única.
+          </motion.p>
+        </motion.div>
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10"
+          initial={reduceMotion ? false : 'hidden'}
+          whileInView={reduceMotion ? undefined : 'show'}
+          viewport={viewportOnce}
+          variants={stagger}
+        >
           {steps.map((step, index) => (
+            <motion.div key={index} variants={scaleIn}>
             <Card 
-              key={index} 
-              className="group bg-white/90 backdrop-blur-sm border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 ease-in-out rounded-2xl"
+              className="group h-full bg-white/90 backdrop-blur-sm border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 ease-in-out rounded-2xl hover:-translate-y-1"
             >
               <CardHeader className="flex flex-row items-center gap-3 sm:gap-4 pb-2">
                   <div className="bg-primary/10 p-2.5 rounded-full group-hover:bg-primary/20 transition-all duration-300 shrink-0">
@@ -236,8 +255,9 @@ function ComoFunciona() {
                   <p className="text-sm text-gray-600 leading-relaxed">{step.text}</p>
               </CardContent>
             </Card>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
         
         <div className={`transition-all duration-700 ease-in-out overflow-hidden ${expandido ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
            <div className="bg-slate-100/70 p-6 sm:p-8 rounded-xl shadow-inner border border-slate-200 max-w-3xl mx-auto space-y-6">
@@ -358,6 +378,7 @@ const HomePage = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const handleResize = () => {
@@ -622,9 +643,17 @@ const HomePage = () => {
           {/* Overlay gradiente para asegurar legibilidad */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/30 z-10" />
         </div>
-        <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-5 pt-16 sm:pt-8 w-full">
-          <h1 className="text-[1.85rem] leading-tight xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-3 sm:mb-6"
-              style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+        <motion.div
+          className="relative z-10 text-center text-white max-w-4xl mx-auto px-5 pt-16 sm:pt-8 w-full"
+          initial={reduceMotion ? false : 'hidden'}
+          animate={reduceMotion ? undefined : 'show'}
+          variants={stagger}
+        >
+          <motion.h1
+            variants={fadeUp}
+            className="text-[1.85rem] leading-tight xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-3 sm:mb-6"
+            style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}
+          >
             Ha llegado otra manera de{' '}
             <span className="relative inline-block">
               <span className="text-white font-semibold">
@@ -651,12 +680,18 @@ const HomePage = () => {
                 />
               </svg>
             </span><span className="text-primary">.</span>
-          </h1>
-          <p className="text-[0.95rem] sm:text-xl md:text-2xl mb-6 sm:mb-10 font-light max-w-2xl mx-auto leading-relaxed"
-             style={{ textShadow: '0 1px 5px rgba(0,0,0,0.4)' }}>
+          </motion.h1>
+          <motion.p
+            variants={fadeUp}
+            className="text-[0.95rem] sm:text-xl md:text-2xl mb-6 sm:mb-10 font-light max-w-2xl mx-auto leading-relaxed"
+            style={{ textShadow: '0 1px 5px rgba(0,0,0,0.4)' }}
+          >
             Accede a propiedades exclusivas por una fracción del coste. Disfruta, rentabiliza e intercambia.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center w-full max-w-sm sm:max-w-none mx-auto mb-2">
+          </motion.p>
+          <motion.div
+            variants={fadeUp}
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center w-full max-w-sm sm:max-w-none mx-auto mb-2"
+          >
           <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-7 py-3 text-sm sm:text-base font-semibold shadow-lg transform transition hover:scale-105 w-full sm:w-auto" asChild>
             <Link to="/propiedades">
               Explorar Propiedades
@@ -670,12 +705,19 @@ const HomePage = () => {
               <HelpCircle className="w-5 h-5 mr-2 inline-block" />
               Cómo funciona
             </Button>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
       <section id="zonas-destacadas" className="py-10 sm:py-16 bg-[#F7F8FA]">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl sm:text-4xl font-bold text-center mb-2 sm:mb-3 text-gray-800">
+          <motion.div
+            className="text-center mb-6 sm:mb-12"
+            initial={reduceMotion ? false : 'hidden'}
+            whileInView={reduceMotion ? undefined : 'show'}
+            viewport={viewportOnce}
+            variants={stagger}
+          >
+            <motion.h2 variants={fadeUp} className="text-2xl sm:text-4xl font-bold text-center mb-2 sm:mb-3 text-gray-800">
             Explora por{' '}
             <span className="relative inline-block">
               <span className="text-gray-800 font-bold">zonas</span>
@@ -701,18 +743,19 @@ const HomePage = () => {
               </svg>
               <span className="text-primary text-3xl sm:text-4xl align-middle ml-1">.</span>
             </span>
-          </h2>
-          <p className="text-base sm:text-lg text-center text-gray-600 mb-6 sm:mb-12 max-w-2xl mx-auto px-2">
+            </motion.h2>
+            <motion.p variants={fadeUp} className="text-base sm:text-lg text-center text-gray-600 max-w-2xl mx-auto px-2">
             Encuentra tu refugio perfecto en las regiones más deseadas.
-          </p>
-          <div className="text-center mb-6 sm:mb-8">
+            </motion.p>
+            <motion.div variants={fadeUp} className="text-center mt-6 sm:mt-8">
             <Button asChild variant="default" size="lg" className="group rounded-full px-6">
               <Link to="/properties">
                 Ver Todas las Propiedades
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
             </Button>
-          </div>
+            </motion.div>
+          </motion.div>
           {/* Vista móvil: Carrusel horizontal sin flechas que desbordan en 360px */}
           <div className="relative block md:hidden">
             <div className="py-2">
@@ -760,7 +803,13 @@ const HomePage = () => {
           </div>
 
           {/* Vista PC: Grid de 6x2 cards */}
-          <div className="hidden md:block">
+          <motion.div
+            className="hidden md:block"
+            initial={reduceMotion ? false : 'hidden'}
+            whileInView={reduceMotion ? undefined : 'show'}
+            viewport={viewportOnce}
+            variants={stagger}
+          >
             <div className="grid grid-cols-6 gap-4 px-4 max-w-7xl mx-auto">
               {zonasUnicas.map((zona, index) => {
                 // Buscar el contador usando la zona normalizada
@@ -769,9 +818,9 @@ const HomePage = () => {
                 );
                 const countZona = getFakeCount(zona);
                 return (
+                  <motion.div key={index} variants={scaleIn}>
                   <Link
                     to={`/properties?zona=${encodeURIComponent(zona)}`}
-                    key={index}
                     className="group/card-link block"
                   >
                     <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl transform hover:-translate-y-2 hover:scale-105 rounded-2xl group/card bg-white relative h-32 border-2 border-primary/20 hover:border-primary/40">
@@ -794,15 +843,22 @@ const HomePage = () => {
                       </div>
                     </Card>
                   </Link>
+                  </motion.div>
                 );
               })}
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
       <section className="py-10 sm:py-16 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl sm:text-4xl font-bold text-center mb-8 sm:mb-12 text-gray-800">
+          <motion.div
+            initial={reduceMotion ? false : 'hidden'}
+            whileInView={reduceMotion ? undefined : 'show'}
+            viewport={viewportOnce}
+            variants={stagger}
+          >
+          <motion.h2 variants={fadeUp} className="text-2xl sm:text-4xl font-bold text-center mb-8 sm:mb-12 text-gray-800">
             Oportunidades{' '}
             <span className="relative inline-block">
               <span className="text-gray-800 font-bold">exclusivas</span>
@@ -828,136 +884,258 @@ const HomePage = () => {
               </svg>
               <span className="text-primary text-4xl align-middle ml-1">.</span>
             </span>
-          </h2>
+          </motion.h2>
+          <motion.div variants={fadeIn}>
           <FeaturedProperties />
+          </motion.div>
+          </motion.div>
         </div>
       </section>
       <ComoFunciona />
-      <section id="contacto" className="py-10 sm:py-20 bg-gradient-to-b from-slate-50 to-white">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
-            <div>
-              <h2 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-3 sm:mb-4">
-                <span className="text-black text-3xl sm:text-4xl align-middle mr-1">¿</span>
-                Listo para <span className="relative inline-block"><span className="text-gray-800 font-bold">Empezar</span>
-                  <svg
-                    viewBox="0 0 180 12"
-                    width="180"
-                    height="12"
-                    className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[120px] sm:w-[180px]"
-                    aria-hidden="true"
-                  >
-                    <linearGradient id="linea-empezar" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#22d3ee" />
-                      <stop offset="0.5" stopColor="#0ea5e9" />
-                      <stop offset="1" stopColor="#2563eb" />
-                    </linearGradient>
-                    <path
-                      d="M 0 10 Q 90 0, 180 10"
-                      fill="none"
-                      stroke="url(#linea-empezar)"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span className="text-black text-4xl align-middle ml-1">?</span>
-                </span>
-              </h2>
-              <p className="text-lg text-gray-600 mb-8">
-                Contacta con nosotros para descubrir cómo Quincenalia puede transformar tu forma de disfrutar y rentabilizar
-                tus vacaciones. Nuestro equipo está listo para asesorarte.
-              </p>
-              <div className="space-y-6">
-                <a 
-                  href="tel:+34616462861" 
-                  className="group flex items-center p-4 rounded-xl hover:bg-primary/5 transition-all duration-300 ease-in-out transform hover:shadow-lg border border-transparent hover:border-primary/20"
+      <section id="contacto" className="relative py-14 sm:py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#F7F8FA] via-white to-slate-50 pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[min(900px,90vw)] h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="container relative mx-auto px-4 max-w-6xl">
+          {/* Cabecera a ancho completo */}
+          <motion.div
+            className="text-center max-w-3xl mx-auto mb-10 sm:mb-14"
+            initial={reduceMotion ? false : 'hidden'}
+            whileInView={reduceMotion ? undefined : 'show'}
+            viewport={viewportOnce}
+            variants={stagger}
+          >
+            <motion.span
+              variants={fadeUp}
+              className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-4 py-1.5 text-xs font-semibold uppercase tracking-wider mb-5"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              Contacto
+            </motion.span>
+
+            <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold text-slate-900 leading-tight mb-4">
+              ¿Listo para{' '}
+              <span className="relative inline-block text-primary">
+                empezar
+                <svg
+                  viewBox="0 0 180 12"
+                  width="180"
+                  height="12"
+                  className="absolute left-0 top-full mt-1 w-full max-w-[140px]"
+                  aria-hidden="true"
                 >
-                  <div className="bg-primary/10 p-3 rounded-full mr-4 group-hover:bg-primary/20 transition-all duration-300">
-                    <Phone className="w-6 h-6 text-primary transition-transform duration-300 ease-in-out group-hover:scale-125 group-hover:-rotate-12" />
+                  <linearGradient id="linea-empezar" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#22d3ee" />
+                    <stop offset="0.5" stopColor="#0ea5e9" />
+                    <stop offset="1" stopColor="#2563eb" />
+                  </linearGradient>
+                  <path
+                    d="M 0 10 Q 90 0, 180 10"
+                    fill="none"
+                    stroke="url(#linea-empezar)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+              ?
+            </motion.h2>
+
+            <motion.p variants={fadeUp} className="text-base sm:text-lg text-slate-600 leading-relaxed">
+              Cuéntanos qué buscas y te ayudamos a dar el primer paso hacia tu segunda residencia inteligente.
+            </motion.p>
+          </motion.div>
+
+          {/* Dos columnas: contacto | formulario — misma altura y tipografía */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-stretch">
+            <motion.div
+              className="h-full"
+              initial={reduceMotion ? false : 'hidden'}
+              whileInView={reduceMotion ? undefined : 'show'}
+              viewport={viewportOnce}
+              variants={fadeUp}
+            >
+              <div className="h-full rounded-3xl border border-slate-100 bg-white shadow-xl shadow-slate-200/60 p-6 sm:p-8 lg:p-10 flex flex-col">
+                <div className="flex items-start gap-4 mb-6 sm:mb-8">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+                    <Phone className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-800 text-sm">Llámanos</p>
-                    <p className="text-gray-700 group-hover:text-primary text-base transition-colors">+34 616 462 861</p>
-                  </div>
-                </a>
-                <a 
-                  href="mailto:info@quincenalia.com" 
-                  className="group flex items-center p-4 rounded-xl hover:bg-primary/5 transition-all duration-300 ease-in-out transform hover:shadow-lg border border-transparent hover:border-primary/20"
-                >
-                  <div className="bg-primary/10 p-3 rounded-full mr-4 group-hover:bg-primary/20 transition-all duration-300">
-                    <Mail className="w-6 h-6 text-primary transition-transform duration-300 ease-in-out group-hover:scale-125 group-hover:-rotate-12" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-800 text-sm">Escríbenos</p>
-                    <p className="text-gray-700 group-hover:text-primary text-base transition-colors">info@quincenalia.com</p>
-                  </div>
-                </a>
-                <div className="group flex items-start p-4 rounded-xl hover:bg-primary/5 transition-all duration-300 ease-in-out transform hover:shadow-lg border border-transparent hover:border-primary/20">
-                  <div className="bg-primary/10 p-3 rounded-full mr-4 group-hover:bg-primary/20 transition-all duration-300 mt-1">
-                    <MapPin className="w-6 h-6 text-primary flex-shrink-0 transition-transform duration-300 ease-in-out group-hover:scale-125 group-hover:-rotate-12" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-800 text-sm">Visítanos (con cita)</p>
-                    <p className="text-gray-700 text-base">Oficinas en Avenida de Burgos 52, Madrid, Proximamente Barcelona y Málaga.</p>
-                    <p className="text-xs text-gray-500">(Visitas con cita previa)</p>
+                    <h3 className="text-xl font-bold text-slate-900">Contacta con nosotros</h3>
+                    <p className="text-sm text-slate-500 mt-1 leading-relaxed">
+                      Llámanos, escríbenos o visita nuestras oficinas con cita previa.
+                    </p>
                   </div>
                 </div>
+
+                <div className="flex flex-1 flex-col gap-3 min-h-0">
+                  <div className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+                      <Clock className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">Respuesta en menos de 24 h</p>
+                      <p className="text-sm text-slate-500">Lunes a viernes, horario laboral</p>
+                    </div>
+                  </div>
+
+                  {[
+                    {
+                      href: 'tel:+34616462861',
+                      icon: Phone,
+                      label: 'Llámanos',
+                      value: '+34 616 462 861',
+                      external: true,
+                    },
+                    {
+                      href: 'mailto:info@quincenalia.com',
+                      icon: Mail,
+                      label: 'Escríbenos',
+                      value: 'info@quincenalia.com',
+                      external: true,
+                    },
+                    {
+                      href: undefined,
+                      icon: MapPin,
+                      label: 'Visítanos (con cita)',
+                      value: 'Av. de Burgos 52, Madrid',
+                      detail: 'Próximamente Barcelona y Málaga · cita previa',
+                      external: false,
+                    },
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    const inner = (
+                      <>
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-white">
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-slate-700">{item.label}</p>
+                          <p className="text-sm font-semibold text-slate-900 truncate group-hover:text-primary transition-colors mt-0.5">
+                            {item.value}
+                          </p>
+                          {item.detail && (
+                            <p className="text-sm text-slate-500 mt-1 leading-snug">{item.detail}</p>
+                          )}
+                        </div>
+                        {item.external && (
+                          <ChevronRight className="w-5 h-5 text-slate-300 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                        )}
+                      </>
+                    );
+
+                    const cardClass =
+                      'group flex flex-1 items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-all duration-300 hover:border-primary/25 hover:shadow-md min-h-[4.5rem]';
+
+                    return item.href ? (
+                      <a key={item.label} href={item.href} className={cardClass}>
+                        {inner}
+                      </a>
+                    ) : (
+                      <div key={item.label} className={cardClass}>
+                        {inner}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-            <Card className="bg-white shadow-xl p-6 sm:p-8 rounded-2xl border border-slate-100">
-              <CardHeader className="p-0 mb-6">
-                <CardTitle className="text-2xl font-semibold text-gray-800">Envíanos un Mensaje</CardTitle>
-                <p className="text-sm text-gray-500 mt-1">Te responderemos lo antes posible.</p>
-              </CardHeader>
-              <CardContent className="p-0">
-                <ContactForm />
-              </CardContent>
-            </Card>
+            </motion.div>
+
+            <motion.div
+              className="h-full"
+              initial={reduceMotion ? false : 'hidden'}
+              whileInView={reduceMotion ? undefined : 'show'}
+              viewport={viewportOnce}
+              variants={fadeUp}
+            >
+              <div className="h-full rounded-3xl border border-slate-100 bg-white shadow-xl shadow-slate-200/60 p-6 sm:p-8 lg:p-10 flex flex-col">
+                <div className="flex items-start gap-4 mb-6 sm:mb-8">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+                    <Send className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">Envíanos un mensaje</h3>
+                    <p className="text-sm text-slate-500 mt-1 leading-relaxed">
+                      Rellena el formulario y un asesor se pondrá en contacto contigo.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex-1 flex flex-col min-h-0">
+                  <ContactForm variant="landing" className="flex-1 flex flex-col" />
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
-      <section id="faq" className="py-10 sm:py-20 bg-slate-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl sm:text-4xl font-bold text-center mb-8 sm:mb-12 text-gray-800">
-            <span className="relative inline-block">
-              Resolvemos tus Dudas
-              <svg
-                viewBox="0 0 220 12"
-                width="220"
-                height="12"
-                className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[160px] sm:w-[220px]"
-                aria-hidden="true"
-              >
-                <linearGradient id="linea-dudas" x1="0" y1="0" x2="220" y2="0" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#22d3ee" />
-                  <stop offset="0.5" stopColor="#0ea5e9" />
-                  <stop offset="1" stopColor="#2563eb" />
-                </linearGradient>
-                <path
-                  d="M 0 10 Q 110 0, 220 10"
-                  fill="none"
-                  stroke="url(#linea-dudas)"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <span className="text-primary text-4xl align-middle ml-1">.</span>
-            </span>
-          </h2>
+      <section id="faq" className="py-12 sm:py-20 bg-slate-50 border-t border-slate-100">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <motion.div
+            className="text-center mb-8 sm:mb-10"
+            initial={reduceMotion ? false : 'hidden'}
+            whileInView={reduceMotion ? undefined : 'show'}
+            viewport={viewportOnce}
+            variants={stagger}
+          >
+            <motion.span
+              variants={fadeUp}
+              className="inline-flex items-center gap-2 rounded-full bg-white border border-slate-200 text-slate-600 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider mb-4"
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              FAQ
+            </motion.span>
+            <motion.h2 variants={fadeUp} className="text-2xl sm:text-4xl font-bold text-slate-900 mb-3">
+              <span className="relative inline-block">
+                Resolvemos tus dudas
+                <svg
+                  viewBox="0 0 220 12"
+                  width="220"
+                  height="12"
+                  className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[160px] sm:w-[220px]"
+                  aria-hidden="true"
+                >
+                  <linearGradient id="linea-dudas" x1="0" y1="0" x2="220" y2="0" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#22d3ee" />
+                    <stop offset="0.5" stopColor="#0ea5e9" />
+                    <stop offset="1" stopColor="#2563eb" />
+                  </linearGradient>
+                  <path
+                    d="M 0 10 Q 110 0, 220 10"
+                    fill="none"
+                    stroke="url(#linea-dudas)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span className="text-primary align-middle ml-0.5">.</span>
+              </span>
+            </motion.h2>
+            <motion.p variants={fadeUp} className="text-slate-600 text-base sm:text-lg max-w-2xl mx-auto">
+              Gastos, tarifas, alquiler, intercambio… las respuestas a lo más habitual.
+            </motion.p>
+          </motion.div>
           <div className={`transition-all duration-500 ease-in-out overflow-hidden ${faqExpandido ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
             <div className="max-w-4xl mx-auto">
               <FAQAccordion />
-              <div className="text-center mt-6">
-                <Button variant="outline" onClick={() => setFaqExpandido(false)} className="group transition-all duration-300">
-                  Ocultar FAQ
+              <div className="text-center mt-8">
+                <Button
+                  variant="outline"
+                  onClick={() => setFaqExpandido(false)}
+                  className="rounded-full px-6 border-slate-200 hover:bg-white"
+                >
+                  Ocultar preguntas
                 </Button>
               </div>
             </div>
           </div>
           {!faqExpandido && (
-            <div className="text-center mt-6">
-              <Button variant="outline" onClick={() => setFaqExpandido(true)} className="group transition-all duration-300">
-                Mostrar FAQ
+            <div className="text-center">
+              <Button
+                variant="default"
+                onClick={() => setFaqExpandido(true)}
+                className="rounded-full px-8 h-12 font-semibold shadow-md"
+              >
+                Ver preguntas frecuentes
+                <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
           )}

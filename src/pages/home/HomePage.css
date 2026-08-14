@@ -49,3 +49,9 @@
     line-height: 1.25;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-image {
+    animation: none;
+  }
+}
