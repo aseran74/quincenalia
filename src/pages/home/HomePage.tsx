@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import { FeaturedProperties } from '@/components/FeaturedProperties';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -393,16 +393,6 @@ function getFakeCount(zona: string) {
   return num;
 }
 
-// Configuración de la secuencia de imágenes
-const IMAGE_BASE_NAME = 'Whisk_ytmyqmm2ugomhzmk1cmlfwotydohrtl5qzmz0yy_';
-const IMAGE_FOLDER = `${IMAGE_BASE_NAME}000`;
-const TOTAL_IMAGES = 50; 
-const IMAGE_SEQUENCE = Array.from({ length: TOTAL_IMAGES }, (_, i) => {
-  const num = i.toString().padStart(3, '0');
-  const fileName = `${IMAGE_BASE_NAME}${num}`;
-  return `/fotos-efecto/${IMAGE_FOLDER}/${fileName}.webp`;
-});
-
 const HomePage = () => {
   const [viviendasPorZona, setViviendasPorZona] = useState<{ [key: string]: number }>({});
   const [zonasUnicas, setZonasUnicas] = useState<string[]>([]);
@@ -412,19 +402,11 @@ const HomePage = () => {
   const [aceptaCondiciones, setAceptaCondiciones] = useState(false);
   const navigate = useNavigate();
   const [showCookieBanner, setShowCookieBanner] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imagesRef = useRef<HTMLImageElement[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [videoEnded, setVideoEnded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
       if (window.innerWidth >= 768) {
         setFaqExpandido(true);
       } else {
@@ -435,112 +417,6 @@ const HomePage = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  // Función para dibujar un frame en el Canvas (cover real, sin márgenes negros)
-  const renderCanvasFrame = useCallback((index: number) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    const img = imagesRef.current[index];
-
-    if (!ctx || !img || !img.complete || img.naturalWidth === 0) return;
-
-    const parent = canvas.parentElement;
-    const w = parent?.clientWidth || window.innerWidth;
-    const h = parent?.clientHeight || window.innerHeight;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-    canvas.width = Math.floor(w * dpr);
-    canvas.height = Math.floor(h * dpr);
-    canvas.style.width = `${w}px`;
-    canvas.style.height = `${h}px`;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    // Cover + ligero overscale en móvil (360x740) para evitar bandas negras
-    const scaleBoost = isMobile ? 1.14 : 1.03;
-    const canvasAspect = w / h;
-    const imgAspect = img.naturalWidth / img.naturalHeight;
-
-    let drawWidth: number;
-    let drawHeight: number;
-    if (imgAspect > canvasAspect) {
-      drawHeight = h * scaleBoost;
-      drawWidth = drawHeight * imgAspect;
-    } else {
-      drawWidth = w * scaleBoost;
-      drawHeight = drawWidth / imgAspect;
-    }
-
-    const offsetX = (w - drawWidth) / 2;
-    // En móvil priorizamos el centro-superior sin dejar hueco inferior
-    const offsetY = isMobile ? (h - drawHeight) * 0.4 : (h - drawHeight) / 2;
-
-    ctx.clearRect(0, 0, w, h);
-    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-  }, [isMobile]);
-
-  // Precarga de imágenes
-  useEffect(() => {
-    let loadedCount = 0;
-
-    const preloadImages = () => {
-      IMAGE_SEQUENCE.forEach((src, index) => {
-        const img = new Image();
-        img.src = src;
-        img.onload = () => {
-          imagesRef.current[index] = img;
-          loadedCount++;
-          if (loadedCount === TOTAL_IMAGES) {
-            setIsLoaded(true);
-            if (videoEnded) {
-              renderCanvasFrame(0);
-            }
-          }
-        };
-        img.onerror = () => {
-          const fallbackImg = new Image();
-          fallbackImg.src = isMobile ? '/foto-movil.jpg' : '/hero.jpg';
-          imagesRef.current[index] = fallbackImg;
-          loadedCount++;
-          if (loadedCount === TOTAL_IMAGES) {
-            setIsLoaded(true);
-            if (videoEnded) {
-              renderCanvasFrame(0);
-            }
-          }
-        };
-      });
-    };
-
-    preloadImages();
-  }, [isMobile, videoEnded, renderCanvasFrame]);
-
-
-  // Escucha de Scroll para la secuencia de imágenes (solo en desktop)
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPos = window.scrollY;
-      setScrollY(scrollPos);
-      
-      // Solo hacer transición en desktop, en móvil mostrar solo la primera imagen
-      if (!isMobile && isLoaded && videoEnded) {
-        const heroHeight = window.innerHeight;
-        const progress = Math.min(scrollPos / heroHeight, 1);
-        const frameIndex = Math.min(
-          TOTAL_IMAGES - 1,
-          Math.floor(progress * TOTAL_IMAGES)
-        );
-        requestAnimationFrame(() => renderCanvasFrame(frameIndex));
-      } else if (isMobile && isLoaded && videoEnded) {
-        // En móvil, cover completo de la primera imagen
-        requestAnimationFrame(() => renderCanvasFrame(0));
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isLoaded, videoEnded, isMobile, renderCanvasFrame]);
 
   useEffect(() => {
     const fetchViviendasPorZona = async () => {
@@ -597,95 +473,29 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-white font-poppins">
       <Navbar />
-      <section className="relative h-[100svh] min-h-[100svh] sm:h-screen sm:min-h-0 flex items-center justify-center overflow-hidden">
-        {/* Imagen hero con secuencia de imágenes basada en scroll */}
-        <div className="absolute inset-0 z-0 w-full h-full hero-image-container bg-[#0a1628]">
-          {/* Video que se reproduce primero */}
+      <section className="relative z-30 h-[100svh] min-h-[100svh] sm:h-screen sm:min-h-0 flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 z-0 w-full h-full overflow-hidden bg-[#0a1628]">
           <video
             ref={videoRef}
-            className="w-full h-full object-cover absolute inset-0"
-            style={{
-              filter: 'brightness(0.72)',
-              // Overscale en móvil evita bandas negras en 360x740; menos translateY en móvil
-              transform: isMobile
-                ? `scale(${1.18 + scrollY * 0.0003})`
-                : `scale(${1 + scrollY * 0.0005}) translateY(${scrollY * 0.2}px)`,
-              transition: 'transform 0.1s ease-out, opacity 0.5s ease-out',
-              willChange: 'transform',
-              objectPosition: isMobile ? 'center 35%' : 'center center',
-              zIndex: videoEnded ? 0 : 2,
-              opacity: videoEnded ? 0 : 1
-            }}
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{ filter: 'brightness(0.92)' }}
+            autoPlay
             muted
             playsInline
             preload="auto"
-            poster={isMobile ? "/foto-movil.jpg" : "/hero.jpg"}
             onLoadedData={() => {
-              // Esperar 2 segundos antes de reproducir el video
-              if (videoRef.current) {
-                setTimeout(() => {
-                  if (videoRef.current) {
-                    videoRef.current.play().catch((err) => {
-                      console.log('Error al reproducir video:', err);
-                    });
-                  }
-                }, 2000); // 2 segundos de delay
-              }
-            }}
-            onEnded={() => {
-              // Cuando el video termina, mostrar hero.jpg
-              setVideoEnded(true);
-            }}
-            onError={() => {
-              // Si el video falla, usar imágenes directamente
-              console.log('Error al cargar video, usando imágenes');
-              setVideoEnded(true);
+              videoRef.current?.play().catch(() => {});
             }}
           >
             <source
-              src={isMobile ? "/Video-movil.mp4" : "/fotos-efecto/Whisk_ytmyqmm2ugomhzmk1cmlfwotydohrtl5qzmz0yy_000/Video.mp4"}
+              src="/fotos-efecto/Coastal_village_on_rocky_cliffs_202608151450.mp4"
               type="video/mp4"
             />
           </video>
-          {/* Canvas con secuencia de imágenes (se muestra cuando el video termina) */}
-          {videoEnded && (
-            <>
-              {!isLoaded && (
-                <img
-                  src={isMobile ? "/foto-movil.jpg" : "/hero.jpg"}
-                  alt="Imagen principal de Quincenalia: costa y propiedades vacacionales"
-                  className="w-full h-full object-cover absolute inset-0"
-                  style={{
-                    filter: 'brightness(0.72)',
-                    objectPosition: isMobile ? 'center 35%' : 'center center',
-                    transform: isMobile ? 'scale(1.14)' : 'scale(1.02)',
-                    zIndex: 1,
-                    opacity: 1
-                  }}
-                />
-              )}
-              <canvas
-                ref={canvasRef}
-                className="w-full h-full block absolute inset-0"
-                style={{
-                  filter: 'brightness(0.72)',
-                  transform: isMobile
-                    ? `scale(${1.02 + scrollY * 0.0002})`
-                    : `scale(${1 + scrollY * 0.0005}) translateY(${scrollY * 0.2}px)`,
-                  transition: 'transform 0.1s ease-out',
-                  willChange: 'transform',
-                  zIndex: 2,
-                  opacity: isLoaded ? 1 : 0,
-                  display: isLoaded ? 'block' : 'none'
-                }}
-              />
-            </>
-          )}
-          {/* Overlay gradiente para asegurar legibilidad */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/30 z-10" />
+          <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/55 via-black/15 to-black/20" />
         </div>
         <motion.div
-          className="relative z-10 text-center text-white max-w-4xl mx-auto px-5 pt-16 sm:pt-8 w-full"
+          className="relative z-20 text-center text-white max-w-4xl mx-auto px-5 pt-16 sm:pt-8 w-full"
           initial={reduceMotion ? false : 'hidden'}
           animate={reduceMotion ? undefined : 'show'}
           variants={stagger}
@@ -749,7 +559,7 @@ const HomePage = () => {
           </motion.div>
         </motion.div>
       </section>
-      <section id="zonas-destacadas" className="py-10 sm:py-16 bg-white">
+      <section id="zonas-destacadas" className="relative z-10 py-10 sm:py-16 bg-white">
         <div className="container mx-auto px-4">
           <motion.div
             className="text-center mb-6 sm:mb-12"

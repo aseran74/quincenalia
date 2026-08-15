@@ -17,6 +17,8 @@ import type { Property } from '@/types/property';
 import { Input as ShadInput } from '@/components/ui/input'; // Renombrado para evitar conflicto
 import type { Libraries } from '@react-google-maps/api';
 import Navbar from '@/components/Navbar';
+import { motion, useReducedMotion } from 'framer-motion';
+import { fadeUp, staggerFast, scaleIn, easeOut } from '@/components/landing/motion';
 
 // --- Tipos y Constantes ---
 type Filters = {
@@ -165,6 +167,7 @@ export const PropertiesPage = () => {
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const locationInputRef = useRef<HTMLInputElement | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  const reduceMotion = useReducedMotion();
 
   const { isLoaded: isAutocompleteLoaded, loadError: autocompleteLoadError } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
@@ -308,12 +311,12 @@ export const PropertiesPage = () => {
     const monthly = minShare ? calcularCuotaHipoteca(minShare) : null;
     return (
       <Link to={`/properties/${property.id}`} className="group block h-full">
-        <Card className="overflow-hidden h-full flex flex-col border-0 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 bg-white ring-1 ring-slate-200/80 hover:-translate-y-0.5">
+        <Card className="overflow-hidden h-full flex flex-col border-0 rounded-2xl shadow-sm hover:shadow-xl transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] bg-white ring-1 ring-slate-200/80 hover-lift pressable">
           <div className="relative w-full aspect-[4/3] overflow-hidden">
             <img
               src={imageUrl}
               alt={`Imagen de ${property.title}`}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.77,0,0.175,1)] group-hover:scale-[1.03]"
               onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10 pointer-events-none" />
@@ -333,20 +336,20 @@ export const PropertiesPage = () => {
               <>
                 <button
                   type="button" aria-label="Anterior"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-slate-800 rounded-full p-1.5 shadow opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-slate-800 rounded-full p-1.5 shadow opacity-0 group-hover:opacity-100 transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] z-20 pressable"
                   onClick={e => { e.preventDefault(); e.stopPropagation(); setImgIdx(idx => (idx - 1 + totalImgs) % totalImgs); }}
                 > <ChevronLeftIcon className="w-4 h-4" /> </button>
                 <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1 z-20">
                   {Array.from({ length: Math.min(totalImgs, 5) }).map((_, i) => (
                     <span
                       key={i}
-                      className={`h-1.5 rounded-full transition-all ${i === imgIdx ? 'w-4 bg-white' : 'w-1.5 bg-white/55'}`}
+                      className={`h-1.5 rounded-full transition-[width,background-color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] ${i === imgIdx ? 'w-4 bg-white' : 'w-1.5 bg-white/55'}`}
                     />
                   ))}
                 </div>
                 <button
                   type="button" aria-label="Siguiente"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-slate-800 rounded-full p-1.5 shadow opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-slate-800 rounded-full p-1.5 shadow opacity-0 group-hover:opacity-100 transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] z-20 pressable"
                   onClick={e => { e.preventDefault(); e.stopPropagation(); setImgIdx(idx => (idx + 1) % totalImgs); }}
                 > <ChevronRightIcon className="w-4 h-4" /> </button>
               </>
@@ -395,7 +398,7 @@ export const PropertiesPage = () => {
     
     return (
       <Card 
-        className={`overflow-hidden border-0 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 bg-white cursor-pointer ring-1 ${
+        className={`overflow-hidden border-0 rounded-xl shadow-sm hover:shadow-md transition-[transform,box-shadow] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] bg-white cursor-pointer ring-1 pressable ${
           isSelected ? 'ring-2 ring-primary shadow-md' : 'ring-black/5'
         }`}
         onClick={onClick}
@@ -458,7 +461,7 @@ export const PropertiesPage = () => {
   const filterControl = (dark = false) =>
     dark
       ? 'w-full justify-between text-sm h-10 font-normal rounded-xl bg-white/15 border-white/25 text-white hover:bg-white/25 hover:text-white'
-      : 'w-full justify-between text-sm h-10 font-normal rounded-xl bg-white/80 border-0 text-slate-800 hover:bg-white';
+      : 'w-full justify-between text-sm h-10 font-normal rounded-xl bg-white/80 border-0 text-slate-800 hover:bg-white hover:text-slate-800';
 
   const filterPanel = (      <Card className="bg-white border-0 shadow-md shadow-slate-200/50 rounded-2xl ring-1 ring-slate-200/80">
         <CardContent className="p-4 md:p-5">
@@ -534,7 +537,7 @@ export const PropertiesPage = () => {
                 <div className="absolute z-30 mt-1 left-3 right-3 min-w-[220px] bg-popover border border-border rounded-md shadow-lg p-2 max-h-60 overflow-y-auto">
                   <div className="grid grid-cols-1 gap-1">
                     {zonasUnicas.map(z => (
-                      <div key={z} className="flex items-center space-x-2 hover:bg-accent rounded p-1.5">
+                      <div key={z} className="flex items-center space-x-2 hover:bg-[#CFB8FC]/40 rounded p-1.5 text-slate-800">
                         <Checkbox
                           id={`zona-${z}`}
                           checked={filters.zonas.includes(z)}
@@ -574,7 +577,7 @@ export const PropertiesPage = () => {
                 <div className="absolute z-30 mt-1 left-3 right-3 min-w-[200px] bg-popover border border-border rounded-md shadow-lg p-2">
                   <div className="grid grid-cols-1 gap-1">
                     {QUINCENA_OPTIONS.map(opt => (
-                      <div key={opt.value} className="flex items-center space-x-2 hover:bg-accent rounded p-1.5">
+                      <div key={opt.value} className="flex items-center space-x-2 hover:bg-[#CFB8FC]/40 rounded p-1.5 text-slate-800">
                         <Checkbox
                           id={`quincena-${opt.value}`}
                           checked={filters.quincenas.includes(opt.value)}
@@ -615,7 +618,7 @@ export const PropertiesPage = () => {
                 >
                   <div className="grid grid-cols-1 gap-1">
                     {TIPO_VIVIENDA_OPTIONS.map(type => (
-                      <div key={type} className="flex items-center space-x-2 hover:bg-accent rounded p-1.5">
+                      <div key={type} className="flex items-center space-x-2 hover:bg-[#CFB8FC]/40 rounded p-1.5 text-slate-800">
                         <Checkbox
                           id={`type-${type}`} checked={filters.propertyTypes.includes(type)}
                           onCheckedChange={checked => {
@@ -711,22 +714,23 @@ export const PropertiesPage = () => {
                 <span>1.000.000€+</span>
               </div>
             </div>
-            
-            {/* 8. Más filtros */}
+          </div>
+
+          {/* Misma línea: Más filtros · Obra nueva · Buscar · Limpiar */}
+          <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 items-stretch">
             <div className={filterTile('#FFFFFF')} style={{ backgroundColor: '#FFFFFF' }}>
-              <Button
-                variant="ghost"
-                className="text-sm px-3 h-10 flex items-center text-[#5C0FF5] hover:bg-[#CFB8FC]/40 hover:text-[#5C0FF5] gap-2 font-semibold w-full"
+              <button
+                type="button"
+                className="text-sm px-3 h-10 inline-flex items-center justify-center gap-2 font-semibold w-full rounded-xl text-[#5C0FF5] bg-transparent hover:bg-[#CFB8FC]/40 transition-colors"
                 onClick={() => setShowAdvancedFilters(v => !v)}
               >
-                <SlidersHorizontal className="w-4 h-4 mr-1" />
+                <SlidersHorizontal className="w-4 h-4" />
                 {showAdvancedFilters ? 'Menos filtros' : 'Más filtros'}
-                {showAdvancedFilters ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
-              </Button>
+                {showAdvancedFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
             </div>
 
-            {/* 9. Obra nueva */}
-            <div className={`${filterTile('#E8DAD9')} flex items-center gap-2`} style={{ backgroundColor: '#E8DAD9' }}>
+            <div className={`${filterTile('#E8DAD9')} flex items-center justify-center gap-2`} style={{ backgroundColor: '#E8DAD9' }}>
               <input
                 type="checkbox"
                 id="filterObraNueva"
@@ -734,8 +738,41 @@ export const PropertiesPage = () => {
                 onChange={e => setFilters(prev => ({ ...prev, obraNueva: e.target.checked }))}
                 className="mr-1"
               />
-              <Building2 className="w-5 h-5 text-[#5C0FF5] mr-1" />
-              <label htmlFor="filterObraNueva" className="text-sm cursor-pointer select-none text-slate-800">Obra nueva</label>
+              <Building2 className="w-5 h-5 text-[#5C0FF5] mr-1 shrink-0" />
+              <label htmlFor="filterObraNueva" className="text-sm cursor-pointer select-none text-slate-800 whitespace-nowrap">Obra nueva</label>
+            </div>
+
+            <div className={filterTile('#E8DAD9')} style={{ backgroundColor: '#E8DAD9' }}>
+              <button
+                type="button"
+                className="w-full h-10 inline-flex items-center justify-center gap-2 rounded-xl font-semibold bg-[#E8DAD9] text-slate-900 hover:bg-[#d9c8c6] transition-colors"
+                onClick={() => {
+                  setShowFilters(false);
+                  document.getElementById('resultados-propiedades')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+              >
+                <Search className="w-4 h-4" />
+                Buscar
+              </button>
+            </div>
+
+            <div className={filterTile('#FFFFFF')} style={{ backgroundColor: '#FFFFFF' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  resetFilters();
+                  if (searchParams.has('zona')) {
+                    const next = new URLSearchParams(searchParams);
+                    next.delete('zona');
+                    setSearchParams(next, { replace: true });
+                  }
+                }}
+                disabled={numActiveFilters === 0}
+                className="w-full h-10 inline-flex items-center justify-center gap-2 rounded-xl font-semibold text-slate-700 bg-transparent hover:bg-slate-100 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                Limpiar{numActiveFilters > 0 ? ` (${numActiveFilters})` : ''}
+              </button>
             </div>
           </div>
 
@@ -808,16 +845,6 @@ export const PropertiesPage = () => {
               ))}
             </div>
           )}
-
-          {/* Botón Limpiar Filtros */}
-          {numActiveFilters > 0 && (
-            <div className="mt-6 pt-5 border-t border-border flex justify-end">
-                <Button variant="ghost" onClick={resetFilters} className="text-sm text-primary hover:text-primary/80">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Limpiar filtros ({numActiveFilters})
-                </Button>
-            </div>
-          )}
         </CardContent>
       </Card>
   );
@@ -864,9 +891,14 @@ export const PropertiesPage = () => {
       <Navbar />
       <div className="min-h-screen bg-white">
         <div className={`${view === 'map' ? 'max-w-[1600px] w-full mx-auto px-3 sm:px-4' : 'container mx-auto px-4'} py-6 pt-24 pb-12`}>
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-5 sm:mb-7">
-          <div>
-            <Button asChild variant="ghost" className="rounded-full px-3 mb-2 text-slate-600 hover:text-slate-900 hover:bg-white/70 -ml-2">
+        <motion.div
+          className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-5 sm:mb-7"
+          initial={reduceMotion ? false : 'hidden'}
+          animate={reduceMotion ? undefined : 'show'}
+          variants={staggerFast}
+        >
+          <motion.div variants={fadeUp}>
+            <Button asChild variant="ghost" className="rounded-full px-3 mb-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 -ml-2">
               <Link to="/"> <ArrowLeft className="w-4 h-4 mr-1.5" /> Volver </Link>
             </Button>
             <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1.5">Buscador</p>
@@ -875,18 +907,20 @@ export const PropertiesPage = () => {
               {filteredProperties.length} {filteredProperties.length === 1 ? 'resultado' : 'resultados'}
               {numActiveFilters > 0 && ` · ${numActiveFilters} filtro${numActiveFilters === 1 ? '' : 's'} activo${numActiveFilters === 1 ? '' : 's'}`}
             </p>
-          </div>
+          </motion.div>
+          <motion.div variants={fadeUp}>
           <Tabs value={view} onValueChange={(v) => setView(v as 'grid' | 'map')} className="w-full sm:w-auto">
             <TabsList className="grid w-full grid-cols-2 sm:w-auto rounded-full bg-[#CFB8FC] p-1 shadow-sm h-auto">
-              <TabsTrigger value="grid" className="rounded-full data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm text-slate-800 px-4 py-2">
+              <TabsTrigger value="grid" className="rounded-full data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm text-slate-800 px-4 py-2 transition-[background-color,color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]">
                 <LayoutGrid className="h-4 w-4 mr-2" /> Lista
               </TabsTrigger>
-              <TabsTrigger value="map" className="rounded-full data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm text-slate-800 px-4 py-2">
+              <TabsTrigger value="map" className="rounded-full data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm text-slate-800 px-4 py-2 transition-[background-color,color,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]">
                 <MapPin className="h-4 w-4 mr-2" /> Mapa
               </TabsTrigger>
             </TabsList>
           </Tabs>
-        </div>
+          </motion.div>
+        </motion.div>
 
         <div className="block sm:hidden mb-4">
           <Button
@@ -904,33 +938,63 @@ export const PropertiesPage = () => {
           </Button>
         </div>
 
-        <div 
-          id="filtros-busqueda" 
-          className={`transition-all duration-300 ease-in-out ${showFilters ? 'max-h-[2000px] opacity-100 mb-6' : 'max-h-0 opacity-0 mb-0'} overflow-hidden sm:max-h-none sm:opacity-100 sm:mb-6`}
+        <div
+          id="filtros-busqueda"
+          className={`${showFilters ? 'mb-6 block' : 'mb-0 hidden'} sm:mb-6 sm:block`}
         >
-          {filterPanel}
+          <motion.div
+            initial={reduceMotion ? false : { opacity: 0, transform: 'translateY(10px)' }}
+            animate={{ opacity: 1, transform: 'translateY(0px)' }}
+            transition={{ duration: 0.35, ease: easeOut }}
+          >
+            {filterPanel}
+          </motion.div>
         </div>
 
+        <div id="resultados-propiedades">
         {view === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6"
+            initial={reduceMotion ? false : 'hidden'}
+            animate={reduceMotion ? undefined : 'show'}
+            variants={staggerFast}
+          >
             {filteredProperties.length > 0 ? (
-              filteredProperties.map((property) => (
-                <PropertyCard key={property.id} property={property} />
+              filteredProperties.map((property, index) => (
+                <motion.div
+                  key={property.id}
+                  variants={scaleIn}
+                  transition={{
+                    duration: 0.3,
+                    ease: easeOut,
+                    delay: reduceMotion ? 0 : Math.min(index, 8) * 0.04,
+                  }}
+                >
+                  <PropertyCard property={property} />
+                </motion.div>
               ))
             ) : (
-              <div className="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-16 text-slate-500 bg-white rounded-2xl ring-1 ring-slate-200/80 shadow-sm">
+              <motion.div
+                variants={fadeUp}
+                className="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-16 text-slate-500 bg-white rounded-2xl ring-1 ring-slate-200/80 shadow-sm"
+              >
                   <Search className="mx-auto h-10 w-10 text-slate-300 mb-3" />
                   <p className="font-semibold text-slate-800">No hay propiedades que coincidan</p>
                   <p className="text-sm mt-1">Prueba a modificar o limpiar los filtros.</p>
                   {numActiveFilters > 0 && <Button variant="link" size="sm" onClick={resetFilters} className="mt-2 text-primary">Limpiar filtros</Button>}
-              </div>
+              </motion.div>
             )}
-          </div>
+          </motion.div>
         ) : (
           isAutocompleteLoaded && ( 
             <div className="flex flex-col lg:flex-row gap-3 lg:gap-4 h-[520px] md:h-[620px] lg:h-[calc(100vh-170px)] lg:min-h-[680px]">
               {/* Columna lateral con cards pequeñas - Solo en escritorio */}
-              <div className="hidden lg:block w-full lg:w-72 xl:w-80 flex-shrink-0">
+              <motion.div
+                className="hidden lg:block w-full lg:w-72 xl:w-80 flex-shrink-0 h-full"
+                initial={reduceMotion ? false : { opacity: 0, transform: 'translateX(-8px)' }}
+                animate={{ opacity: 1, transform: 'translateX(0px)' }}
+                transition={{ duration: 0.3, ease: easeOut }}
+              >
                 <div className="bg-white border-0 rounded-2xl shadow-sm ring-1 ring-slate-200/80 p-3 h-full overflow-y-auto">
                   <h3 className="text-sm font-semibold text-slate-900 mb-3 sticky top-0 bg-white pb-2 z-10">
                     {filteredProperties.length} {filteredProperties.length === 1 ? 'propiedad' : 'propiedades'}
@@ -939,13 +1003,19 @@ export const PropertiesPage = () => {
                     {filteredProperties.length > 0 ? (
                       filteredProperties
                         .filter(p => p.latitude && p.longitude)
-                        .map((property) => (
-                          <PropertyCardSmall
+                        .map((property, index) => (
+                          <motion.div
                             key={property.id}
+                            initial={reduceMotion ? false : { opacity: 0, transform: 'translateY(8px)' }}
+                            animate={{ opacity: 1, transform: 'translateY(0px)' }}
+                            transition={{ duration: 0.25, ease: easeOut, delay: Math.min(index, 6) * 0.04 }}
+                          >
+                          <PropertyCardSmall
                             property={property}
                             isSelected={selectedMapProperty?.id === property.id}
                             onClick={() => setSelectedMapProperty(property)}
                           />
+                          </motion.div>
                         ))
                     ) : (
                       <div className="text-center py-8 text-muted-foreground">
@@ -955,10 +1025,15 @@ export const PropertiesPage = () => {
                     )}
                   </div>
                 </div>
-              </div>
+              </motion.div>
               
               {/* Mapa - Columna principal más grande en PC */}
-              <div className="flex-1 w-full rounded-2xl overflow-hidden shadow-sm relative bg-slate-200 min-h-[420px] lg:min-h-0 ring-1 ring-slate-200/80">
+              <motion.div
+                className="flex-1 w-full rounded-2xl overflow-hidden shadow-sm relative bg-slate-200 min-h-[420px] lg:min-h-0 ring-1 ring-slate-200/80"
+                initial={reduceMotion ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.35, ease: easeOut }}
+              >
                 <GoogleMap
                   mapContainerStyle={{ width: '100%', height: '100%' }}
                   center={selectedMapProperty && selectedMapProperty.latitude && selectedMapProperty.longitude 
@@ -1025,10 +1100,11 @@ export const PropertiesPage = () => {
                     </InfoWindow>
                   )}
                 </GoogleMap>
-              </div>
+              </motion.div>
             </div>
           )
         )}
+        </div>
       </div>
       </div>
     </>
