@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
+import AppleScrollHero from '@/components/landing/AppleScrollHero';
 import { FeaturedProperties } from '@/components/FeaturedProperties';
 import { useEffect, useState, useRef } from 'react';
 import {
@@ -402,7 +403,6 @@ const HomePage = () => {
   const [aceptaCondiciones, setAceptaCondiciones] = useState(false);
   const navigate = useNavigate();
   const [showCookieBanner, setShowCookieBanner] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
@@ -473,92 +473,7 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-white font-poppins">
       <Navbar />
-      <section className="relative z-30 h-[100svh] min-h-[100svh] sm:h-screen sm:min-h-0 flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 z-0 w-full h-full overflow-hidden bg-[#0a1628]">
-          <video
-            ref={videoRef}
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{ filter: 'brightness(0.92)' }}
-            autoPlay
-            muted
-            playsInline
-            preload="auto"
-            onLoadedData={() => {
-              videoRef.current?.play().catch(() => {});
-            }}
-          >
-            <source
-              src="/fotos-efecto/Coastal_village_on_rocky_cliffs_202608151450.mp4"
-              type="video/mp4"
-            />
-          </video>
-          <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/55 via-black/15 to-black/20" />
-        </div>
-        <motion.div
-          className="relative z-20 text-center text-white max-w-4xl mx-auto px-5 pt-16 sm:pt-8 w-full"
-          initial={reduceMotion ? false : 'hidden'}
-          animate={reduceMotion ? undefined : 'show'}
-          variants={stagger}
-        >
-          <motion.h1
-            variants={fadeUp}
-            className="text-[1.85rem] leading-tight xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-3 sm:mb-6"
-            style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}
-          >
-            Ha llegado otra manera de{' '}
-            <span className="relative inline-block">
-              <span className="text-white font-semibold">
-                veranear
-              </span>
-              <svg
-                viewBox="0 0 180 12"
-                width="180"
-                height="12"
-                className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[120px] sm:w-[180px]"
-                aria-hidden="true"
-              >
-                <linearGradient id="linea-grad" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#22d3ee" />
-                  <stop offset="0.5" stopColor="#0ea5e9" />
-                  <stop offset="1" stopColor="#2563eb" />
-                </linearGradient>
-                <path
-                  d="M 0 6 Q 45 0, 90 6 T 180 6"
-                  fill="none"
-                  stroke="url(#linea-grad)"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span><span className="text-primary">.</span>
-          </motion.h1>
-          <motion.p
-            variants={fadeUp}
-            className="text-[0.95rem] sm:text-xl md:text-2xl mb-6 sm:mb-10 font-light max-w-2xl mx-auto leading-relaxed"
-            style={{ textShadow: '0 1px 5px rgba(0,0,0,0.4)' }}
-          >
-            Accede a propiedades exclusivas por una fracción del coste. Disfruta, rentabiliza e intercambia.
-          </motion.p>
-          <motion.div
-            variants={fadeUp}
-            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-stretch sm:items-center w-full max-w-sm sm:max-w-none mx-auto mb-2"
-          >
-          <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-7 py-3 text-sm sm:text-base font-semibold shadow-lg w-full sm:w-auto" asChild>
-            <Link to="/propiedades">
-              Explorar Propiedades
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
-            <Button size="lg" variant="outline" className="rounded-full px-7 py-3 text-sm sm:text-base font-semibold shadow-lg border-white/80 bg-white/10 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm w-full sm:w-auto" onClick={() => {
-              const seccion = document.getElementById('reinventada');
-              if (seccion) seccion.scrollIntoView({ behavior: 'smooth' });
-            }}>
-              <HelpCircle className="w-5 h-5 mr-2 inline-block" />
-              Cómo funciona
-            </Button>
-          </motion.div>
-        </motion.div>
-      </section>
+      <AppleScrollHero />
       <section id="zonas-destacadas" className="relative z-10 py-10 sm:py-16 bg-white">
         <div className="container mx-auto px-4">
           <motion.div
