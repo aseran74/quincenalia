@@ -720,8 +720,8 @@ const HomePage = () => {
             >
               <div className="h-full rounded-3xl border border-slate-100 bg-white shadow-xl shadow-slate-200/60 p-6 sm:p-8 lg:p-10 flex flex-col">
                 <div className="flex items-start gap-4 mb-6 sm:mb-8">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
-                    <Phone className="w-5 h-5 text-primary" />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#783046]/10">
+                    <Phone className="w-5 h-5 text-[#783046]" />
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-slate-900">Contacta con nosotros</h3>
@@ -733,8 +733,8 @@ const HomePage = () => {
 
                 <div className="flex flex-1 flex-col gap-3 min-h-0">
                   <div className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
-                      <Clock className="w-5 h-5 text-emerald-600" />
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#783046]/10">
+                      <Clock className="w-5 h-5 text-[#783046]" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-slate-800">Respuesta en menos de 24 h</p>
@@ -769,12 +769,12 @@ const HomePage = () => {
                     const Icon = item.icon;
                     const inner = (
                       <>
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#783046]/10 text-[#783046] transition-colors group-hover:bg-[#783046] group-hover:text-white">
                           <Icon className="w-5 h-5" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-slate-700">{item.label}</p>
-                          <p className="text-sm font-semibold text-slate-900 truncate group-hover:text-primary transition-colors mt-0.5">
+                          <p className="text-sm font-semibold text-slate-900 truncate group-hover:text-[#783046] transition-colors mt-0.5">
                             {item.value}
                           </p>
                           {item.detail && (
@@ -782,13 +782,13 @@ const HomePage = () => {
                           )}
                         </div>
                         {item.external && (
-                          <ChevronRight className="w-5 h-5 text-slate-300 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                          <ChevronRight className="w-5 h-5 text-slate-300 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-[#783046]" />
                         )}
                       </>
                     );
 
                     const cardClass =
-                      'group flex flex-1 items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-[border-color,box-shadow,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-primary/25 hover:shadow-md pressable min-h-[4.5rem]';
+                      'group flex flex-1 items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-[border-color,box-shadow,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-[#783046]/25 hover:shadow-md pressable min-h-[4.5rem]';
 
                     return item.href ? (
                       <a key={item.label} href={item.href} className={cardClass}>
@@ -813,8 +813,8 @@ const HomePage = () => {
             >
               <div className="h-full rounded-3xl border border-slate-100 bg-white shadow-xl shadow-slate-200/60 p-6 sm:p-8 lg:p-10 flex flex-col">
                 <div className="flex items-start gap-4 mb-6 sm:mb-8">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
-                    <Send className="w-5 h-5 text-primary" />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#783046]/10">
+                    <Send className="w-5 h-5 text-[#783046]" />
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-slate-900">Envíanos un mensaje</h3>

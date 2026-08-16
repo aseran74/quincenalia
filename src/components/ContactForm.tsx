@@ -89,7 +89,7 @@ const ContactForm: React.FC<ContactFormProps> = ({
   };
 
   const fieldClass = isLanding
-    ? 'h-11 rounded-xl border-slate-200 bg-slate-50/80 px-4 text-sm placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-primary/30'
+    ? 'h-11 rounded-xl border-slate-200 bg-slate-50/80 px-4 text-sm placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-[#783046]/30'
     : 'w-full';
 
   return (
@@ -103,7 +103,7 @@ const ContactForm: React.FC<ContactFormProps> = ({
       <div className="space-y-2">
         {isLanding && (
           <Label htmlFor="contact-name" className="text-sm font-medium text-slate-700">
-            Nombre completo <span className="text-primary">*</span>
+            Nombre completo <span className="text-[#783046]">*</span>
           </Label>
         )}
         <Input
@@ -124,7 +124,7 @@ const ContactForm: React.FC<ContactFormProps> = ({
         <div className="space-y-2">
           {isLanding && (
             <Label htmlFor="contact-email" className="text-sm font-medium text-slate-700">
-              Correo electrónico <span className="text-primary">*</span>
+              Correo electrónico <span className="text-[#783046]">*</span>
             </Label>
           )}
           <Input
@@ -185,7 +185,7 @@ const ContactForm: React.FC<ContactFormProps> = ({
         type="submit"
         className={cn(
           'w-full',
-          isLanding && 'h-11 rounded-full text-sm font-semibold shadow-md hover:shadow-lg transition-shadow'
+          isLanding && 'h-11 rounded-full text-sm font-semibold shadow-md hover:shadow-lg transition-shadow bg-[#783046] hover:bg-[#5f2638] text-white'
         )}
         disabled={loading}
       >
