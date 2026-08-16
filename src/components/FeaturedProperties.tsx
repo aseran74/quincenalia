@@ -60,7 +60,7 @@ const PropertyCard = ({ property }: { property: any }) => {
             <div className="flex flex-col xs:flex-row xs:justify-between items-start gap-2 p-2 sm:p-4 w-full">
               {/* Badge copropiedad a la izquierda */}
               {minShare && (
-                <span className="bg-primary text-white text-[11px] xs:text-xs font-semibold px-2.5 py-1 rounded-full shadow z-20 max-w-[90vw] xs:max-w-[60%] truncate">
+                <span className="bg-primary text-primary-foreground text-[11px] xs:text-xs font-semibold px-2.5 py-1 rounded-full shadow z-20 max-w-[90vw] xs:max-w-[60%] truncate">
                   Desde {minShare.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
                 </span>
               )}

@@ -169,7 +169,7 @@ const PropertiesSearch = () => {
                         alt={property.title}
                         className="absolute inset-0 w-full h-full object-cover"
                       />
-                      <div className="absolute top-4 right-4 bg-primary text-white px-3 py-1 rounded-full text-sm font-semibold">
+                      <div className="absolute top-4 right-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-semibold">
                         {property.price?.toLocaleString?.() || ''}€
                       </div>
                     </div>

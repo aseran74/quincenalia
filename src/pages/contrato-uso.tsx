@@ -7,7 +7,7 @@ const ContratoUsoPage: React.FC = () => (
     <div className="mb-8">
       <Link
         to="/"
-        className="inline-flex items-center gap-2 px-5 py-2 bg-primary text-white font-semibold rounded-full shadow hover:bg-primary/90 transition-colors group"
+        className="inline-flex items-center gap-2 px-5 py-2 bg-primary text-primary-foreground font-semibold rounded-full shadow hover:bg-primary/90 transition-colors group"
       >
         <ArrowLeft className="w-5 h-5 transition-transform duration-300 group-hover:-translate-x-1" />
         Volver a la página principal

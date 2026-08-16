@@ -371,7 +371,7 @@ export const PropertiesPage = () => {
             <div className="w-full pt-2 mt-1 border-t border-slate-100 flex items-end justify-between gap-2">
               <div>
                 <p className="text-[11px] text-slate-400">Copropiedad desde</p>
-                <p className="text-base font-bold text-primary leading-tight">
+                <p className="text-base font-bold text-[#5C0FF5] leading-tight">
                   {minShare ? formatPriceSimple(minShare) : 'Consultar'}
                 </p>
               </div>
@@ -423,7 +423,7 @@ export const PropertiesPage = () => {
               </p>
             )}
             {minShare && (
-              <p className="text-sm font-bold text-primary">
+              <p className="text-sm font-bold text-[#5C0FF5]">
                 {formatPriceSimple(minShare)}
               </p>
             )}
@@ -1088,7 +1088,7 @@ export const PropertiesPage = () => {
                           >
                             {selectedMapProperty.title}
                           </a>
-                          <div className="text-base font-bold mt-0.5 text-primary">
+                          <div className="text-base font-bold mt-0.5 text-[#5C0FF5]">
                             {getMinSharePrice(selectedMapProperty) ? formatPriceSimple(getMinSharePrice(selectedMapProperty)!) : 'N/A'}
                             <span className="text-xs font-normal text-muted-foreground ml-1">/copropiedad</span>
                           </div>

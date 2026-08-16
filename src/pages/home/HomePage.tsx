@@ -154,11 +154,11 @@ function FAQAccordion() {
             >
               <AccordionItem
                 value={faq.id}
-                className="group/item relative border border-slate-200/80 rounded-2xl bg-white shadow-sm transition-[border-color,box-shadow] duration-200 data-[state=open]:border-primary/35 data-[state=open]:shadow-md hover:border-primary/20 hover:shadow-md before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:origin-top before:scale-y-0 before:rounded-l-2xl before:bg-primary before:transition-transform before:duration-200 before:ease-[cubic-bezier(0.23,1,0.32,1)] data-[state=open]:before:scale-y-100"
+                className="group/item relative border border-slate-200/80 rounded-2xl bg-white shadow-sm transition-[border-color,box-shadow] duration-200 data-[state=open]:border-[#783046]/35 data-[state=open]:shadow-md hover:border-[#783046]/20 hover:shadow-md before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:origin-top before:scale-y-0 before:rounded-l-2xl before:bg-[#783046] before:transition-transform before:duration-200 before:ease-[cubic-bezier(0.23,1,0.32,1)] data-[state=open]:before:scale-y-100"
               >
                 <AccordionTrigger className="group px-4 py-3.5 text-sm sm:text-base font-medium text-left hover:no-underline [&[data-state=open]>svg]:rotate-180">
                   <div className="flex items-center gap-3 pr-2">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-[background-color,color,transform] duration-200 group-data-[state=open]:bg-primary group-data-[state=open]:text-white">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#783046]/10 text-[#783046] transition-[background-color,color,transform] duration-200 group-data-[state=open]:bg-[#783046] group-data-[state=open]:text-white">
                       <faq.icon className="w-4 h-4" />
                     </span>
                     <span className="leading-snug">{faq.question}</span>
@@ -255,9 +255,9 @@ function ComoFunciona() {
                 aria-hidden="true"
               >
                 <linearGradient id="linea-reinventada" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#22d3ee" />
-                  <stop offset="0.5" stopColor="#0ea5e9" />
-                  <stop offset="1" stopColor="#2563eb" />
+                  <stop stopColor="#CDB6FC" />
+                  <stop offset="0.5" stopColor="#CDB6FC" />
+                  <stop offset="1" stopColor="#CDB6FC" />
                 </linearGradient>
                 <path
                   d="M 0 10 Q 90 0, 180 10"
@@ -342,7 +342,7 @@ function ComoFunciona() {
         <div className="text-center mt-6">
           <Link
             to="/contrato-uso"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-full shadow-lg hover:bg-primary/90 transition-colors group"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-full shadow-lg hover:bg-primary/90 transition-colors group"
             style={{ fontSize: '1.1rem' }}
           >
             <span>Ver Contrato de Uso y Disfrute</span>
@@ -495,9 +495,9 @@ const HomePage = () => {
                 aria-hidden="true"
               >
                 <linearGradient id="linea-zonas" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#22d3ee" />
-                  <stop offset="0.5" stopColor="#0ea5e9" />
-                  <stop offset="1" stopColor="#2563eb" />
+                  <stop stopColor="#CDB6FC" />
+                  <stop offset="0.5" stopColor="#CDB6FC" />
+                  <stop offset="1" stopColor="#CDB6FC" />
                 </linearGradient>
                 <path
                   d="M 0 10 Q 90 0, 180 10"
@@ -636,9 +636,9 @@ const HomePage = () => {
                 aria-hidden="true"
               >
                 <linearGradient id="linea-exclusivas" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#22d3ee" />
-                  <stop offset="0.5" stopColor="#0ea5e9" />
-                  <stop offset="1" stopColor="#2563eb" />
+                  <stop stopColor="#CDB6FC" />
+                  <stop offset="0.5" stopColor="#CDB6FC" />
+                  <stop offset="1" stopColor="#CDB6FC" />
                 </linearGradient>
                 <path
                   d="M 0 10 Q 90 0, 180 10"
@@ -670,27 +670,27 @@ const HomePage = () => {
           >
             <motion.span
               variants={fadeUp}
-              className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-4 py-1.5 text-xs font-semibold uppercase tracking-wider mb-5"
+              className="inline-flex items-center gap-2 rounded-full bg-[#783046]/10 text-[#783046] px-4 py-1.5 text-xs font-semibold uppercase tracking-wider mb-5"
             >
               <MessageCircle className="w-3.5 h-3.5" />
               Contacto
             </motion.span>
 
             <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold text-slate-900 leading-tight mb-4">
-              ¿Listo para{' '}
-              <span className="relative inline-block text-primary">
-                empezar
+              ¿Listo para tener tu{' '}
+              <span className="relative inline-block text-[#783046]">
+                segunda vacacional
                 <svg
                   viewBox="0 0 180 12"
                   width="180"
                   height="12"
-                  className="absolute left-0 top-full mt-1 w-full max-w-[140px]"
+                  className="absolute left-0 top-full mt-1 w-full max-w-[220px]"
                   aria-hidden="true"
                 >
                   <linearGradient id="linea-empezar" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#22d3ee" />
-                    <stop offset="0.5" stopColor="#0ea5e9" />
-                    <stop offset="1" stopColor="#2563eb" />
+                    <stop stopColor="#783046" />
+                    <stop offset="0.5" stopColor="#783046" />
+                    <stop offset="1" stopColor="#783046" />
                   </linearGradient>
                   <path
                     d="M 0 10 Q 90 0, 180 10"
@@ -769,7 +769,7 @@ const HomePage = () => {
                     const Icon = item.icon;
                     const inner = (
                       <>
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-white">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                           <Icon className="w-5 h-5" />
                         </div>
                         <div className="min-w-0 flex-1">
@@ -842,7 +842,7 @@ const HomePage = () => {
           >
             <motion.span
               variants={fadeUp}
-              className="inline-flex items-center gap-2 rounded-full bg-white border border-slate-200 text-slate-600 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider mb-4"
+              className="inline-flex items-center gap-2 rounded-full bg-[#783046]/10 border border-[#783046]/20 text-[#783046] px-4 py-1.5 text-xs font-semibold uppercase tracking-wider mb-4"
             >
               <motion.span
                 animate={reduceMotion ? undefined : { rotate: [0, -10, 8, 0] }}
@@ -863,15 +863,10 @@ const HomePage = () => {
                   className="absolute left-1/2 -translate-x-1/2 top-full mt-0.5 w-[160px] sm:w-[220px]"
                   aria-hidden="true"
                 >
-                  <linearGradient id="linea-dudas" x1="0" y1="0" x2="220" y2="0" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#22d3ee" />
-                    <stop offset="0.5" stopColor="#0ea5e9" />
-                    <stop offset="1" stopColor="#2563eb" />
-                  </linearGradient>
                   <motion.path
                     d="M 0 10 Q 110 0, 220 10"
                     fill="none"
-                    stroke="url(#linea-dudas)"
+                    stroke="#783046"
                     strokeWidth="3"
                     strokeLinecap="round"
                     initial={reduceMotion ? { pathLength: 1 } : { pathLength: 0 }}
@@ -880,7 +875,7 @@ const HomePage = () => {
                     transition={{ duration: 0.8, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
                   />
                 </svg>
-                <span className="text-primary align-middle ml-0.5">.</span>
+                <span className="text-[#783046] align-middle ml-0.5">.</span>
               </span>
             </motion.h2>
             <motion.p variants={fadeUp} className="text-slate-600 text-base sm:text-lg max-w-2xl mx-auto">
@@ -929,50 +924,50 @@ const HomePage = () => {
         </div>
       </section>
 
-      <footer className="bg-slate-900 text-gray-300 py-12 sm:py-16 text-sm font-normal"> {/* Ajustado text-sm */}
+      <footer className="bg-[#783046] text-white/85 py-12 sm:py-16 text-sm font-normal">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
             <div className="md:col-span-2 lg:col-span-1">
               <h3 className="text-2xl font-bold mb-3 text-white">Quincenalia</h3>
-              <p className="text-gray-400 leading-relaxed">
+              <p className="text-white/70 leading-relaxed">
                 La forma inteligente de poseer, disfrutar y rentabilizar tu segunda residencia.
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-gray-100 uppercase tracking-wide text-xs">Navegación</h4>
+              <h4 className="font-semibold mb-4 text-white uppercase tracking-wide text-xs">Navegación</h4>
               <ul className="space-y-2.5">
-                  <li><Link to="/propiedades" className="hover:text-primary transition-colors">Propiedades</Link></li>
-                  <li><a href="#zonas-destacadas" className="hover:text-primary transition-colors">Zonas Destacadas</a></li>
-                  <li><a href="#reinventada" className="hover:text-primary transition-colors">Cómo Funciona</a></li>
-                  <li><a href="#contacto" className="hover:text-primary transition-colors">Contacto</a></li>
-                  <li><a href="#faq" className="hover:text-primary transition-colors">FAQ</a></li>
+                  <li><Link to="/propiedades" className="hover:text-[#CDB6FC] transition-colors">Propiedades</Link></li>
+                  <li><a href="#zonas-destacadas" className="hover:text-[#CDB6FC] transition-colors">Zonas Destacadas</a></li>
+                  <li><a href="#reinventada" className="hover:text-[#CDB6FC] transition-colors">Cómo Funciona</a></li>
+                  <li><a href="#contacto" className="hover:text-[#CDB6FC] transition-colors">Contacto</a></li>
+                  <li><a href="#faq" className="hover:text-[#CDB6FC] transition-colors">FAQ</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-gray-100 uppercase tracking-wide text-xs">Legal</h4>
+              <h4 className="font-semibold mb-4 text-white uppercase tracking-wide text-xs">Legal</h4>
               <ul className="space-y-2.5">
-                <li><Link to="/terminos-servicio" className="hover:text-primary transition-colors flex items-center gap-1.5"><FileText className="w-4 h-4 text-gray-500" /> Términos de Servicio</Link></li>
-                <li><Link to="/politica-privacidad" className="hover:text-primary transition-colors flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-gray-500" /> Política de Privacidad</Link></li>
-                <li><Link to="/politica-cookies" className="hover:text-primary transition-colors flex items-center gap-1.5"><Cookie className="w-4 h-4 text-gray-500" /> Política de Cookies</Link></li>
+                <li><Link to="/terminos-servicio" className="hover:text-[#CDB6FC] transition-colors flex items-center gap-1.5"><FileText className="w-4 h-4 text-white/50" /> Términos de Servicio</Link></li>
+                <li><Link to="/politica-privacidad" className="hover:text-[#CDB6FC] transition-colors flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-white/50" /> Política de Privacidad</Link></li>
+                <li><Link to="/politica-cookies" className="hover:text-[#CDB6FC] transition-colors flex items-center gap-1.5"><Cookie className="w-4 h-4 text-white/50" /> Política de Cookies</Link></li>
               </ul>
             </div>
              <div className="md:col-span-2 lg:col-span-1">
-              <h4 className="font-semibold mb-4 text-gray-100 uppercase tracking-wide text-xs">Síguenos</h4>
+              <h4 className="font-semibold mb-4 text-white uppercase tracking-wide text-xs">Síguenos</h4>
                 <div className="flex space-x-4">
-                    <a href="#" aria-label="Facebook" className="text-gray-400 hover:text-primary transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/></svg></a>
-                    <a href="#" aria-label="Instagram" className="text-gray-400 hover:text-primary transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.272.058 2.166.296 2.913.588.764.302 1.33.696 1.902 1.27.574.572.97 1.138 1.27 1.903.293.747.53 1.64.588 2.912.058 1.267.07 1.647.07 4.85s-.012 3.583-.07 4.85c-.058 1.272-.295 2.166-.588 2.913-.302.764-.696 1.33-1.27 1.902-.572.574-1.138.97-1.903 1.27-.747.293-1.64.53-2.912.588-1.267.058-1.647.07-4.85.07s-3.583-.012-4.85-.07c-1.272-.058-2.187-.295-2.966-.613-2.966-.302 0-.602.308-1.218.613-1.818.308-.78.555-1.687.613-2.967.058-1.279.072-1.687-.072-4.946-.072zm0-2.163c-3.259 0-3.667.014-4.947.072-1.28.058-2.187.305-2.966.613-.793.308-1.41.72-2.01 1.32-.602.602-1.012 1.218-1.32 2.01-.308.78-.555 1.687-.613 2.967-.058 1.279-.072 1.687-.072 4.946s.014 3.667.072 4.947c.058 1.28.305 2.187.613 2.966.308.793.72 1.41 1.32 2.01.602.602 1.218 1.012 2.01 1.32.78.308 1.687.555 2.967.613 1.279.058 1.687.072 4.946.072s3.667-.014 4.947-.072c1.28-.058 2.187-.305 2.966-.613.793-.308 1.41-.72 2.01-1.32.602.602 1.012-1.218 1.32-2.01.308-.78.555-1.687.613-2.967.058-1.279.072-1.687-.072-4.946s-.014-3.667-.072-4.947c-.058-1.28-.305-2.187-.613-2.966-.308-.793-.72-1.41-1.32-2.01-.602-.602-1.218-1.012-2.01-1.32-.78-.308-1.687-.555-2.967-.613-1.279-.058-1.687-.072-4.946-.072zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.441 1.441 1.441 1.441-.645 1.441-1.441-.645-1.44-1.441-1.44z"/></svg></a>
-                    <a href="#" aria-label="LinkedIn" className="text-gray-400 hover:text-primary transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg></a>
+                    <a href="#" aria-label="Facebook" className="text-white/70 hover:text-[#CDB6FC] transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/></svg></a>
+                    <a href="#" aria-label="Instagram" className="text-white/70 hover:text-[#CDB6FC] transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.272.058 2.166.296 2.913.588.764.302 1.33.696 1.902 1.27.574.572.97 1.138 1.27 1.903.293.747.53 1.64.588 2.912.058 1.267.07 1.647.07 4.85s-.012 3.583-.07 4.85c-.058 1.272-.295 2.166-.588 2.913-.302.764-.696 1.33-1.27 1.902-.572.574-1.138.97-1.903 1.27-.747.293-1.64.53-2.912.588-1.267.058-1.647.07-4.85.07s-3.583-.012-4.85-.07c-1.272-.058-2.187-.295-2.966-.613-2.966-.302 0-.602.308-1.218.613-1.818.308-.78.555-1.687.613-2.967.058-1.279.072-1.687-.072-4.946-.072zm0-2.163c-3.259 0-3.667.014-4.947.072-1.28.058-2.187.305-2.966.613-.793.308-1.41.72-2.01 1.32-.602.602-1.012 1.218-1.32 2.01-.308.78-.555 1.687-.613 2.967-.058 1.279-.072 1.687-.072 4.946s.014 3.667.072 4.947c.058 1.28.305 2.187.613 2.966.308.793.72 1.41 1.32 2.01.602.602 1.218 1.012 2.01 1.32.78.308 1.687.555 2.967.613 1.279.058 1.687.072 4.946.072s3.667-.014 4.947-.072c1.28-.058 2.187-.305 2.966-.613.793-.308 1.41-.72 2.01-1.32.602.602 1.012-1.218 1.32-2.01.308-.78.555-1.687.613-2.967.058-1.279.072-1.687-.072-4.946s-.014-3.667-.072-4.947c-.058-1.28-.305-2.187-.613-2.966-.308-.793-.72-1.41-1.32-2.01-.602-.602-1.218-1.012-2.01-1.32-.78-.308-1.687-.555-2.967-.613-1.279-.058-1.687-.072-4.946-.072zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.441 1.441 1.441 1.441-.645 1.441-1.441-.645-1.44-1.441-1.44z"/></svg></a>
+                    <a href="#" aria-label="LinkedIn" className="text-white/70 hover:text-[#CDB6FC] transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg></a>
                 </div>
             </div>
           </div>
-          <div className="border-t border-gray-700 pt-8 text-center text-xs text-gray-500">
+          <div className="border-t border-white/20 pt-8 text-center text-xs text-white/55">
             © {new Date().getFullYear()} Quincenalia. Todos los derechos reservados.
           </div>
         </div>
       </footer>
       <div>
         <button
-          className="fixed bottom-6 right-6 z-50 bg-primary text-white rounded-full shadow-lg w-14 h-14 flex items-center justify-center hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/60"
+          className="fixed bottom-6 right-6 z-50 bg-primary text-primary-foreground rounded-full shadow-lg w-14 h-14 flex items-center justify-center hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/60"
           style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}
           onClick={() => setShowLegalPopup(v => !v)}
           aria-label="Ayuda y legal"
@@ -1009,7 +1004,7 @@ const HomePage = () => {
       {showCookieBanner && (
         <div className="fixed bottom-0 left-0 w-full z-50 bg-slate-900 text-white px-4 py-4 flex flex-col sm:flex-row items-center justify-center gap-3 shadow-lg animate-fade-in">
           <span className="text-sm">Usamos cookies para mejorar tu experiencia. Consulta nuestra <Link to="/politica-privacidad" className="underline text-primary">Política de Privacidad</Link>.</span>
-          <button onClick={aceptarCookies} className="ml-0 sm:ml-4 mt-2 sm:mt-0 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary/90 transition">Aceptar</button>
+          <button onClick={aceptarCookies} className="ml-0 sm:ml-4 mt-2 sm:mt-0 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-semibold hover:bg-primary/90 transition">Aceptar</button>
         </div>
       )}
       {/* Icono del Pitch Deck */}
@@ -1017,7 +1012,7 @@ const HomePage = () => {
         href="https://holydeo.my.canva.site/quincenalia"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 left-6 z-50 bg-primary text-white rounded-full shadow-lg w-14 h-14 flex items-center justify-center hover:bg-primary/90 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary/60 group"
+        className="fixed bottom-6 left-6 z-50 bg-primary text-primary-foreground rounded-full shadow-lg w-14 h-14 flex items-center justify-center hover:bg-primary/90 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary/60 group"
         aria-label="Ver Pitch Deck"
         title="Ver Pitch Deck"
       >

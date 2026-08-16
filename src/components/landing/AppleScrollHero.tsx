@@ -251,9 +251,9 @@ const AppleScrollHero = () => {
                     aria-hidden="true"
                   >
                     <linearGradient id="linea-grad-apple" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#22d3ee" />
-                      <stop offset="0.5" stopColor="#0ea5e9" />
-                      <stop offset="1" stopColor="#2563eb" />
+                      <stop stopColor="#CDB6FC" />
+                      <stop offset="0.5" stopColor="#CDB6FC" />
+                      <stop offset="1" stopColor="#CDB6FC" />
                     </linearGradient>
                     <path
                       d="M 0 6 Q 45 0, 90 6 T 180 6"

@@ -29,7 +29,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onDelete, onEdit 
     <div className="block rounded-lg shadow-lg overflow-hidden bg-white dark:bg-gray-800 transform hover:-translate-y-1 transition-transform duration-300 relative">
       <div className="relative h-56 cursor-pointer" onClick={() => navigate(`/dashboard/admin/properties/${property.id}`)}>
         <img className="w-full h-full object-cover" src={imageUrl} alt={property.title} />
-        <div className="absolute top-2 right-2 bg-primary text-white text-sm font-bold px-3 py-1 rounded-full">
+        <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-sm font-bold px-3 py-1 rounded-full">
           <span className="flex items-center">
             {'€' + price + ' / Copropiedad'}
           </span>

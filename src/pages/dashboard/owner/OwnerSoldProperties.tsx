@@ -226,7 +226,7 @@ const OwnerSoldProperties: React.FC = () => {
               <PropertyFilters onFiltersChange={setPendingFilters} />
               <div className="flex flex-col items-center gap-2">
                 <Button
-                  className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold"
+                  className="w-full bg-[#CFB8FC] hover:bg-[#C0A8F0] text-slate-900 font-semibold"
                   onClick={handleSearch}
                   size="lg"
                 >

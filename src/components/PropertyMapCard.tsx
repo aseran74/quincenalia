@@ -64,7 +64,7 @@ const PropertyMapCard: React.FC<PropertyMapCardProps> = ({
         
         {/* Badge de precio mínimo */}
         {minSharePrice && (
-          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-primary font-bold text-sm px-3 py-1.5 rounded-full shadow-lg">
+          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm text-[#5C0FF5] font-bold text-sm px-3 py-1.5 rounded-full shadow-lg">
             {formatPrice(minSharePrice)}
           </div>
         )}
@@ -81,7 +81,7 @@ const PropertyMapCard: React.FC<PropertyMapCardProps> = ({
       <div className={padding}>
         <a
           href={`${window.location.origin}/properties/${property.id}`}
-          className="font-bold text-base text-gray-900 block hover:text-primary transition-colors line-clamp-2 mb-2"
+          className="font-bold text-base text-gray-900 block hover:text-[#5C0FF5] transition-colors line-clamp-2 mb-2"
           target="_blank" 
           rel="noopener noreferrer"
           onClick={(e) => { e.stopPropagation(); }}
@@ -123,7 +123,7 @@ const PropertyMapCard: React.FC<PropertyMapCardProps> = ({
           href={`${window.location.origin}/properties/${property.id}`}
           target="_blank" 
           rel="noopener noreferrer"
-          className="block w-full bg-primary text-primary-foreground hover:bg-primary/90 text-center py-2 px-4 rounded-lg font-semibold text-sm transition-colors"
+          className="block w-full bg-[#CFB8FC] text-slate-900 hover:bg-[#C0A8F0] text-center py-2 px-4 rounded-lg font-semibold text-sm transition-colors"
           onClick={(e) => { e.stopPropagation(); }}
         >
           Ver detalles

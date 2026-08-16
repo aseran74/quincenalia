@@ -151,7 +151,7 @@ export const PropertyCard: FC<PropertyCardProps> = ({
           {/* Calendario acordeón */}
           <div className="mt-4">
             <button
-              className="flex items-center gap-2 text-blue-700 font-semibold hover:underline focus:outline-none"
+              className="flex items-center gap-2 text-[#5C0FF5] font-semibold hover:underline focus:outline-none"
               onClick={() => setShowCalendar((v) => !v)}
               aria-expanded={showCalendar}
             >
@@ -181,12 +181,12 @@ export const PropertyCard: FC<PropertyCardProps> = ({
         <Button asChild className="w-full">
           <Link
             to={`/properties/${id}`}
-            className="w-full rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            className="w-full rounded-md bg-[#CFB8FC] px-3 py-2 text-center text-sm font-semibold text-slate-900 shadow-sm hover:bg-[#C0A8F0] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#CFB8FC]"
           >
             Ver detalles
           </Link>
         </Button>
-        <Button asChild className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold">
+        <Button asChild className="w-full bg-[#CFB8FC] hover:bg-[#C0A8F0] text-slate-900 font-semibold">
           <Link
             to={getReserveUrl()}
             className="w-full px-3 py-2 text-center text-sm font-semibold"
