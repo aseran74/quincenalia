@@ -541,7 +541,7 @@ const HomePage = () => {
                       key={index}
                       className="flex-shrink-0 w-[72vw] max-w-[280px] snap-center"
                     >
-                      <Card className="overflow-hidden transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] pressable rounded-2xl group/card w-full h-44 border border-primary/20 bg-white relative shadow-sm">
+                      <Card className="overflow-hidden rounded-2xl group/card w-full h-44 border border-primary/20 bg-white relative shadow-sm transition-[box-shadow] duration-200 hover:shadow-md">
                         <div className="relative w-full h-full">
                           <img
                             src={getZonaImage(zona)}
@@ -569,35 +569,25 @@ const HomePage = () => {
           </div>
 
           {/* Vista PC: Grid de 6x2 cards */}
-          <motion.div
-            className="hidden md:block"
-            initial={reduceMotion ? false : 'hidden'}
-            whileInView={reduceMotion ? undefined : 'show'}
-            viewport={viewportOnce}
-            variants={stagger}
-          >
+          <div className="hidden md:block">
             <div className="grid grid-cols-6 gap-4 px-4 max-w-7xl mx-auto">
               {zonasUnicas.map((zona, index) => {
-                // Buscar el contador usando la zona normalizada
-                const zonaKey = Object.keys(viviendasPorZona).find(
-                  key => normalizaZona(key) === normalizaZona(zona)
-                );
                 const countZona = getFakeCount(zona);
                 return (
-                  <motion.div key={index} variants={scaleIn}>
                   <Link
+                    key={index}
                     to={`/properties?zona=${encodeURIComponent(zona)}`}
-                    className="group/card-link block"
+                    className="block"
                   >
-                    <Card className="overflow-hidden transition-[transform,box-shadow] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:shadow-xl hover-lift pressable rounded-2xl group/card bg-white relative h-32 border-2 border-primary/20 hover:border-primary/40">
+                    <Card className="overflow-hidden rounded-2xl group/card bg-white relative h-32 border-2 border-primary/20 transition-[transform,box-shadow,border-color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:shadow-xl hover:border-primary/40 hover:-translate-y-1">
                       <div className="relative w-full h-full">
                         <img
                           src={getZonaImage(zona)}
                           alt={`Propiedades en ${zona}`}
-                          className="w-full h-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.77,0,0.175,1)] group-hover/card:scale-[1.04] rounded-2xl"
+                          className="w-full h-full object-cover rounded-2xl transition-transform duration-500 ease-[cubic-bezier(0.77,0,0.175,1)] group-hover/card:scale-[1.04]"
                           onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-90 group-hover/card:opacity-95 transition-opacity duration-300 rounded-2xl"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent rounded-2xl"></div>
                         <div className="absolute bottom-2 left-0 right-0 px-3 text-center">
                           <h3 className="text-sm font-bold text-white truncate" title={zona}>
                             {zona}
@@ -609,11 +599,10 @@ const HomePage = () => {
                       </div>
                     </Card>
                   </Link>
-                  </motion.div>
                 );
               })}
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
       <section className="py-10 sm:py-16 bg-white">

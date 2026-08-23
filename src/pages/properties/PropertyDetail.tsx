@@ -21,6 +21,7 @@ import type { Property } from '@/types/property'; // Asegúrate de que esta ruta
 import ContactForm from '@/components/ContactForm'; // Asegúrate de que esta ruta sea correcta
 import { useAuth } from '@/context/AuthContext';
 import { HeartButton } from '@/components/properties/HeartButton';
+import Navbar from '@/components/Navbar';
 
 // --- CONSTANTE FEATURES ACTUALIZADA ---
 const FEATURES = [
@@ -486,23 +487,18 @@ export const PropertyDetail = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 w-1/4 bg-gray-200 rounded mb-6"></div>
-          <div className="h-[300px] sm:h-[400px] lg:h-[500px] bg-gray-200 rounded-lg mb-4" />
-          <div className="h-6 w-3/4 mx-auto bg-gray-200 rounded mb-2" />
-          <div className="h-6 w-1/4 mx-auto bg-gray-200 rounded mb-6" />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <div className="h-32 bg-gray-200 rounded"/>
-              <div className="h-40 bg-gray-200 rounded"/>
-              <div className="h-48 bg-gray-200 rounded"/>
+      <div className="min-h-screen bg-white font-outfit font-normal antialiased">
+        <Navbar />
+        <div className="container mx-auto px-4 pt-24 pb-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-[50vh] sm:h-[60vh] bg-gray-200 rounded-2xl mb-4" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="h-40 bg-gray-200 rounded-xl" />
+              <div className="h-40 bg-gray-200 rounded-xl" />
+              <div className="h-40 bg-gray-200 rounded-xl" />
             </div>
-            <div className="space-y-6">
-              <div className="h-32 bg-gray-200 rounded"/>
-              <div className="h-64 bg-gray-200 rounded"/>
-              <div className="h-56 bg-gray-200 rounded"/>
-            </div>
+            <div className="h-8 w-2/3 bg-gray-200 rounded" />
+            <div className="h-6 w-1/3 bg-gray-200 rounded" />
           </div>
         </div>
       </div>
@@ -511,25 +507,33 @@ export const PropertyDetail = () => {
 
   if (!property) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-         <Button variant="outline" onClick={() => navigate('/')} className="mb-6">
+      <div className="min-h-screen bg-white font-outfit font-normal antialiased">
+        <Navbar />
+        <div className="container mx-auto px-4 pt-24 pb-8 text-center">
+         <Button variant="outline" onClick={() => navigate('/properties')} className="mb-6">
            <FaArrowLeft className="mr-2 h-4 w-4" /> Volver a la búsqueda
          </Button>
         <h1 className="text-2xl font-bold text-red-600">Propiedad no encontrada</h1>
         <p className="text-gray-600 mt-2">La propiedad que buscas no existe o no está disponible.</p>
+        </div>
       </div>
     );
   }
 
   const monthlyPaymentForTitle = calculateMonthlyPayment(property.price);
+  const images = property.images && property.images.length > 0 ? property.images : [];
+  const heroImage = images[0];
+  const restImages = images.slice(1);
 
   return (
-    <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8">
+    <div className="min-h-screen bg-white font-outfit font-normal antialiased">
+      <Navbar />
+      <div className="container mx-auto px-2 sm:px-4 pt-20 sm:pt-24 pb-6 sm:pb-8">
        <div className="mb-4 sm:mb-6 flex items-center justify-between">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate('/propiedades')}
+              onClick={() => navigate('/properties')}
               className="flex items-center gap-2 text-sm"
             >
               <FaArrowLeft className="w-3 h-3" />
@@ -537,21 +541,20 @@ export const PropertyDetail = () => {
             </Button>
        </div>
       <Card className="overflow-hidden shadow-lg">
-         {/* Sección Galería */}
-         <div id="galeria" className="relative group mb-6 p-4">
-              {property.images && property.images.length > 0 ? (
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-2 lg:gap-4">
-                  <div className="col-span-1 lg:col-span-2 row-span-2 cursor-pointer relative" onClick={() => openModal(0)}>
+         {/* Galería: foto grande + resto al hacer scroll */}
+         <div id="galeria" className="relative mb-6 p-3 sm:p-4 space-y-3 sm:space-y-4">
+              {heroImage ? (
+                <>
+                  <div className="relative cursor-pointer" onClick={() => openModal(0)}>
                     <img
-                      src={property.images[0]}
+                      src={heroImage}
                       alt={`${property.title} - Imagen principal`}
-                      className="w-full h-[250px] sm:h-[350px] lg:h-[500px] object-cover rounded-lg shadow-md"
+                      className="w-full h-[55vh] sm:h-[65vh] lg:h-[70vh] object-cover rounded-2xl shadow-md"
                     />
-                    {/* Botones favoritos y compartir sobre la imagen */}
-                    <div className="absolute top-4 right-4 flex flex-row gap-4 z-20">
+                    <div className="absolute top-4 right-4 flex flex-row gap-3 z-20">
                       <HeartButton 
                         propertyId={property.id} 
-                        className="w-14 h-14 flex items-center justify-center bg-white/80 hover:bg-white/90 shadow-lg border-2 border-white" 
+                        className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center bg-white/80 hover:bg-white/90 shadow-lg border-2 border-white" 
                       />
                       <div className="relative flex items-center justify-center">
                         <Button
@@ -559,12 +562,12 @@ export const PropertyDetail = () => {
                           size="icon"
                           aria-label="Compartir"
                           onClick={e => { e.stopPropagation(); setShowShareMenu(v => !v); }}
-                          className="bg-white/80 hover:bg-white/90 shadow-lg border-2 border-white text-gray-600 hover:text-primary w-14 h-14 flex items-center justify-center"
+                          className="bg-white/80 hover:bg-white/90 shadow-lg border-2 border-white text-gray-600 hover:text-primary w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center"
                         >
-                          <FaShareAlt className="w-8 h-8" />
+                          <FaShareAlt className="w-6 h-6 sm:w-7 sm:h-7" />
                         </Button>
                         {showShareMenu && (
-                          <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50 animate-fade-in">
+                          <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50 animate-fade-in">
                             <button
                               className="flex items-center gap-2 w-full px-4 py-3 hover:bg-gray-100 text-left text-base"
                               onClick={e => { e.stopPropagation(); handleShareWhatsapp(); }}
@@ -587,59 +590,38 @@ export const PropertyDetail = () => {
                         )}
                       </div>
                     </div>
+                    {images.length > 1 && (
+                      <div className="absolute bottom-4 left-4 rounded-full bg-black/55 px-3 py-1.5 text-xs sm:text-sm text-white backdrop-blur-sm">
+                        1 / {images.length} · Desliza para ver más
+                      </div>
+                    )}
                   </div>
-                  <div className="col-span-1 lg:col-span-3 grid grid-cols-2 gap-2 lg:gap-4">
-                    <img
-                      src={property.images[1] || property.images[0]}
-                      alt={`${property.title} - Imagen secundaria 1`}
-                      className="w-full h-[120px] sm:h-[170px] lg:h-[245px] object-cover rounded-lg shadow cursor-pointer"
-                      onClick={() => openModal(1)}
-                    />
-                    <img
-                      src={property.images[2] || property.images[0]}
-                      alt={`${property.title} - Imagen secundaria 2`}
-                      className="w-full h-[120px] sm:h-[170px] lg:h-[245px] object-cover rounded-lg shadow cursor-pointer"
-                      onClick={() => openModal(2)}
-                    />
-                  </div>
-                  <div className="col-span-1 lg:col-span-3 mt-1 lg:-mt-0">
-                    <img
-                      src={property.images[3] || property.images[0]}
-                      alt={`${property.title} - Imagen secundaria 3`}
-                      className="w-full h-[120px] sm:h-[170px] lg:h-[245px] object-cover rounded-lg shadow cursor-pointer"
-                      onClick={() => openModal(3)}
-                    />
-                  </div>
-                </div>
+
+                  {restImages.length > 0 && (
+                    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                      {restImages.map((image, index) => (
+                        <button
+                          key={`gallery-${index + 1}`}
+                          type="button"
+                          onClick={() => openModal(index + 1)}
+                          id={`miniatura-${index + 1}`}
+                          className="relative h-14 w-24 sm:h-16 sm:w-28 flex-shrink-0 overflow-hidden rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                          aria-label={`Foto ${index + 2}`}
+                        >
+                          <img
+                            src={image}
+                            alt={`${property.title} - Foto ${index + 2}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
               ) : (
-                <div className="w-full h-[250px] sm:h-[350px] bg-gray-200 flex items-center justify-center rounded-lg">
+                <div className="w-full h-[40vh] bg-gray-200 flex items-center justify-center rounded-2xl">
                     <FaImages className="w-12 h-12 text-gray-400" />
                     <p className="ml-2 text-gray-500">No hay imágenes disponibles</p>
-                </div>
-              )}
-              {property.images && property.images.length > 4 && (
-                <div
-                  className="flex gap-2 mt-3 overflow-x-auto pb-2"
-                  style={{scrollBehavior: 'smooth'}}
-                  ref={miniaturasRef}
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                >
-                  {property.images.slice(4).map((image, index) => (
-                    <button
-                      key={`thumb-${index+4}`}
-                      onClick={() => openModal(index+4)}
-                      id={`miniatura-${index+4}`}
-                      className="relative h-16 w-24 flex-shrink-0 border-2 border-white hover:border-blue-500 rounded-lg overflow-hidden transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      aria-label={`Miniatura ${index+5}`}
-                    >
-                      <img
-                        src={image}
-                        alt={`Miniatura ${index+5}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
                 </div>
               )}
           </div>
@@ -892,7 +874,7 @@ export const PropertyDetail = () => {
           <button onClick={closeModal} className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white bg-black/60 rounded-full p-2 hover:bg-black/80 z-[51]">
             <X className="w-6 h-6 sm:w-8 sm:h-8" />
           </button>
-          {property.images.length > 1 && ( // Solo mostrar botones si hay más de una imagen
+          {property.images.length > 1 && (
             <>
             <button onClick={prevModalImage} className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 text-white bg-black/60 rounded-full p-2 hover:bg-black/80 z-[51]">
                 <ChevronLeft className="w-8 h-8 sm:w-10 sm:h-10" />
@@ -914,6 +896,7 @@ export const PropertyDetail = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
