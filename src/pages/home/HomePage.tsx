@@ -913,8 +913,22 @@ const HomePage = () => {
         </div>
       </section>
 
-      <footer className="bg-[#783046] text-white/85 py-12 sm:py-16 text-sm font-normal">
+      <footer className="bg-[#783046] text-white/85 py-8 sm:py-16 text-sm font-normal">
         <div className="container mx-auto px-4">
+          {/* Móvil: corto */}
+          <div className="md:hidden flex flex-col items-center text-center gap-4">
+            <h3 className="text-xl font-bold text-white">Quincenalia</h3>
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-white/70">
+              <Link to="/terminos-servicio" className="hover:text-[#CDB6FC] transition-colors">Términos</Link>
+              <Link to="/politica-privacidad" className="hover:text-[#CDB6FC] transition-colors">Privacidad</Link>
+              <Link to="/politica-cookies" className="hover:text-[#CDB6FC] transition-colors">Cookies</Link>
+              <a href="#contacto" className="hover:text-[#CDB6FC] transition-colors">Contacto</a>
+            </div>
+            <p className="text-xs text-white/55">© {new Date().getFullYear()} Quincenalia</p>
+          </div>
+
+          {/* Desktop */}
+          <div className="hidden md:block">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
             <div className="md:col-span-2 lg:col-span-1">
               <h3 className="text-2xl font-bold mb-3 text-white">Quincenalia</h3>
@@ -951,6 +965,7 @@ const HomePage = () => {
           </div>
           <div className="border-t border-white/20 pt-8 text-center text-xs text-white/55">
             © {new Date().getFullYear()} Quincenalia. Todos los derechos reservados.
+          </div>
           </div>
         </div>
       </footer>
