@@ -647,7 +647,7 @@ const HomePage = () => {
         </div>
       </section>
       <ComoFunciona />
-      <section id="contacto" className="py-14 sm:py-24 bg-white">
+      <section id="contacto" className="py-14 sm:py-24 bg-[#E8DAD9]">
         <div className="container mx-auto px-4 max-w-6xl">
           {/* Cabecera a ancho completo */}
           <motion.div
@@ -659,7 +659,7 @@ const HomePage = () => {
           >
             <motion.span
               variants={fadeUp}
-              className="inline-flex items-center gap-2 rounded-full bg-[#783046]/10 text-[#783046] px-4 py-1.5 text-xs font-semibold uppercase tracking-wider mb-5"
+              className="inline-flex items-center gap-2 rounded-full bg-white/70 text-[#6F4C48] px-4 py-1.5 text-xs font-semibold uppercase tracking-wider mb-5"
             >
               <MessageCircle className="w-3.5 h-3.5" />
               Contacto
@@ -667,7 +667,7 @@ const HomePage = () => {
 
             <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold text-slate-900 leading-tight mb-4">
               ¿Listo para tener tu{' '}
-              <span className="relative inline-block text-[#783046]">
+              <span className="relative inline-block text-[#6F4C48]">
                 segunda vacacional
                 <svg
                   viewBox="0 0 180 12"
@@ -677,9 +677,9 @@ const HomePage = () => {
                   aria-hidden="true"
                 >
                   <linearGradient id="linea-empezar" x1="0" y1="0" x2="180" y2="0" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#783046" />
-                    <stop offset="0.5" stopColor="#783046" />
-                    <stop offset="1" stopColor="#783046" />
+                    <stop stopColor="#6F4C48" />
+                    <stop offset="0.5" stopColor="#6F4C48" />
+                    <stop offset="1" stopColor="#6F4C48" />
                   </linearGradient>
                   <path
                     d="M 0 10 Q 90 0, 180 10"
@@ -707,10 +707,10 @@ const HomePage = () => {
               viewport={viewportOnce}
               variants={fadeUp}
             >
-              <div className="h-full rounded-3xl border border-slate-100 bg-white shadow-xl shadow-slate-200/60 p-6 sm:p-8 lg:p-10 flex flex-col">
+              <div className="h-full rounded-3xl border border-white/80 bg-white/90 shadow-xl shadow-[#6F4C48]/10 p-6 sm:p-8 lg:p-10 flex flex-col">
                 <div className="flex items-start gap-4 mb-6 sm:mb-8">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#783046]/10">
-                    <Phone className="w-5 h-5 text-[#783046]" />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E8DAD9]">
+                    <Phone className="w-5 h-5 text-[#6F4C48]" />
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-slate-900">Contacta con nosotros</h3>
@@ -721,9 +721,9 @@ const HomePage = () => {
                 </div>
 
                 <div className="flex flex-1 flex-col gap-3 min-h-0">
-                  <div className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#783046]/10">
-                      <Clock className="w-5 h-5 text-[#783046]" />
+                  <div className="flex items-center gap-4 rounded-2xl border border-[#E8DAD9] bg-[#E8DAD9]/50 p-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E8DAD9]">
+                      <Clock className="w-5 h-5 text-[#6F4C48]" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-slate-800">Respuesta en menos de 24 h</p>
@@ -758,12 +758,12 @@ const HomePage = () => {
                     const Icon = item.icon;
                     const inner = (
                       <>
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#783046]/10 text-[#783046] transition-colors group-hover:bg-[#783046] group-hover:text-white">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E8DAD9] text-[#6F4C48] transition-colors group-hover:bg-[#6F4C48] group-hover:text-white">
                           <Icon className="w-5 h-5" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-slate-700">{item.label}</p>
-                          <p className="text-sm font-semibold text-slate-900 truncate group-hover:text-[#783046] transition-colors mt-0.5">
+                          <p className="text-sm font-semibold text-slate-900 truncate group-hover:text-[#6F4C48] transition-colors mt-0.5">
                             {item.value}
                           </p>
                           {item.detail && (
@@ -771,13 +771,13 @@ const HomePage = () => {
                           )}
                         </div>
                         {item.external && (
-                          <ChevronRight className="w-5 h-5 text-slate-300 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-[#783046]" />
+                          <ChevronRight className="w-5 h-5 text-slate-300 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-[#6F4C48]" />
                         )}
                       </>
                     );
 
                     const cardClass =
-                      'group flex flex-1 items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-[border-color,box-shadow,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-[#783046]/25 hover:shadow-md pressable min-h-[4.5rem]';
+                      'group flex flex-1 items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-[border-color,box-shadow,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:border-[#E8DAD9] hover:shadow-md pressable min-h-[4.5rem]';
 
                     return item.href ? (
                       <a key={item.label} href={item.href} className={cardClass}>
@@ -800,10 +800,10 @@ const HomePage = () => {
               viewport={viewportOnce}
               variants={fadeUp}
             >
-              <div className="h-full rounded-3xl border border-slate-100 bg-white shadow-xl shadow-slate-200/60 p-6 sm:p-8 lg:p-10 flex flex-col">
+              <div className="h-full rounded-3xl border border-white/80 bg-white/90 shadow-xl shadow-[#6F4C48]/10 p-6 sm:p-8 lg:p-10 flex flex-col">
                 <div className="flex items-start gap-4 mb-6 sm:mb-8">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#783046]/10">
-                    <Send className="w-5 h-5 text-[#783046]" />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E8DAD9]">
+                    <Send className="w-5 h-5 text-[#6F4C48]" />
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-slate-900">Envíanos un mensaje</h3>
@@ -913,57 +913,57 @@ const HomePage = () => {
         </div>
       </section>
 
-      <footer className="bg-[#783046] text-white/85 py-8 sm:py-16 text-sm font-normal">
+      <footer className="bg-[#CFB8FC] text-slate-800/85 py-8 sm:py-16 text-sm font-normal">
         <div className="container mx-auto px-4">
           {/* Móvil: corto */}
           <div className="md:hidden flex flex-col items-center text-center gap-4">
-            <h3 className="text-xl font-bold text-white">Quincenalia</h3>
-            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-white/70">
-              <Link to="/terminos-servicio" className="hover:text-[#CDB6FC] transition-colors">Términos</Link>
-              <Link to="/politica-privacidad" className="hover:text-[#CDB6FC] transition-colors">Privacidad</Link>
-              <Link to="/politica-cookies" className="hover:text-[#CDB6FC] transition-colors">Cookies</Link>
-              <a href="#contacto" className="hover:text-[#CDB6FC] transition-colors">Contacto</a>
+            <h3 className="text-xl font-bold text-slate-900">Quincenalia</h3>
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-700">
+              <Link to="/terminos-servicio" className="hover:text-[#783046] transition-colors">Términos</Link>
+              <Link to="/politica-privacidad" className="hover:text-[#783046] transition-colors">Privacidad</Link>
+              <Link to="/politica-cookies" className="hover:text-[#783046] transition-colors">Cookies</Link>
+              <a href="#contacto" className="hover:text-[#783046] transition-colors">Contacto</a>
             </div>
-            <p className="text-xs text-white/55">© {new Date().getFullYear()} Quincenalia</p>
+            <p className="text-xs text-slate-600">© {new Date().getFullYear()} Quincenalia</p>
           </div>
 
           {/* Desktop */}
           <div className="hidden md:block">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
             <div className="md:col-span-2 lg:col-span-1">
-              <h3 className="text-2xl font-bold mb-3 text-white">Quincenalia</h3>
-              <p className="text-white/70 leading-relaxed">
+              <h3 className="text-2xl font-bold mb-3 text-slate-900">Quincenalia</h3>
+              <p className="text-slate-700 leading-relaxed">
                 La forma inteligente de poseer, disfrutar y rentabilizar tu segunda residencia.
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-white uppercase tracking-wide text-xs">Navegación</h4>
+              <h4 className="font-semibold mb-4 text-slate-900 uppercase tracking-wide text-xs">Navegación</h4>
               <ul className="space-y-2.5">
-                  <li><Link to="/propiedades" className="hover:text-[#CDB6FC] transition-colors">Propiedades</Link></li>
-                  <li><a href="#zonas-destacadas" className="hover:text-[#CDB6FC] transition-colors">Zonas Destacadas</a></li>
-                  <li><a href="#reinventada" className="hover:text-[#CDB6FC] transition-colors">Cómo Funciona</a></li>
-                  <li><a href="#contacto" className="hover:text-[#CDB6FC] transition-colors">Contacto</a></li>
-                  <li><a href="#faq" className="hover:text-[#CDB6FC] transition-colors">FAQ</a></li>
+                  <li><Link to="/propiedades" className="hover:text-[#783046] transition-colors">Propiedades</Link></li>
+                  <li><a href="#zonas-destacadas" className="hover:text-[#783046] transition-colors">Zonas Destacadas</a></li>
+                  <li><a href="#reinventada" className="hover:text-[#783046] transition-colors">Cómo Funciona</a></li>
+                  <li><a href="#contacto" className="hover:text-[#783046] transition-colors">Contacto</a></li>
+                  <li><a href="#faq" className="hover:text-[#783046] transition-colors">FAQ</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-white uppercase tracking-wide text-xs">Legal</h4>
+              <h4 className="font-semibold mb-4 text-slate-900 uppercase tracking-wide text-xs">Legal</h4>
               <ul className="space-y-2.5">
-                <li><Link to="/terminos-servicio" className="hover:text-[#CDB6FC] transition-colors flex items-center gap-1.5"><FileText className="w-4 h-4 text-white/50" /> Términos de Servicio</Link></li>
-                <li><Link to="/politica-privacidad" className="hover:text-[#CDB6FC] transition-colors flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-white/50" /> Política de Privacidad</Link></li>
-                <li><Link to="/politica-cookies" className="hover:text-[#CDB6FC] transition-colors flex items-center gap-1.5"><Cookie className="w-4 h-4 text-white/50" /> Política de Cookies</Link></li>
+                <li><Link to="/terminos-servicio" className="hover:text-[#783046] transition-colors flex items-center gap-1.5"><FileText className="w-4 h-4 text-slate-500" /> Términos de Servicio</Link></li>
+                <li><Link to="/politica-privacidad" className="hover:text-[#783046] transition-colors flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-slate-500" /> Política de Privacidad</Link></li>
+                <li><Link to="/politica-cookies" className="hover:text-[#783046] transition-colors flex items-center gap-1.5"><Cookie className="w-4 h-4 text-slate-500" /> Política de Cookies</Link></li>
               </ul>
             </div>
              <div className="md:col-span-2 lg:col-span-1">
-              <h4 className="font-semibold mb-4 text-white uppercase tracking-wide text-xs">Síguenos</h4>
+              <h4 className="font-semibold mb-4 text-slate-900 uppercase tracking-wide text-xs">Síguenos</h4>
                 <div className="flex space-x-4">
-                    <a href="#" aria-label="Facebook" className="text-white/70 hover:text-[#CDB6FC] transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/></svg></a>
-                    <a href="#" aria-label="Instagram" className="text-white/70 hover:text-[#CDB6FC] transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.272.058 2.166.296 2.913.588.764.302 1.33.696 1.902 1.27.574.572.97 1.138 1.27 1.903.293.747.53 1.64.588 2.912.058 1.267.07 1.647.07 4.85s-.012 3.583-.07 4.85c-.058 1.272-.295 2.166-.588 2.913-.302.764-.696 1.33-1.27 1.902-.572.574-1.138.97-1.903 1.27-.747.293-1.64.53-2.912.588-1.267.058-1.647.07-4.85.07s-3.583-.012-4.85-.07c-1.272-.058-2.187-.295-2.966-.613-2.966-.302 0-.602.308-1.218.613-1.818.308-.78.555-1.687.613-2.967.058-1.279.072-1.687-.072-4.946-.072zm0-2.163c-3.259 0-3.667.014-4.947.072-1.28.058-2.187.305-2.966.613-.793.308-1.41.72-2.01 1.32-.602.602-1.012 1.218-1.32 2.01-.308.78-.555 1.687-.613 2.967-.058 1.279-.072 1.687-.072 4.946s.014 3.667.072 4.947c.058 1.28.305 2.187.613 2.966.308.793.72 1.41 1.32 2.01.602.602 1.218 1.012 2.01 1.32.78.308 1.687.555 2.967.613 1.279.058 1.687.072 4.946.072s3.667-.014 4.947-.072c1.28-.058 2.187-.305 2.966-.613.793-.308 1.41-.72 2.01-1.32.602.602 1.012-1.218 1.32-2.01.308-.78.555-1.687.613-2.967.058-1.279.072-1.687-.072-4.946s-.014-3.667-.072-4.947c-.058-1.28-.305-2.187-.613-2.966-.308-.793-.72-1.41-1.32-2.01-.602-.602-1.218-1.012-2.01-1.32-.78-.308-1.687-.555-2.967-.613-1.279-.058-1.687-.072-4.946-.072zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.441 1.441 1.441 1.441-.645 1.441-1.441-.645-1.44-1.441-1.44z"/></svg></a>
-                    <a href="#" aria-label="LinkedIn" className="text-white/70 hover:text-[#CDB6FC] transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg></a>
+                    <a href="#" aria-label="Facebook" className="text-slate-700 hover:text-[#783046] transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/></svg></a>
+                    <a href="#" aria-label="Instagram" className="text-slate-700 hover:text-[#783046] transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.272.058 2.166.296 2.913.588.764.302 1.33.696 1.902 1.27.574.572.97 1.138 1.27 1.903.293.747.53 1.64.588 2.912.058 1.267.07 1.647.07 4.85s-.012 3.583-.07 4.85c-.058 1.272-.295 2.166-.588 2.913-.302.764-.696 1.33-1.27 1.902-.572.574-1.138.97-1.903 1.27-.747.293-1.64.53-2.912.588-1.267.058-1.647.07-4.85.07s-3.583-.012-4.85-.07c-1.272-.058-2.187-.295-2.966-.613-2.966-.302 0-.602.308-1.218.613-1.818.308-.78.555-1.687.613-2.967.058-1.279.072-1.687-.072-4.946-.072zm0-2.163c-3.259 0-3.667.014-4.947.072-1.28.058-2.187.305-2.966.613-.793.308-1.41.72-2.01 1.32-.602.602-1.012 1.218-1.32 2.01-.308.78-.555 1.687-.613 2.967-.058 1.279-.072 1.687-.072 4.946s.014 3.667.072 4.947c.058 1.28.305 2.187.613 2.966.308.793.72 1.41 1.32 2.01.602.602 1.218 1.012 2.01 1.32.78.308 1.687.555 2.967.613 1.279.058 1.687.072 4.946.072s3.667-.014 4.947-.072c1.28-.058 2.187-.305 2.966-.613.793-.308 1.41-.72 2.01-1.32.602.602 1.012-1.218 1.32-2.01.308-.78.555-1.687.613-2.967.058-1.279.072-1.687-.072-4.946s-.014-3.667-.072-4.947c-.058-1.28-.305-2.187-.613-2.966-.308-.793-.72-1.41-1.32-2.01-.602-.602-1.218-1.012-2.01-1.32-.78-.308-1.687-.555-2.967-.613-1.279-.058-1.687-.072-4.946-.072zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.441 1.441 1.441 1.441-.645 1.441-1.441-.645-1.44-1.441-1.44z"/></svg></a>
+                    <a href="#" aria-label="LinkedIn" className="text-slate-700 hover:text-[#783046] transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg></a>
                 </div>
             </div>
           </div>
-          <div className="border-t border-white/20 pt-8 text-center text-xs text-white/55">
+          <div className="border-t border-slate-900/15 pt-8 text-center text-xs text-slate-600">
             © {new Date().getFullYear()} Quincenalia. Todos los derechos reservados.
           </div>
           </div>
