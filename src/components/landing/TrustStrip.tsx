@@ -1,4 +1,4 @@
-import { Home, Calendar, RefreshCw, Users, Globe } from 'lucide-react';
+import { Home, Calendar, RefreshCw, Users, Globe, Briefcase } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { fadeUp, stagger, viewportOnce } from '@/components/landing/motion';
 import { cn } from '@/lib/utils';
@@ -8,7 +8,8 @@ const PROOF = [
   { icon: Calendar, value: '15 días', label: 'Fijos en verano' },
   { icon: RefreshCw, value: '10 semanas', label: 'Flexibles al año' },
   { icon: Users, value: '4 socios', label: 'Gastos compartidos' },
-  { icon: Globe, value: 'Viaja gratis', label: 'Intercambio de estancias con Host y Guest points' },
+  { icon: Globe, value: 'Viaja gratis', label: 'Intercambio de estancias' },
+  { icon: Briefcase, value: 'Gestión integral', label: 'Nos encargamos de todo' },
 ] as const;
 
 export default function TrustStrip() {
@@ -46,7 +47,7 @@ export default function TrustStrip() {
         </motion.header>
 
         <motion.ul
-          className="mx-auto grid max-w-5xl grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
+          className="mx-auto grid max-w-6xl grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"
           initial={reduceMotion ? false : 'hidden'}
           whileInView={reduceMotion ? undefined : 'show'}
           viewport={viewportOnce}
@@ -62,7 +63,7 @@ export default function TrustStrip() {
               )}
             >
               <item.icon className="mx-auto mb-2 h-4 w-4 text-[#783046]" aria-hidden="true" />
-              <p className="landing-display text-xl sm:text-2xl font-semibold text-slate-900 tracking-tight">
+              <p className="landing-display text-lg sm:text-xl font-semibold text-slate-900 tracking-tight">
                 {item.value}
               </p>
               <p className="mt-1 text-xs sm:text-sm text-slate-500 leading-snug">{item.label}</p>
