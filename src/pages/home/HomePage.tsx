@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import AppleScrollHero from '@/components/landing/AppleScrollHero';
+import TrustStrip from '@/components/landing/TrustStrip';
 import { FeaturedProperties } from '@/components/FeaturedProperties';
 import { useEffect, useState, useRef } from 'react';
 import {
@@ -12,8 +13,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-    PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin, ChevronLeft, HelpCircle, Cookie, Star, Users, FileText, Presentation, Clock, Send
-} from 'lucide-react'; // Iconos usados y potencialmente nuevos
+    PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin, ChevronLeft, HelpCircle, Cookie, Star, Users, FileText, Presentation, Clock, Send, Compass, Info, Scale
+} from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import ContactForm from '@/components/ContactForm';
 import './HomePage.css'; // Asegúrate de que este archivo exista y no cause conflictos
@@ -234,7 +235,7 @@ function ComoFunciona() {
   ];
 
   return (
-    <section id="reinventada" className="py-10 sm:py-20 bg-white">
+    <section id="reinventada" className="py-16 sm:py-24 bg-white">
       <div className="container mx-auto px-4">
         <motion.div
           className="text-center mb-8 sm:mb-12"
@@ -377,21 +378,19 @@ function getZonaImage(zona: string) {
 // Función para normalizar nombres de zona (quita tildes, puntos, espacios y pasa a minúsculas)
 function normalizaZona(z: string) {
   return (z || '')
-    .normalize('NFD').replace(/\[\u0300-\u036f\]/g, '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/\./g, '')
     .replace(/\s+/g, '')
     .toLowerCase();
 }
 
-// Generar un número aleatorio de 2 dígitos para cada zona
-function getFakeCount(zona: string) {
-  // Usar un hash simple para que el número sea "fijo" por zona en cada recarga
-  let hash = 0;
-  for (let i = 0; i < zona.length; i++) {
-    hash = zona.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const num = Math.abs(hash) % 90 + 10; // entre 10 y 99
-  return num;
+function getZonaCount(zona: string, viviendasPorZona: Record<string, number>) {
+  const zonaKey = Object.keys(viviendasPorZona).find(
+    (key) => normalizaZona(key) === normalizaZona(zona)
+  );
+  if (!zonaKey) return null;
+  const total = viviendasPorZona[zonaKey];
+  return Number.isFinite(total) ? total : null;
 }
 
 const HomePage = () => {
@@ -400,7 +399,6 @@ const HomePage = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [faqExpandido, setFaqExpandido] = useState(false);
   const [showLegalPopup, setShowLegalPopup] = useState(false);
-  const [aceptaCondiciones, setAceptaCondiciones] = useState(false);
   const navigate = useNavigate();
   const [showCookieBanner, setShowCookieBanner] = useState(false);
   const reduceMotion = useReducedMotion();
@@ -467,14 +465,17 @@ const HomePage = () => {
     }
   };
 
-  // Debug: mostrar el contenido real de viviendasPorZona antes de renderizar las cards de zona
-  console.log('viviendasPorZona:', viviendasPorZona);
-
   return (
-    <div className="min-h-screen bg-white font-poppins">
+    <div className="landing-page min-h-screen bg-white font-walsheim">
+      <a
+        href="#zonas-destacadas"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-900 focus:shadow-lg"
+      >
+        Saltar al contenido
+      </a>
       <Navbar />
       <AppleScrollHero />
-      <section id="zonas-destacadas" className="relative z-10 py-10 sm:py-16 bg-white">
+      <section id="zonas-destacadas" className="relative z-10 py-8 sm:py-12 bg-white">
         <div className="container mx-auto px-4">
           <motion.div
             className="text-center mb-6 sm:mb-12"
@@ -522,40 +523,70 @@ const HomePage = () => {
             </Button>
             </motion.div>
           </motion.div>
-          {/* Vista móvil: Carrusel horizontal sin flechas que desbordan en 360px */}
           <div className="relative block md:hidden">
-            <div className="py-2">
+            <button
+              type="button"
+              aria-label="Zona anterior"
+              onClick={() => scrollZonaCarrusel('left')}
+              className="absolute left-1 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/70 bg-white/80 text-slate-800 shadow-md backdrop-blur-md cursor-pointer"
+            >
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              aria-label="Zona siguiente"
+              onClick={() => scrollZonaCarrusel('right')}
+              className="absolute right-1 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/70 bg-white/80 text-slate-800 shadow-md backdrop-blur-md cursor-pointer"
+            >
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <div className="py-2 px-8">
               <div
                 ref={scrollContainerRef}
-                className="flex space-x-4 overflow-x-auto pb-3 scrollbar-hide snap-x snap-mandatory px-1"
+                role="region"
+                aria-label="Zonas destacadas"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.key === 'ArrowLeft') {
+                    event.preventDefault();
+                    scrollZonaCarrusel('left');
+                  }
+                  if (event.key === 'ArrowRight') {
+                    event.preventDefault();
+                    scrollZonaCarrusel('right');
+                  }
+                }}
+                className="flex space-x-4 overflow-x-auto pb-3 scrollbar-hide snap-x snap-mandatory"
               >
                 {zonasUnicas.map((zona, index) => {
-                  // Buscar el contador usando la zona normalizada
-                  const zonaKey = Object.keys(viviendasPorZona).find(
-                    key => normalizaZona(key) === normalizaZona(zona)
-                  );
-                  const countZona = getFakeCount(zona);
+                  const countZona = getZonaCount(zona, viviendasPorZona);
                   return (
                     <Link
                       to={`/properties?zona=${encodeURIComponent(zona)}`}
-                      key={index}
-                      className="flex-shrink-0 w-[72vw] max-w-[280px] snap-center"
+                      key={zona}
+                      className="flex-shrink-0 w-[72vw] max-w-[280px] snap-center cursor-pointer"
                     >
-                      <Card className="overflow-hidden rounded-2xl group/card w-full h-44 border border-primary/20 bg-white relative shadow-sm transition-[box-shadow] duration-200 hover:shadow-md">
+                      <Card className="overflow-hidden rounded-2xl group/card w-full aspect-[16/10] border border-primary/20 bg-white relative shadow-sm transition-[box-shadow] duration-200 hover:shadow-md">
                         <div className="relative w-full h-full">
                           <img
                             src={getZonaImage(zona)}
                             alt={`Propiedades en ${zona}`}
+                            width={280}
+                            height={175}
+                            loading={index < 2 ? 'eager' : 'lazy'}
+                            decoding="async"
                             className="w-full h-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.77,0,0.175,1)] group-hover/card:scale-[1.04]"
                             onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"></div>
                           <div className="absolute bottom-3 left-0 right-0 px-3 text-center">
-                            <h3 className="text-base font-bold text-white truncate" title={zona}>
+                            <h3 className="text-base font-semibold text-white truncate" title={zona}>
                               {zona}
                             </h3>
-                            <p className="text-xs text-white/85 mt-0.5">
-                              {countZona} {countZona === 1 ? 'vivienda' : 'viviendas'}
+                            <p className="text-xs text-white/90 mt-0.5">
+                              {countZona == null
+                                ? 'Ver propiedades'
+                                : `${countZona} ${countZona === 1 ? 'vivienda' : 'viviendas'}`}
                             </p>
                           </div>
                         </div>
@@ -565,35 +596,40 @@ const HomePage = () => {
                 })}
               </div>
             </div>
-            <p className="text-center text-xs text-gray-500 mt-1">Desliza para ver más zonas →</p>
+            <p className="text-center text-xs text-slate-500 mt-1">Desliza o usa las flechas para ver más zonas</p>
           </div>
 
-          {/* Vista PC: Grid de 6x2 cards */}
           <div className="hidden md:block">
-            <div className="grid grid-cols-6 gap-4 px-4 max-w-7xl mx-auto">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 max-w-6xl mx-auto">
               {zonasUnicas.map((zona, index) => {
-                const countZona = getFakeCount(zona);
+                const countZona = getZonaCount(zona, viviendasPorZona);
                 return (
                   <Link
-                    key={index}
+                    key={zona}
                     to={`/properties?zona=${encodeURIComponent(zona)}`}
-                    className="block"
+                    className="block cursor-pointer"
                   >
-                    <Card className="overflow-hidden rounded-2xl group/card bg-white relative h-32 border-2 border-primary/20 transition-[transform,box-shadow,border-color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:shadow-xl hover:border-primary/40 hover:-translate-y-1">
+                    <Card className="overflow-hidden rounded-2xl group/card bg-white relative aspect-[16/10] border border-primary/20 transition-[transform,box-shadow,border-color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:shadow-xl hover:border-primary/40 hover:-translate-y-1">
                       <div className="relative w-full h-full">
                         <img
                           src={getZonaImage(zona)}
                           alt={`Propiedades en ${zona}`}
+                          width={400}
+                          height={250}
+                          loading={index < 4 ? 'eager' : 'lazy'}
+                          decoding="async"
                           className="w-full h-full object-cover rounded-2xl transition-transform duration-500 ease-[cubic-bezier(0.77,0,0.175,1)] group-hover/card:scale-[1.04]"
                           onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent rounded-2xl"></div>
-                        <div className="absolute bottom-2 left-0 right-0 px-3 text-center">
-                          <h3 className="text-sm font-bold text-white truncate" title={zona}>
+                        <div className="absolute bottom-3 left-0 right-0 px-3 text-center">
+                          <h3 className="text-sm font-semibold text-white truncate" title={zona}>
                             {zona}
                           </h3>
-                          <p className="text-xs text-gray-200 mt-0.5">
-                            {countZona} {countZona === 1 ? 'vivienda' : 'viviendas'}
+                          <p className="text-xs text-white/90 mt-0.5">
+                            {countZona == null
+                              ? 'Ver propiedades'
+                              : `${countZona} ${countZona === 1 ? 'vivienda' : 'viviendas'}`}
                           </p>
                         </div>
                       </div>
@@ -605,7 +641,8 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-      <section className="py-10 sm:py-16 bg-white">
+      <TrustStrip />
+      <section className="py-16 sm:py-24 bg-white">
         <div className="container mx-auto px-4">
           <motion.div
             initial={reduceMotion ? false : 'hidden'}
@@ -642,12 +679,15 @@ const HomePage = () => {
           </motion.h2>
           <motion.div variants={fadeIn}>
           <FeaturedProperties />
+          <p className="mt-4 text-center text-xs text-slate-500">
+            * La cuota mensual estimada incluye un 7% extra en gastos de compra (notaría, registro, gestoría e impuestos).
+          </p>
           </motion.div>
           </motion.div>
         </div>
       </section>
       <ComoFunciona />
-      <section id="contacto" className="py-14 sm:py-24 bg-[#E8DAD9]">
+      <section id="contacto" className="py-16 sm:py-24 bg-[#E8DAD9]">
         <div className="container mx-auto px-4 max-w-6xl">
           {/* Cabecera a ancho completo */}
           <motion.div
@@ -820,7 +860,7 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-      <section id="faq" className="py-12 sm:py-20 bg-white">
+      <section id="faq" className="py-16 sm:py-24 bg-white">
         <div className="container mx-auto px-4 max-w-4xl">
           <motion.div
             className="text-center mb-8 sm:mb-10"
@@ -913,57 +953,94 @@ const HomePage = () => {
         </div>
       </section>
 
-      <footer className="bg-[#CFB8FC] text-slate-800/85 py-8 sm:py-16 text-sm font-normal">
+      <footer className="bg-[#8D57F8] text-white py-8 sm:py-16 text-sm font-normal mx-3 mb-3 sm:mx-4 sm:mb-4 rounded-[2rem] overflow-hidden">
         <div className="container mx-auto px-4">
           {/* Móvil: corto */}
           <div className="md:hidden flex flex-col items-center text-center gap-4">
-            <h3 className="text-xl font-bold text-slate-900">Quincenalia</h3>
-            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-700">
-              <Link to="/terminos-servicio" className="hover:text-[#783046] transition-colors">Términos</Link>
-              <Link to="/politica-privacidad" className="hover:text-[#783046] transition-colors">Privacidad</Link>
-              <Link to="/politica-cookies" className="hover:text-[#783046] transition-colors">Cookies</Link>
-              <a href="#contacto" className="hover:text-[#783046] transition-colors">Contacto</a>
+            <Link to="/" aria-label="Quincenalia" className="inline-flex">
+              <img src="/logo-blanco.png" alt="Quincenalia" className="h-[4.5rem] w-auto mix-blend-screen" />
+            </Link>
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-white/90">
+              <Link to="/terminos-servicio" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                <FileText className="w-3.5 h-3.5" aria-hidden="true" /> Términos
+              </Link>
+              <Link to="/politica-privacidad" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" /> Privacidad
+              </Link>
+              <Link to="/politica-cookies" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                <Cookie className="w-3.5 h-3.5" aria-hidden="true" /> Cookies
+              </Link>
+              <a href="#contacto" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                <Mail className="w-3.5 h-3.5" aria-hidden="true" /> Contacto
+              </a>
             </div>
-            <p className="text-xs text-slate-600">© {new Date().getFullYear()} Quincenalia</p>
+            <p className="text-xs text-white/80">© {new Date().getFullYear()} Quincenalia</p>
           </div>
 
           {/* Desktop */}
           <div className="hidden md:block">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
             <div className="md:col-span-2 lg:col-span-1">
-              <h3 className="text-2xl font-bold mb-3 text-slate-900">Quincenalia</h3>
-              <p className="text-slate-700 leading-relaxed">
+              <Link to="/" aria-label="Quincenalia" className="inline-flex mb-3">
+                <img src="/logo-blanco.png" alt="Quincenalia" className="h-[5.5rem] w-auto mix-blend-screen" />
+              </Link>
+              <p className="text-white/90 leading-relaxed">
                 La forma inteligente de poseer, disfrutar y rentabilizar tu segunda residencia.
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-slate-900 uppercase tracking-wide text-xs">Navegación</h4>
-              <ul className="space-y-2.5">
-                  <li><Link to="/propiedades" className="hover:text-[#783046] transition-colors">Propiedades</Link></li>
-                  <li><a href="#zonas-destacadas" className="hover:text-[#783046] transition-colors">Zonas Destacadas</a></li>
-                  <li><a href="#reinventada" className="hover:text-[#783046] transition-colors">Cómo Funciona</a></li>
-                  <li><a href="#contacto" className="hover:text-[#783046] transition-colors">Contacto</a></li>
-                  <li><a href="#faq" className="hover:text-[#783046] transition-colors">FAQ</a></li>
+              <h4 className="font-semibold mb-4 text-white uppercase tracking-wide text-xs inline-flex items-center gap-1.5">
+                <Compass className="w-3.5 h-3.5" aria-hidden="true" /> Navegación
+              </h4>
+              <ul className="space-y-2.5 text-white/90">
+                  <li>
+                    <Link to="/propiedades" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                      <Home className="w-4 h-4 text-white/80" aria-hidden="true" /> Propiedades
+                    </Link>
+                  </li>
+                  <li>
+                    <a href="#zonas-destacadas" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                      <MapPin className="w-4 h-4 text-white/80" aria-hidden="true" /> Zonas Destacadas
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#reinventada" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                      <Info className="w-4 h-4 text-white/80" aria-hidden="true" /> Cómo Funciona
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#contacto" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                      <MessageCircle className="w-4 h-4 text-white/80" aria-hidden="true" /> Contacto
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#faq" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                      <HelpCircle className="w-4 h-4 text-white/80" aria-hidden="true" /> FAQ
+                    </a>
+                  </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-slate-900 uppercase tracking-wide text-xs">Legal</h4>
-              <ul className="space-y-2.5">
-                <li><Link to="/terminos-servicio" className="hover:text-[#783046] transition-colors flex items-center gap-1.5"><FileText className="w-4 h-4 text-slate-500" /> Términos de Servicio</Link></li>
-                <li><Link to="/politica-privacidad" className="hover:text-[#783046] transition-colors flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-slate-500" /> Política de Privacidad</Link></li>
-                <li><Link to="/politica-cookies" className="hover:text-[#783046] transition-colors flex items-center gap-1.5"><Cookie className="w-4 h-4 text-slate-500" /> Política de Cookies</Link></li>
+              <h4 className="font-semibold mb-4 text-white uppercase tracking-wide text-xs inline-flex items-center gap-1.5">
+                <Scale className="w-3.5 h-3.5" aria-hidden="true" /> Legal
+              </h4>
+              <ul className="space-y-2.5 text-white/90">
+                <li><Link to="/terminos-servicio" className="hover:text-white transition-colors flex items-center gap-1.5"><FileText className="w-4 h-4 text-white/80" aria-hidden="true" /> Términos de Servicio</Link></li>
+                <li><Link to="/politica-privacidad" className="hover:text-white transition-colors flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-white/80" aria-hidden="true" /> Política de Privacidad</Link></li>
+                <li><Link to="/politica-cookies" className="hover:text-white transition-colors flex items-center gap-1.5"><Cookie className="w-4 h-4 text-white/80" aria-hidden="true" /> Política de Cookies</Link></li>
               </ul>
             </div>
              <div className="md:col-span-2 lg:col-span-1">
-              <h4 className="font-semibold mb-4 text-slate-900 uppercase tracking-wide text-xs">Síguenos</h4>
-                <div className="flex space-x-4">
-                    <a href="#" aria-label="Facebook" className="text-slate-700 hover:text-[#783046] transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/></svg></a>
-                    <a href="#" aria-label="Instagram" className="text-slate-700 hover:text-[#783046] transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.272.058 2.166.296 2.913.588.764.302 1.33.696 1.902 1.27.574.572.97 1.138 1.27 1.903.293.747.53 1.64.588 2.912.058 1.267.07 1.647.07 4.85s-.012 3.583-.07 4.85c-.058 1.272-.295 2.166-.588 2.913-.302.764-.696 1.33-1.27 1.902-.572.574-1.138.97-1.903 1.27-.747.293-1.64.53-2.912.588-1.267.058-1.647.07-4.85.07s-3.583-.012-4.85-.07c-1.272-.058-2.187-.295-2.966-.613-2.966-.302 0-.602.308-1.218.613-1.818.308-.78.555-1.687.613-2.967.058-1.279.072-1.687-.072-4.946-.072zm0-2.163c-3.259 0-3.667.014-4.947.072-1.28.058-2.187.305-2.966.613-.793.308-1.41.72-2.01 1.32-.602.602-1.012 1.218-1.32 2.01-.308.78-.555 1.687-.613 2.967-.058 1.279-.072 1.687-.072 4.946s.014 3.667.072 4.947c.058 1.28.305 2.187.613 2.966.308.793.72 1.41 1.32 2.01.602.602 1.218 1.012 2.01 1.32.78.308 1.687.555 2.967.613 1.279.058 1.687.072 4.946.072s3.667-.014 4.947-.072c1.28-.058 2.187-.305 2.966-.613.793-.308 1.41-.72 2.01-1.32.602.602 1.012-1.218 1.32-2.01.308-.78.555-1.687.613-2.967.058-1.279.072-1.687-.072-4.946s-.014-3.667-.072-4.947c-.058-1.28-.305-2.187-.613-2.966-.308-.793-.72-1.41-1.32-2.01-.602-.602-1.218-1.012-2.01-1.32-.78-.308-1.687-.555-2.967-.613-1.279-.058-1.687-.072-4.946-.072zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.441 1.441 1.441 1.441-.645 1.441-1.441-.645-1.44-1.441-1.44z"/></svg></a>
-                    <a href="#" aria-label="LinkedIn" className="text-slate-700 hover:text-[#783046] transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg></a>
-                </div>
+              <h4 className="font-semibold mb-4 text-white uppercase tracking-wide text-xs inline-flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5" aria-hidden="true" /> Contacto
+              </h4>
+              <a href="mailto:info@quincenalia.com" className="text-white/90 hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1.5">
+                <Send className="w-4 h-4 text-white/80" aria-hidden="true" />
+                info@quincenalia.com
+              </a>
             </div>
           </div>
-          <div className="border-t border-slate-900/15 pt-8 text-center text-xs text-slate-600">
+          <div className="border-t border-white/25 pt-8 text-center text-xs text-white/80">
             © {new Date().getFullYear()} Quincenalia. Todos los derechos reservados.
           </div>
           </div>
@@ -971,15 +1048,16 @@ const HomePage = () => {
       </footer>
       <div>
         <button
-          className="fixed bottom-6 right-6 z-50 bg-primary text-primary-foreground rounded-full shadow-lg w-14 h-14 flex items-center justify-center hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/60"
+          className={`fixed right-6 z-50 bg-primary text-primary-foreground rounded-full shadow-lg w-14 h-14 flex items-center justify-center hover:bg-primary/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 cursor-pointer ${showCookieBanner ? 'bottom-28' : 'bottom-6'}`}
           style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}
           onClick={() => setShowLegalPopup(v => !v)}
+          aria-expanded={showLegalPopup}
           aria-label="Ayuda y legal"
         >
           <HelpCircle className="w-7 h-7" />
         </button>
         {showLegalPopup && (
-          <div className="fixed bottom-24 right-6 z-50 bg-white border border-gray-200 rounded-xl shadow-xl p-4 w-72 animate-fade-in">
+          <div className={`fixed right-6 z-50 bg-white border border-gray-200 rounded-xl shadow-xl p-4 w-72 ${showCookieBanner ? 'bottom-[11.5rem]' : 'bottom-24'}`}>
             <h4 className="font-semibold text-lg mb-2 flex items-center gap-2"><HelpCircle className="w-5 h-5 text-primary" />Ayuda y Legal</h4>
             <ul className="space-y-2 mb-3">
               <li>
@@ -988,27 +1066,23 @@ const HomePage = () => {
                 </button>
               </li>
               <li>
-                <button className="flex items-center gap-2 text-primary hover:underline disabled:text-gray-400" disabled={!aceptaCondiciones} onClick={() => { setShowLegalPopup(false); navigate('/proteccion-datos'); }}>
+                <button className="flex min-h-11 items-center gap-2 text-primary hover:underline cursor-pointer" onClick={() => { setShowLegalPopup(false); navigate('/proteccion-datos'); }}>
                   <ShieldCheck className="w-4 h-4" /> Protección de datos
                 </button>
               </li>
               <li>
-                <button className="flex items-center gap-2 text-primary hover:underline disabled:text-gray-400" disabled={!aceptaCondiciones} onClick={() => { setShowLegalPopup(false); navigate('/politica-privacidad'); }}>
+                <button className="flex min-h-11 items-center gap-2 text-primary hover:underline cursor-pointer" onClick={() => { setShowLegalPopup(false); navigate('/politica-privacidad'); }}>
                   <FileText className="w-4 h-4" /> Política de privacidad
                 </button>
               </li>
             </ul>
-            <div className="flex items-center gap-2">
-              <input type="checkbox" id="acepta-condiciones" checked={aceptaCondiciones} onChange={e => setAceptaCondiciones(e.target.checked)} className="accent-primary" />
-              <label htmlFor="acepta-condiciones" className="text-xs text-gray-700">He leído y acepto las condiciones legales</label>
-            </div>
           </div>
         )}
       </div>
       {showCookieBanner && (
         <div className="fixed bottom-0 left-0 w-full z-50 bg-slate-900 text-white px-4 py-4 flex flex-col sm:flex-row items-center justify-center gap-3 shadow-lg animate-fade-in">
           <span className="text-sm">Usamos cookies para mejorar tu experiencia. Consulta nuestra <Link to="/politica-privacidad" className="underline text-primary">Política de Privacidad</Link>.</span>
-          <button onClick={aceptarCookies} className="ml-0 sm:ml-4 mt-2 sm:mt-0 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-semibold hover:bg-primary/90 transition">Aceptar</button>
+          <button onClick={aceptarCookies} className="ml-0 sm:ml-4 mt-2 sm:mt-0 min-h-11 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-semibold hover:bg-primary/90 transition cursor-pointer">Aceptar</button>
         </div>
       )}
       {/* Icono del Pitch Deck */}
@@ -1016,7 +1090,7 @@ const HomePage = () => {
         href="https://holydeo.my.canva.site/quincenalia"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 left-6 z-50 bg-primary text-primary-foreground rounded-full shadow-lg w-14 h-14 flex items-center justify-center hover:bg-primary/90 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary/60 group"
+        className={`fixed left-6 z-50 bg-primary text-primary-foreground rounded-full shadow-lg w-14 h-14 flex items-center justify-center hover:bg-primary/90 transition-all duration-300 hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 group cursor-pointer ${showCookieBanner ? 'bottom-28' : 'bottom-6'}`}
         aria-label="Ver Pitch Deck"
         title="Ver Pitch Deck"
       >

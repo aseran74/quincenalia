@@ -60,9 +60,6 @@ const ContactForm: React.FC<ContactFormProps> = ({
           status: 'pendiente'
         });
 
-      console.log('DATA:', data);
-      console.log('ERROR:', error);
-
       if (error) throw error;
 
       toast({

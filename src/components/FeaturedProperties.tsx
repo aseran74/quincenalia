@@ -46,36 +46,32 @@ const PropertyCard = ({ property }: { property: any }) => {
   const monthly = minShare && minShare > 0 ? getMonthlyPayment(minShare) : null;
 
   return (
-    <Link to={`/properties/${property.id}`} className="group block h-full">
+    <Link to={`/properties/${property.id}`} className="group block h-full cursor-pointer">
       <Card className="overflow-hidden h-64 flex flex-col border border-border rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 bg-card p-0 group">
         <div className="relative w-full h-full flex-1">
           <img
             src={imageUrl}
             alt={`Imagen de ${property.title}`}
+            width={640}
+            height={400}
+            loading="lazy"
+            decoding="async"
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 z-0"
             onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-property.jpg'; }}
           />
           <div className="absolute inset-0 z-10 flex flex-col justify-between">
-            {/* Badges de copropiedad y precio/mes */}
             <div className="flex flex-col xs:flex-row xs:justify-between items-start gap-2 p-2 sm:p-4 w-full">
-              {/* Badge copropiedad a la izquierda */}
               {minShare && (
                 <span className="bg-primary text-primary-foreground text-[11px] xs:text-xs font-semibold px-2.5 py-1 rounded-full shadow z-20 max-w-[90vw] xs:max-w-[60%] truncate">
                   Desde {minShare.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
                 </span>
               )}
-              {/* Badge precio/mes a la derecha */}
               {monthly && (
                 <span className="bg-white text-gray-700 text-[11px] xs:text-xs font-normal px-2.5 py-1 rounded-full shadow z-20 border border-gray-200 max-w-[90vw] xs:max-w-[60%] truncate">
-                  {monthly.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })} <span className="text-[10px] text-gray-400 font-normal">/mes*</span>
+                  {monthly.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })} <span className="text-[10px] text-gray-500 font-normal">/mes*</span>
                 </span>
               )}
             </div>
-            {monthly && (
-              <span className="text-[10px] text-gray-200 mt-1 text-center block">
-                * Incluye un 7% extra en gastos de compra (notaría, registro, gestoría, impuestos)
-              </span>
-            )}
           </div>
           <div className="absolute inset-0 z-10 flex flex-col justify-between bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 sm:p-3">
             {/* Contenido inferior sobre la imagen */}
@@ -154,12 +150,7 @@ export const FeaturedProperties = () => {
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-6">
         {[...Array(8)].map((_, index) => (
           <Card key={index} className="overflow-hidden animate-pulse h-64">
-            <div className="w-full h-3/5 bg-gray-300 dark:bg-gray-700" />
-            <div className="p-3">
-              <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded mb-1 w-3/4" />
-              <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded mb-2 w-full" />
-              <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-1/2" />
-            </div>
+            <div className="w-full h-full bg-muted" />
           </Card>
         ))}
       </div>

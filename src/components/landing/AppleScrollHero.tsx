@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowRight, HelpCircle } from 'lucide-react';
+import { ArrowRight, ChevronDown, HelpCircle, Pause, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { fadeUp, stagger } from '@/components/landing/motion';
 
@@ -24,7 +24,9 @@ const AppleScrollHero = () => {
   const frameRef = useRef(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
+  const [videoPaused, setVideoPaused] = useState(false);
   const [progress, setProgress] = useState(0);
+  const userPausedRef = useRef(false);
   const reduceMotion = useReducedMotion();
 
   const drawFrame = useCallback((index: number) => {
@@ -148,6 +150,42 @@ const AppleScrollHero = () => {
     setVideoEnded(true);
   }, []);
 
+  const toggleVideoPlayback = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || videoEnded) return;
+    if (video.paused) {
+      userPausedRef.current = false;
+      video.play().catch(finishVideo);
+      setVideoPaused(false);
+    } else {
+      userPausedRef.current = true;
+      video.pause();
+      setVideoPaused(true);
+    }
+  }, [videoEnded, finishVideo]);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    const video = videoRef.current;
+    if (!section || !video || reduceMotion || videoEnded) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) {
+          video.pause();
+          return;
+        }
+        if (!userPausedRef.current) {
+          video.play().catch(finishVideo);
+        }
+      },
+      { threshold: 0.35 }
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [reduceMotion, videoEnded, finishVideo]);
+
   const textOpacity =
     !videoEnded || reduceMotion ? 1 : Math.max(0, 1 - progress * 1.35);
   const textY = !videoEnded || reduceMotion ? 0 : progress * 48;
@@ -220,7 +258,7 @@ const AppleScrollHero = () => {
           />
         )}
 
-        <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/55 via-black/15 to-black/20 pointer-events-none" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/70 via-black/30 to-black/25 pointer-events-none" />
 
         <motion.div
           className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
@@ -237,8 +275,8 @@ const AppleScrollHero = () => {
             >
               <motion.h1
                 variants={fadeUp}
-                className="text-[1.85rem] leading-tight xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-3 sm:mb-6"
-                style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}
+                className="landing-display text-[1.85rem] leading-tight xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold mb-3 sm:mb-6"
+                style={{ textShadow: '0 2px 16px rgba(0,0,0,0.55)' }}
               >
                 Ha llegado otra manera de{' '}
                 <span className="relative inline-block">
@@ -279,29 +317,48 @@ const AppleScrollHero = () => {
               >
                 <Button
                   size="lg"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-7 py-3 text-sm sm:text-base font-semibold shadow-lg w-full sm:w-auto"
+                  className="min-h-11 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-7 py-3 text-sm sm:text-base font-semibold shadow-lg w-full sm:w-auto"
                   asChild
                 >
                   <Link to="/properties">
-                    Explorar Propiedades
+                    Explorar propiedades
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  className="rounded-full px-7 py-3 text-sm sm:text-base font-semibold shadow-lg border-white/80 bg-white/10 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm w-full sm:w-auto"
+                  className="min-h-11 rounded-full px-7 py-3 text-sm sm:text-base font-semibold shadow-lg border-white/80 bg-white/15 text-white hover:bg-white/25 hover:text-white backdrop-blur-md w-full sm:w-auto"
                   onClick={() => {
                     document.getElementById('reinventada')?.scrollIntoView({ behavior: 'smooth' });
                   }}
                 >
-                  <HelpCircle className="w-5 h-5 mr-2 inline-block" />
+                  <HelpCircle className="w-5 h-5 mr-2 inline-block" aria-hidden="true" />
                   Cómo funciona
                 </Button>
               </motion.div>
             </motion.div>
           </div>
         </motion.div>
+
+        {!reduceMotion && !videoEnded && (
+          <button
+            type="button"
+            onClick={toggleVideoPlayback}
+            aria-label={videoPaused ? 'Reproducir vídeo' : 'Pausar vídeo'}
+            className="absolute bottom-6 right-5 z-30 flex h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-white/15 text-white backdrop-blur-md cursor-pointer transition-colors duration-200 hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
+            {videoPaused ? <Play className="h-5 w-5" aria-hidden="true" /> : <Pause className="h-5 w-5" aria-hidden="true" />}
+          </button>
+        )}
+
+        <a
+          href="#zonas-destacadas"
+          className="absolute bottom-6 left-1/2 z-30 hidden -translate-x-1/2 sm:flex h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white backdrop-blur-md cursor-pointer transition-colors duration-200 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+        >
+          <ChevronDown className="h-5 w-5" aria-hidden="true" />
+          <span className="sr-only">Ir a la propuesta de valor</span>
+        </a>
       </div>
     </section>
   );

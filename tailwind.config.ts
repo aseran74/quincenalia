@@ -129,6 +129,7 @@ export default {
 				'sans': ['Poppins', 'ui-sans-serif', 'system-ui', 'sans-serif'],
 				'poppins': ['Poppins', 'ui-sans-serif', 'system-ui', 'sans-serif'],
 				'outfit': ['Outfit', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+				'walsheim': ['GT Walsheim', 'Outfit', 'ui-sans-serif', 'system-ui', 'sans-serif'],
 			},
 		}
 	},

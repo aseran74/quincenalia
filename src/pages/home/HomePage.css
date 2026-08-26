@@ -7,6 +7,53 @@
   scrollbar-width: none;     /* Firefox */
 }
 
+@font-face {
+  font-family: 'GT Walsheim';
+  src: local('GT Walsheim Regular'), local('GT Walsheim'), local('GTWalsheim'), local('GT Walsheim Pro Regular'), local('GTWalsheimPro-Regular');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GT Walsheim';
+  src: local('GT Walsheim Medium'), local('GT Walsheim Pro Medium'), local('GTWalsheimPro-Medium');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GT Walsheim';
+  src: local('GT Walsheim Bold'), local('GT Walsheim Pro Bold'), local('GTWalsheimPro-Bold');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+.landing-page,
+.landing-page h1,
+.landing-page h2,
+.landing-page h3,
+.landing-page h4,
+.landing-page button,
+.landing-page input,
+.landing-page textarea,
+.landing-page .landing-display {
+  font-family: 'GT Walsheim', Outfit, ui-sans-serif, system-ui, sans-serif;
+}
+
+.landing-page h1,
+.landing-page h2,
+.landing-page .landing-display {
+  text-wrap: balance;
+}
+
+.landing-page p,
+.landing-page li {
+  line-height: 1.6;
+}
+
 /* Landing: tipografía y ritmo en pantallas muy estrechas (360px) */
 @media (max-width: 380px) {
   .landing-section-title {
