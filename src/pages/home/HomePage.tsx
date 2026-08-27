@@ -13,7 +13,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-    PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin, ChevronLeft, HelpCircle, Cookie, Star, Users, FileText, Presentation, Clock, Send, Compass, Info, Scale
+    PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin, ChevronLeft, HelpCircle, Cookie, Star, Users, FileText, Presentation, Clock, Send, Compass, Info, Scale, WandSparkles
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import ContactForm from '@/components/ContactForm';
@@ -986,9 +986,15 @@ const HomePage = () => {
                   <Cookie className="w-3.5 h-3.5" aria-hidden="true" /> Cookies
                 </Link>
               </div>
-              <p className="text-sm text-white/90 leading-relaxed max-w-xs">
-                La forma inteligente de poseer, disfrutar y rentabilizar tu segunda residencia.
-              </p>
+              <div className="max-w-xs text-left space-y-2">
+                <h4 className="font-semibold h-5 text-white uppercase tracking-wide text-xs flex items-center justify-center gap-1.5 w-full">
+                  <WandSparkles className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                  Otra manera de veranear
+                </h4>
+                <p className="text-sm text-white/90 leading-relaxed text-center">
+                  La forma inteligente de poseer, disfrutar y rentabilizar tu segunda residencia.
+                </p>
+              </div>
               <Link to="/" aria-label="Quincenalia" className="inline-flex">
                 <img src="/logo-blanco.png" alt="Quincenalia" className="h-[4.5rem] w-auto mix-blend-screen" />
               </Link>
@@ -1088,12 +1094,21 @@ const HomePage = () => {
                   </ul>
                 </div>
 
-                <div className="min-w-0">
+                <div className="min-w-0 text-left">
+                  <h4 className="font-semibold mb-4 h-5 text-white uppercase tracking-wide text-xs flex items-center gap-1.5">
+                    <WandSparkles className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                    Otra manera de veranear
+                  </h4>
                   <p className="text-white/90 leading-relaxed text-sm mb-4">
                     La forma inteligente de poseer, disfrutar y rentabilizar tu segunda residencia.
                   </p>
                   <Link to="/" aria-label="Quincenalia" className="inline-flex">
-                    <img src="/logo-blanco.png" alt="Quincenalia" className="h-12 w-auto mix-blend-screen" />
+                    {/* Compensa el padding transparente izquierdo del PNG */}
+                    <img
+                      src="/logo-blanco.png"
+                      alt="Quincenalia"
+                      className="h-12 w-auto mix-blend-screen -ml-2.5"
+                    />
                   </Link>
                 </div>
               </div>
