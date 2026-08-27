@@ -260,11 +260,11 @@ const NavLinkItem: React.FC<NavLinkItemProps> = ({
   children,
   className,
 }) => {
-  const baseDesktopClasses = "px-3 py-1 rounded font-semibold transition-colors duration-200 shadow-sm hover:bg-white/20 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary";
+  const baseDesktopClasses = "px-3 py-1 rounded font-semibold transition-colors duration-200 shadow-sm hover:bg-[#8D57F8]/15 hover:text-[#8D57F8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#8D57F8]";
   const scrolledDesktopClasses = "text-gray-800";
   const notScrolledDesktopClasses = "text-white drop-shadow-lg";
 
-  const baseMobileClasses = "block py-2 text-base font-medium hover:text-primary transition-colors";
+  const baseMobileClasses = "block py-2 text-base font-medium hover:text-[#8D57F8] transition-colors";
   const scrolledMobileClasses = "text-gray-700";
   const notScrolledMobileClasses = "text-white";
 
@@ -435,8 +435,9 @@ const Navbar = () => {
                     <DropdownMenuTrigger asChild>
                       <button
                         className={cn(
-                          "px-3 py-1 rounded font-semibold transition-colors duration-200 shadow-sm hover:bg-white/20 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary flex items-center gap-2",
-                          isNavbarScrolled ? "text-gray-800" : "text-white drop-shadow-lg"
+                          "px-3 py-1 rounded font-semibold transition-colors duration-200 shadow-sm hover:bg-[#8D57F8]/15 hover:text-[#8D57F8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#8D57F8] flex items-center gap-2",
+                          isNavbarScrolled ? "text-gray-800" : "text-white drop-shadow-lg",
+                          isOpen && "text-[#8D57F8]"
                         )}
                         style={{
                           textShadow: isNavbarScrolled ? '0 1px 6px rgba(255,255,255,0.2)' : '0 2px 10px rgba(0,0,0,0.5)'
@@ -449,18 +450,15 @@ const Navbar = () => {
                         }}
                       >
                         {item.icon && (
-                          <span className={cn(
-                            isNavbarScrolled ? "text-gray-800" : "text-white"
-                          )}>
+                          <span className="text-current">
                             {item.icon}
                           </span>
                         )}
                         {item.label}
                         <ChevronDown 
                           className={cn(
-                            "w-3 h-3 transition-all duration-500 ease-in-out",
-                            isOpen ? "rotate-180" : "rotate-0",
-                            isNavbarScrolled ? "text-gray-800" : "text-white"
+                            "w-3 h-3 transition-all duration-500 ease-in-out text-current",
+                            isOpen ? "rotate-180" : "rotate-0"
                           )}
                         />
                       </button>
@@ -478,22 +476,19 @@ const Navbar = () => {
                         <DropdownMenuItem
                           key={subItem.label}
                           asChild
-                          className="cursor-pointer p-0"
+                          className="cursor-pointer p-0 focus:bg-[#8D57F8]/10 focus:text-[#8D57F8]"
                         >
                           {subItem.to ? (
                             <Link
                               to={subItem.to}
-                              className="group flex items-start gap-3 p-3 hover:bg-gray-50 rounded-md transition-all duration-200 ease-in-out hover:shadow-sm"
+                              className="group flex items-start gap-3 p-3 hover:bg-[#8D57F8]/10 rounded-md transition-all duration-200 ease-in-out hover:shadow-sm focus:bg-[#8D57F8]/10"
                               onClick={closeMobileMenu}
                             >
-                              <div className={cn(
-                                "mt-0.5 flex-shrink-0 transition-colors duration-200",
-                                isNavbarScrolled ? "text-blue-600 group-hover:text-blue-700" : "text-blue-500 group-hover:text-blue-600"
-                              )}>
+                              <div className="mt-0.5 flex-shrink-0 transition-colors duration-200 text-[#8D57F8]">
                                 {subItem.icon}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="font-semibold text-gray-900 transition-colors duration-200 group-hover:text-gray-950">
+                                <div className="font-semibold text-gray-900 transition-colors duration-200 group-hover:text-[#8D57F8]">
                                   {subItem.label}
                                 </div>
                                 <div className="text-sm text-gray-500 mt-0.5 transition-colors duration-200 group-hover:text-gray-600">
@@ -504,20 +499,17 @@ const Navbar = () => {
                           ) : (
                             <a
                               href={subItem.href}
-                              className="group flex items-start gap-3 p-3 hover:bg-gray-50 rounded-md transition-all duration-200 ease-in-out hover:shadow-sm"
+                              className="group flex items-start gap-3 p-3 hover:bg-[#8D57F8]/10 rounded-md transition-all duration-200 ease-in-out hover:shadow-sm focus:bg-[#8D57F8]/10"
                               onClick={(e) => {
                                 handleNavLinkClick(e, subItem.sectionId);
                                 closeMobileMenu();
                               }}
                             >
-                              <div className={cn(
-                                "mt-0.5 flex-shrink-0 transition-colors duration-200",
-                                isNavbarScrolled ? "text-blue-600 group-hover:text-blue-700" : "text-blue-500 group-hover:text-blue-600"
-                              )}>
+                              <div className="mt-0.5 flex-shrink-0 transition-colors duration-200 text-[#8D57F8]">
                                 {subItem.icon}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="font-semibold text-gray-900 transition-colors duration-200 group-hover:text-gray-950">
+                                <div className="font-semibold text-gray-900 transition-colors duration-200 group-hover:text-[#8D57F8]">
                                   {subItem.label}
                                 </div>
                                 <div className="text-sm text-gray-500 mt-0.5 transition-colors duration-200 group-hover:text-gray-600">
@@ -609,7 +601,13 @@ const Navbar = () => {
               </>
             ) : (
               <Link to="/login" className="hidden md:inline-flex">
-                <Button variant={isNavbarScrolled ? "outline" : "secondary"} className="rounded-full px-5">
+                <Button
+                  variant={isNavbarScrolled ? "outline" : "secondary"}
+                  className={cn(
+                    "rounded-full px-5",
+                    isNavbarScrolled && "hover:bg-[#8D57F8] hover:text-white hover:border-[#8D57F8]"
+                  )}
+                >
                   Iniciar Sesión
                 </Button>
               </Link>
@@ -617,10 +615,10 @@ const Navbar = () => {
             <Button
               onClick={toggleMobileMenu}
               className={cn(
-                "md:hidden transition-transform duration-200 active:scale-90 hover:scale-110 focus:outline-none",
-                isNavbarScrolled ? 'text-gray-800 hover:bg-blue-600/10 hover:text-blue-700 focus:ring-blue-700' 
-                           : 'text-white hover:bg-blue-600/20 hover:text-blue-400 focus:ring-blue-400',
-                "focus:ring-2" // Anillo de foco
+                "md:hidden transition-transform duration-200 active:scale-90 hover:scale-110 focus:outline-none focus:ring-2",
+                isNavbarScrolled
+                  ? 'text-gray-800 hover:bg-[#8D57F8]/10 hover:text-[#8D57F8] focus:ring-[#8D57F8]'
+                  : 'text-white hover:bg-[#8D57F8]/20 hover:text-[#8D57F8] focus:ring-[#8D57F8]'
               )}
               variant="ghost"
               size="icon"

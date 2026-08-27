@@ -953,98 +953,155 @@ const HomePage = () => {
         </div>
       </section>
 
-      <footer className="bg-[#8D57F8] text-white py-8 sm:py-16 text-sm font-normal mx-3 mb-3 sm:mx-4 sm:mb-4 rounded-[2rem] overflow-hidden">
-        <div className="container mx-auto px-4">
-          {/* Móvil: corto */}
-          <div className="md:hidden flex flex-col items-center text-center gap-4">
-            <Link to="/" aria-label="Quincenalia" className="inline-flex">
-              <img src="/logo-blanco.png" alt="Quincenalia" className="h-[4.5rem] w-auto mix-blend-screen" />
-            </Link>
-            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-white/90">
-              <Link to="/terminos-servicio" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
-                <FileText className="w-3.5 h-3.5" aria-hidden="true" /> Términos
-              </Link>
-              <Link to="/politica-privacidad" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
-                <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" /> Privacidad
-              </Link>
-              <Link to="/politica-cookies" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
-                <Cookie className="w-3.5 h-3.5" aria-hidden="true" /> Cookies
-              </Link>
-              <a href="#contacto" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
-                <Mail className="w-3.5 h-3.5" aria-hidden="true" /> Contacto
-              </a>
-            </div>
-            <p className="text-xs text-white/80">© {new Date().getFullYear()} Quincenalia</p>
-          </div>
-
-          {/* Desktop */}
-          <div className="hidden md:block">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
-            <div className="md:col-span-2 lg:col-span-1">
-              <Link to="/" aria-label="Quincenalia" className="inline-flex mb-3">
-                <img src="/logo-blanco.png" alt="Quincenalia" className="h-[5.5rem] w-auto mix-blend-screen" />
-              </Link>
-              <p className="text-white/90 leading-relaxed">
-                La forma inteligente de poseer, disfrutar y rentabilizar tu segunda residencia.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4 text-white uppercase tracking-wide text-xs inline-flex items-center gap-1.5">
-                <Compass className="w-3.5 h-3.5" aria-hidden="true" /> Navegación
-              </h4>
-              <ul className="space-y-2.5 text-white/90">
-                  <li>
-                    <Link to="/propiedades" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
-                      <Home className="w-4 h-4 text-white/80" aria-hidden="true" /> Propiedades
-                    </Link>
-                  </li>
-                  <li>
-                    <a href="#zonas-destacadas" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
-                      <MapPin className="w-4 h-4 text-white/80" aria-hidden="true" /> Zonas Destacadas
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#reinventada" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
-                      <Info className="w-4 h-4 text-white/80" aria-hidden="true" /> Cómo Funciona
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#contacto" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
-                      <MessageCircle className="w-4 h-4 text-white/80" aria-hidden="true" /> Contacto
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#faq" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
-                      <HelpCircle className="w-4 h-4 text-white/80" aria-hidden="true" /> FAQ
-                    </a>
-                  </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4 text-white uppercase tracking-wide text-xs inline-flex items-center gap-1.5">
-                <Scale className="w-3.5 h-3.5" aria-hidden="true" /> Legal
-              </h4>
-              <ul className="space-y-2.5 text-white/90">
-                <li><Link to="/terminos-servicio" className="hover:text-white transition-colors flex items-center gap-1.5"><FileText className="w-4 h-4 text-white/80" aria-hidden="true" /> Términos de Servicio</Link></li>
-                <li><Link to="/politica-privacidad" className="hover:text-white transition-colors flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-white/80" aria-hidden="true" /> Política de Privacidad</Link></li>
-                <li><Link to="/politica-cookies" className="hover:text-white transition-colors flex items-center gap-1.5"><Cookie className="w-4 h-4 text-white/80" aria-hidden="true" /> Política de Cookies</Link></li>
-              </ul>
-            </div>
-             <div className="md:col-span-2 lg:col-span-1">
-              <h4 className="font-semibold mb-4 text-white uppercase tracking-wide text-xs inline-flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5" aria-hidden="true" /> Contacto
-              </h4>
-              <a href="mailto:info@quincenalia.com" className="text-white/90 hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1.5">
-                <Send className="w-4 h-4 text-white/80" aria-hidden="true" />
+      <footer className="px-3 pb-3 sm:px-4 sm:pb-4 md:px-6 md:pb-6 lg:px-8">
+        <div className="bg-[#8D57F8] text-white rounded-[2rem] overflow-hidden py-8 sm:py-12 md:py-14 px-6 sm:px-10 md:px-12 lg:px-16 xl:px-20 text-sm font-normal">
+            {/* Móvil: corto */}
+            <div className="md:hidden flex flex-col items-center text-center gap-4">
+              <a
+                href="mailto:info@quincenalia.com"
+                className="inline-flex items-center gap-1.5 text-sm text-white/90 hover:text-white transition-colors"
+              >
+                <Mail className="w-3.5 h-3.5" aria-hidden="true" />
                 info@quincenalia.com
               </a>
+              <a
+                href="tel:+34616462861"
+                className="inline-flex items-center gap-1.5 text-sm text-white/90 hover:text-white transition-colors"
+              >
+                <Phone className="w-3.5 h-3.5" aria-hidden="true" />
+                +34 616 462 861
+              </a>
+              <p className="inline-flex items-center gap-1.5 text-sm text-white/90">
+                <MapPin className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                Av. de Burgos 52, Madrid
+              </p>
+              <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-white/90">
+                <Link to="/terminos-servicio" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                  <FileText className="w-3.5 h-3.5" aria-hidden="true" /> Términos
+                </Link>
+                <Link to="/politica-privacidad" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                  <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" /> Privacidad
+                </Link>
+                <Link to="/politica-cookies" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                  <Cookie className="w-3.5 h-3.5" aria-hidden="true" /> Cookies
+                </Link>
+              </div>
+              <p className="text-sm text-white/90 leading-relaxed max-w-xs">
+                La forma inteligente de poseer, disfrutar y rentabilizar tu segunda residencia.
+              </p>
+              <Link to="/" aria-label="Quincenalia" className="inline-flex">
+                <img src="/logo-blanco.png" alt="Quincenalia" className="h-[4.5rem] w-auto mix-blend-screen" />
+              </Link>
+              <div className="w-full border-t border-white/25 pt-4 text-xs text-white/80">
+                © {new Date().getFullYear()} Quincenalia. Todos los derechos reservados.
+              </div>
+            </div>
+
+            {/* Desktop: contacto | navegación | legal | Quincenalia */}
+            <div className="hidden md:block">
+              <div className="mx-auto grid max-w-5xl grid-cols-4 gap-x-6 lg:gap-x-8 items-start">
+                <div className="min-w-0">
+                  <h4 className="font-semibold mb-4 h-5 text-white uppercase tracking-wide text-xs flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> Contacto
+                  </h4>
+                  <ul className="space-y-2.5 text-white/90">
+                    <li>
+                      <a
+                        href="mailto:info@quincenalia.com"
+                        className="hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                      >
+                        <Send className="w-4 h-4 text-white/80 shrink-0" aria-hidden="true" />
+                        info@quincenalia.com
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href="tel:+34616462861"
+                        className="hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                      >
+                        <Phone className="w-4 h-4 text-white/80 shrink-0" aria-hidden="true" />
+                        +34 616 462 861
+                      </a>
+                    </li>
+                    <li>
+                      <span className="inline-flex items-start gap-1.5">
+                        <MapPin className="w-4 h-4 text-white/80 shrink-0 mt-0.5" aria-hidden="true" />
+                        <span>
+                          Av. de Burgos 52, Madrid
+                          <span className="block text-white/70 text-xs mt-0.5">
+                            Próximamente Barcelona y Málaga · cita previa
+                          </span>
+                        </span>
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="min-w-0">
+                  <h4 className="font-semibold mb-4 h-5 text-white uppercase tracking-wide text-xs inline-flex items-center gap-1.5">
+                    <Compass className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> Navegación
+                  </h4>
+                  <ul className="space-y-2.5 text-white/90">
+                    <li>
+                      <Link to="/propiedades" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                        <Home className="w-4 h-4 text-white/80 shrink-0" aria-hidden="true" /> Propiedades
+                      </Link>
+                    </li>
+                    <li>
+                      <a href="#zonas-destacadas" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                        <MapPin className="w-4 h-4 text-white/80 shrink-0" aria-hidden="true" /> Zonas Destacadas
+                      </a>
+                    </li>
+                    <li>
+                      <a href="#reinventada" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                        <Info className="w-4 h-4 text-white/80 shrink-0" aria-hidden="true" /> Cómo Funciona
+                      </a>
+                    </li>
+                    <li>
+                      <a href="#faq" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                        <HelpCircle className="w-4 h-4 text-white/80 shrink-0" aria-hidden="true" /> FAQ
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="min-w-0">
+                  <h4 className="font-semibold mb-4 h-5 text-white uppercase tracking-wide text-xs inline-flex items-center gap-1.5">
+                    <Scale className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> Legal
+                  </h4>
+                  <ul className="space-y-2.5 text-white/90">
+                    <li>
+                      <Link to="/terminos-servicio" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                        <FileText className="w-4 h-4 text-white/80 shrink-0" aria-hidden="true" /> Términos de Servicio
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/politica-privacidad" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                        <ShieldCheck className="w-4 h-4 text-white/80 shrink-0" aria-hidden="true" /> Política de Privacidad
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/politica-cookies" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
+                        <Cookie className="w-4 h-4 text-white/80 shrink-0" aria-hidden="true" /> Política de Cookies
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-white/90 leading-relaxed text-sm mb-4">
+                    La forma inteligente de poseer, disfrutar y rentabilizar tu segunda residencia.
+                  </p>
+                  <Link to="/" aria-label="Quincenalia" className="inline-flex">
+                    <img src="/logo-blanco.png" alt="Quincenalia" className="h-12 w-auto mix-blend-screen" />
+                  </Link>
+                </div>
+              </div>
+              <div className="mt-10 border-t border-white/25 pt-6 text-center text-xs text-white/80">
+                © {new Date().getFullYear()} Quincenalia. Todos los derechos reservados.
+              </div>
             </div>
           </div>
-          <div className="border-t border-white/25 pt-8 text-center text-xs text-white/80">
-            © {new Date().getFullYear()} Quincenalia. Todos los derechos reservados.
-          </div>
-          </div>
-        </div>
       </footer>
       <div>
         <button

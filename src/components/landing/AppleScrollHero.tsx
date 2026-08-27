@@ -150,6 +150,11 @@ const AppleScrollHero = () => {
     setVideoEnded(true);
   }, []);
 
+  useEffect(() => {
+    if (reduceMotion || videoEnded) return;
+    videoRef.current?.play().catch(finishVideo);
+  }, [reduceMotion, videoEnded, finishVideo]);
+
   const toggleVideoPlayback = useCallback(() => {
     const video = videoRef.current;
     if (!video || videoEnded) return;
