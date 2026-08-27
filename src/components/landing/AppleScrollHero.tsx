@@ -5,13 +5,15 @@ import { ArrowRight, ChevronDown, HelpCircle, Pause, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { fadeUp, stagger } from '@/components/landing/motion';
 
-const TOTAL_FRAMES = 5;
-const FRAME_SEQUENCE = Array.from({ length: TOTAL_FRAMES }, (_, i) => {
-  const n = String(i + 1).padStart(3, '0');
-  return `/fotos-efecto/frame_${n}.jpg`;
-});
+const WHISK_ASSETS =
+  '/fotos-efecto/Whisk_ytmyqmm2ugomhzmk1cmlfwotydohrtl5qzmz0yy_000';
+const VIDEO_SRC = `${WHISK_ASSETS}/Video.mp4`;
 
-const VIDEO_SRC = '/fotos-efecto/Coastal_village_on_rocky_cliffs_202608151450.mp4';
+const TOTAL_FRAMES = 62;
+const FRAME_SEQUENCE = Array.from({ length: TOTAL_FRAMES }, (_, i) => {
+  const n = String(i).padStart(3, '0');
+  return `${WHISK_ASSETS}/Whisk_ytmyqmm2ugomhzmk1cmlfwotydohrtl5qzmz0yy_${n}.webp`;
+});
 
 /** Altura del runway de scroll en viewports tras el vídeo (>1 = efecto más lento) */
 const SCROLL_HEIGHT_VH = 180;

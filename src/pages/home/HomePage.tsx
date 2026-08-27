@@ -16,11 +16,35 @@ import {
     PiggyBank, Briefcase, Lock, Sparkles, ScrollText, Ban, MessageCircle, Receipt, ShieldCheck, Unlock, Home, Calendar, Timer, Banknote, Globe, ChevronRight, ArrowRight, Phone, Mail, MapPin, ChevronLeft, HelpCircle, Cookie, Star, Users, FileText, Presentation, Clock, Send, Compass, Info, Scale, WandSparkles
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaWhatsapp } from 'react-icons/fa';
 import ContactForm from '@/components/ContactForm';
 import './HomePage.css'; // Asegúrate de que este archivo exista y no cause conflictos
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { fadeUp, fadeIn, stagger, staggerFast, scaleIn, viewportOnce } from '@/components/landing/motion';
+
+const FOOTER_SOCIALS = [
+  {
+    label: 'Instagram',
+    href: 'https://www.instagram.com/quincenalia/',
+    Icon: FaInstagram,
+  },
+  {
+    label: 'Facebook',
+    href: 'https://www.facebook.com/quincenalia',
+    Icon: FaFacebookF,
+  },
+  {
+    label: 'LinkedIn',
+    href: 'https://www.linkedin.com/company/quincenalia',
+    Icon: FaLinkedinIn,
+  },
+  {
+    label: 'WhatsApp',
+    href: 'https://wa.me/34616462861',
+    Icon: FaWhatsapp,
+  },
+] as const;
 
 const FAQS = [
   {
@@ -994,6 +1018,20 @@ const HomePage = () => {
                 <p className="text-sm text-white/90 leading-relaxed text-center">
                   La forma inteligente de poseer, disfrutar y rentabilizar tu segunda residencia.
                 </p>
+                <div className="flex items-center justify-center gap-2.5 pt-1">
+                  {FOOTER_SOCIALS.map(({ label, href, Icon }) => (
+                    <a
+                      key={label}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={label}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 text-white transition-colors duration-200 hover:bg-white/15 hover:border-white/60"
+                    >
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                    </a>
+                  ))}
+                </div>
               </div>
               <div className="w-full border-t border-white/25 pt-4 flex flex-col items-center gap-3 text-xs text-white/80">
                 <p>© {new Date().getFullYear()} Quincenalia. Todos los derechos reservados.</p>
@@ -1099,9 +1137,23 @@ const HomePage = () => {
                     <WandSparkles className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                     Otra manera de veranear
                   </h4>
-                  <p className="text-white/90 leading-relaxed text-sm">
+                  <p className="text-white/90 leading-relaxed text-sm mb-4">
                     La forma inteligente de poseer, disfrutar y rentabilizar tu segunda residencia.
                   </p>
+                  <div className="flex items-center gap-2.5">
+                    {FOOTER_SOCIALS.map(({ label, href, Icon }) => (
+                      <a
+                        key={label}
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={label}
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 text-white transition-colors duration-200 hover:bg-white/15 hover:border-white/60"
+                      >
+                        <Icon className="h-4 w-4" aria-hidden="true" />
+                      </a>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="mt-10 border-t border-white/25 pt-6 flex flex-col items-center gap-4 text-center text-xs text-white/80">
