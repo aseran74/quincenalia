@@ -995,11 +995,11 @@ const HomePage = () => {
                   La forma inteligente de poseer, disfrutar y rentabilizar tu segunda residencia.
                 </p>
               </div>
-              <Link to="/" aria-label="Quincenalia" className="inline-flex">
-                <img src="/logo-blanco.png" alt="Quincenalia" className="h-[4.5rem] w-auto mix-blend-screen" />
-              </Link>
-              <div className="w-full border-t border-white/25 pt-4 text-xs text-white/80">
-                © {new Date().getFullYear()} Quincenalia. Todos los derechos reservados.
+              <div className="w-full border-t border-white/25 pt-4 flex flex-col items-center gap-3 text-xs text-white/80">
+                <p>© {new Date().getFullYear()} Quincenalia. Todos los derechos reservados.</p>
+                <Link to="/" aria-label="Quincenalia" className="inline-flex">
+                  <img src="/logo-blanco.png" alt="Quincenalia" className="h-[4.5rem] w-auto mix-blend-screen" />
+                </Link>
               </div>
             </div>
 
@@ -1099,21 +1099,20 @@ const HomePage = () => {
                     <WandSparkles className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                     Otra manera de veranear
                   </h4>
-                  <p className="text-white/90 leading-relaxed text-sm mb-4">
+                  <p className="text-white/90 leading-relaxed text-sm">
                     La forma inteligente de poseer, disfrutar y rentabilizar tu segunda residencia.
                   </p>
-                  <Link to="/" aria-label="Quincenalia" className="inline-flex">
-                    {/* Compensa el padding transparente izquierdo del PNG */}
-                    <img
-                      src="/logo-blanco.png"
-                      alt="Quincenalia"
-                      className="h-12 w-auto mix-blend-screen -ml-2.5"
-                    />
-                  </Link>
                 </div>
               </div>
-              <div className="mt-10 border-t border-white/25 pt-6 text-center text-xs text-white/80">
-                © {new Date().getFullYear()} Quincenalia. Todos los derechos reservados.
+              <div className="mt-10 border-t border-white/25 pt-6 flex flex-col items-center gap-4 text-center text-xs text-white/80">
+                <p>© {new Date().getFullYear()} Quincenalia. Todos los derechos reservados.</p>
+                <Link to="/" aria-label="Quincenalia" className="inline-flex">
+                  <img
+                    src="/logo-blanco.png"
+                    alt="Quincenalia"
+                    className="h-12 w-auto mix-blend-screen"
+                  />
+                </Link>
               </div>
             </div>
           </div>
