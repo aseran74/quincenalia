@@ -5,14 +5,14 @@ import { ArrowRight, ChevronDown, HelpCircle, Pause, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { fadeUp, stagger } from '@/components/landing/motion';
 
-const WHISK_ASSETS =
-  '/fotos-efecto/Whisk_ytmyqmm2ugomhzmk1cmlfwotydohrtl5qzmz0yy_000';
-const VIDEO_SRC = `${WHISK_ASSETS}/Video.mp4`;
+const VIDEO_SRC = '/fotos-efecto/Coastal_village_on_rocky_cliffs_202608151450.mp4';
+const FLORES_SRC =
+  '/fotos-efecto/Whisk_ytmyqmm2ugomhzmk1cmlfwotydohrtl5qzmz0yy_000/Flores.png';
 
-const TOTAL_FRAMES = 62;
+const TOTAL_FRAMES = 11;
 const FRAME_SEQUENCE = Array.from({ length: TOTAL_FRAMES }, (_, i) => {
-  const n = String(i).padStart(3, '0');
-  return `${WHISK_ASSETS}/Whisk_ytmyqmm2ugomhzmk1cmlfwotydohrtl5qzmz0yy_${n}.webp`;
+  const n = String(i + 1).padStart(3, '0');
+  return `/fotos-efecto/frame_${n}.jpg`;
 });
 
 /** Altura del runway de scroll en viewports tras el vídeo (>1 = efecto más lento) */
@@ -196,6 +196,8 @@ const AppleScrollHero = () => {
   const textOpacity =
     !videoEnded || reduceMotion ? 1 : Math.max(0, 1 - progress * 1.35);
   const textY = !videoEnded || reduceMotion ? 0 : progress * 48;
+  const floresOpacity =
+    !videoEnded || reduceMotion ? 1 : Math.max(0, 1 - progress * 1.35);
 
   const sectionHeight =
     reduceMotion || !videoEnded ? '100svh' : `${SCROLL_HEIGHT_VH}vh`;
@@ -264,6 +266,19 @@ const AppleScrollHero = () => {
             onLoad={() => setVideoEnded(true)}
           />
         )}
+
+        {/* Escritorio: buganvilla fija encima del vídeo y del scroll Apple */}
+        <img
+          src={FLORES_SRC}
+          alt=""
+          width={666}
+          height={375}
+          className="pointer-events-none absolute right-0 top-0 z-[12] hidden h-auto w-[min(48vw,720px)] md:block"
+          style={{
+            opacity: floresOpacity,
+            filter: 'saturate(0.55) brightness(0.92)',
+          }}
+        />
 
         <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/70 via-black/30 to-black/25 pointer-events-none" />
 
