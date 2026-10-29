@@ -214,14 +214,14 @@ const AppleScrollHero = () => {
             src={FRAME_SEQUENCE[0]}
             alt=""
             className="absolute inset-0 h-full w-full object-cover"
-            style={{ filter: 'brightness(0.92)' }}
+            style={{ filter: 'brightness(1)' }}
           />
         )}
         <canvas
           ref={canvasRef}
           className="absolute inset-0 z-[1] block h-full w-full"
           style={{
-            filter: 'brightness(0.92)',
+            filter: 'brightness(1)',
             opacity: videoEnded && isLoaded ? 1 : 0,
             transition: 'opacity 0.5s ease-out',
           }}
@@ -233,7 +233,7 @@ const AppleScrollHero = () => {
             ref={videoRef}
             className="absolute inset-0 z-[2] h-full w-full object-cover"
             style={{
-              filter: 'brightness(0.92)',
+              filter: 'brightness(1)',
               opacity: videoEnded ? 0 : 1,
               transition: 'opacity 0.5s ease-out',
               pointerEvents: videoEnded ? 'none' : 'auto',
@@ -260,12 +260,12 @@ const AppleScrollHero = () => {
             src={FRAME_SEQUENCE[0]}
             alt=""
             className="absolute inset-0 z-[2] h-full w-full object-cover"
-            style={{ filter: 'brightness(0.92)' }}
+            style={{ filter: 'brightness(1)' }}
             onLoad={() => setVideoEnded(true)}
           />
         )}
 
-        <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/70 via-black/30 to-black/25 pointer-events-none" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/45 via-black/10 to-transparent pointer-events-none" />
 
         <motion.div
           className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
